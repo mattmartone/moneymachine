@@ -35,7 +35,6 @@ export function AppNav() {
           <Link to="/shop" className="font-mono font-bold border-2 border-black px-2 py-1 shadow-outset hover:bg-[#ffffcc]">
             {balance !== null ? `${balance.toLocaleString()} tokens` : '—'}
           </Link>
-          <span className="font-mono">{storedUser?.email}</span>
           <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
         </div>
       </div>
