@@ -41,8 +41,8 @@ Analysis is NEVER run on the initial parse. It's a separate prompt invocation.
 - **3 bets per race:** Win, Exacta Box, Trifecta Box
 - **Win bet:** $50, never the favorite. Find value at 7/2 or higher.
 - **Exacta Box:** 2-3 horses, $2-$5 unit (varies by conviction)
-- **Trifecta Box:** 4 horses minimum, $1 unit (3-horse boxes are too tight — 0/6 day one)
-- **Total race outlay:** ~$86-$104
+- **Trifecta Box:** 4 horses, $1/combo ($24 total). Tris are a bonus bet, not a profit center — keep exposure light.
+- **Total race outlay:** ~$134 standard ($184 when win bet doubled)
 
 ### Race Analysis Rules
 
@@ -82,7 +82,7 @@ These are absolute — no exceptions unless noted. They gate whether we bet a ra
 | **Never bet the favorite to win** | (Established in Race Analysis Rules above.) |
 | **No maiden races** | Never bet maiden claiming or maiden special weight. Form is too unreliable. No exceptions. |
 | **Sit out inside lone speed fave** | Pass when the fave is post 1–3 AND E running style AND only speed in the race. Uncontested inside speed wires too often; we can't beat it and don't bet faves. **Exception:** other E horses present = pace duel = fave gets cooked → bet-against, not sit-out. |
-| **Exclude fave from exacta on sharp class drop** | If the favorite has a sharp class drop, exclude it from your exacta box — it may be vulnerable. |
+| **Sharp class drop on fave = vulnerability signal** | If the favorite has a sharp class drop, tag VULNERABLE — strengthens the "key against" read. Fave stays in exotic boxes but we double down on our win pick beating them. |
 
 ### Skill Filters (BOLOs)
 
@@ -151,23 +151,23 @@ Map the early-speed horses first. This feeds vulnerability reads and exacta excl
 - A lone E type = possible wire job.
 - The favorite's running style relative to the pace is the main tell for whether they're vulnerable.
 
-#### Exclude the Favorite from the Exacta (Vulnerability Triggers)
+#### Key Against the Favorite (Vulnerability Triggers)
 
-Leave the favorite OUT of the exacta entirely when either trigger fires. Key the non-favorites whose style/draw is helped by the same scenario. Fave-less exactas pay well when the read is right.
+Keep the favorite IN the exacta and trifecta boxes — but never bet them to WIN. When the fave is vulnerable, we profit when they finish 2nd or 3rd underneath our win pick. Excluding them entirely costs us exotic payouts (proven: Belmont Day R4, R9, R11 — faves hit the board even when vulnerable).
 
 **Trigger A — Traffic (post + style):**
 - Fave drawn inside (post 1–3) AND not a front-runner (E/P, P, or S → runs from behind → rail-trapped behind a wall).
-- A front-runner (E) on the rail is the OPPOSITE — advantaged. Do NOT exclude on this basis.
-- Strongest for closers (S) and stalkers (P); softer for pressers (E/P) who have early speed to grab a forward spot — still excludeable, lower conviction.
+- A front-runner (E) on the rail is the OPPOSITE — advantaged. Do NOT tag vulnerable on this basis.
+- Strongest for closers (S) and stalkers (P); softer for pressers (E/P) who have early speed to grab a forward spot.
 - Field size amplifies: bigger field = more wall = stronger read.
 
 **Trigger B — Pace (style vs pace shape):**
 - Speed (E) fave in a pace duel (2+ E horses) → cooked early.
 - Closer (S) fave in a lone-speed race → no meltdown to run into.
 
-**Conviction:** Lower hit rate, high payout. Favorites can overcome trouble. Fire only when a trigger is strong, not marginal.
+**What triggers drive:** When either trigger fires, DOUBLE the win stake ($100 instead of $50). The fave stays in all exotic boxes — they're likely to hit the board, and we want to collect when they do.
 
-**Reinforces:** Never-bet-fave rule / Vulnerable Fave thesis / S1 — the same read drives the win bet against the fave and the stake size.
+**Reinforces:** Never-bet-fave rule / Vulnerable Fave thesis — the same read drives the win bet against the fave and the stake size.
 
 ### Field-Size Glossary
 
@@ -206,7 +206,7 @@ Every horse gets scored against these signals. Sum all triggered signals, compar
 | S5 | Distance stretch-out to sire sweet spot | +2 | Horse getting their sire's optimal distance for the first time. Pedigree says they want this trip. |
 | S6 | Best last-race Beyer in field | +1 | Highest speed figure among live starters. Proven they can run fast. |
 | S7 | Blinkers change (on or off) | +1 | Trainer making an equipment move = intent. Something's different today. |
-| S9 | Earnings leader in class | +1 | Most $ earned among starters at this class level. Has proven they belong. |
+| S9 | Earnings leader in class | +1 (+2 in graded stakes) | Most $ earned among starters at this class level. Has proven they belong. Bump to +2 in graded stakes where class floor is higher and earnings separation is more meaningful. |
 | S10 | First-time starter + expensive pedigree | +1 | Sire wins >15% with debuters, or horse was $100K+ purchase. Connections expect a run. |
 
 ### How to Score a Race (Execution Sequence)
@@ -280,7 +280,7 @@ This is the prompt workflow — every step is a gate. Do not skip steps or proce
     | **S5 — Distance stretch-out** | Is today's distance longer than any distance in the horse's PPs? Check sire line — does the sire produce winners at today's distance? → +2. *Read from:* Today's distance (race header) vs. distance column in PPs. Sire name (top of horse's section). |
     | **S6 — Best last-race Beyer** | Compare last-race Beyer/speed figure across all live horses in the field. Highest = +1. *Read from:* Beyer speed figure column, most recent race line for each horse. |
     | **S7 — Blinkers change** | Look for "B" or blinkers notation in today's equipment vs. last race equipment. On → off or off → on = +1. *Read from:* Equipment line (today) vs. equipment shown in most recent PP line. |
-    | **S9 — Earnings leader** | Compare lifetime or current-year earnings across the field at this class level. Highest = +1. *Read from:* Earnings line in the horse's header section. |
+    | **S9 — Earnings leader** | Compare lifetime or current-year earnings across the field at this class level. Highest = +1 (or +2 in graded stakes — G1/G2/G3). *Read from:* Earnings line in the horse's header section. Check race conditions for grade level. |
     | **S10 — First-time starter + pedigree** | Horse has no PP lines (first start). Check sire — does sire win >15% with first-time starters? Or was purchase price $100K+? → +1. *Read from:* Empty PPs = debut. Sire name + sale price if listed. |
 
 14. **Rank by total score.** S2 and S3 score zero unless Matt has provided live odds. If live odds arrive later, re-score and adjust picks if rankings change.
@@ -296,14 +296,11 @@ This is the prompt workflow — every step is a gate. Do not skip steps or proce
 16. **Win stake sizing:** Count entries. 10+ horses AND fave tagged VULNERABLE in step 8 → DOUBLE the win stake ($100 instead of $50). Long field alone is not enough — must have confirmed vulnerability.
     - *Read from:* Field size (step 3), vulnerability tag (step 8).
 
-17. **Exacta box:** Top 3-4 scored horses. Apply exclusion gates on the favorite:
-    - **Class drop gate:** Fave flagged YELLOW in step 10 → EXCLUDE from exacta.
-    - **Traffic trigger:** Fave's post is 1–3 (read from post position) AND fave's style is NOT E (read from step 6 tag) → EXCLUDE. Strongest for S/P, softer for E/P.
-    - **Pace trigger:** Fave is E AND pace map shows 2+ E horses (step 7) → EXCLUDE. OR fave is S AND pace map shows lone speed (step 7) → EXCLUDE.
-    - When excluding fave, replace with the non-favorites whose style/draw is helped by the same scenario.
-    - *Read from:* Score rankings, post positions, running style tags, pace map, class drop flag.
+17. **Exacta box:** Top 3-4 scored horses PLUS the favorite when tagged VULNERABLE. The fave running underneath our win pick is how we profit from exotics. Never exclude the fave from the box — they hit the board even when they don't win.
+    - Include the fave in the box regardless of vulnerability status. If vulnerable, they're likely 2nd/3rd. If protected, they may win (and we lose the win bet but can still catch the exacta with other combos).
+    - *Read from:* Score rankings. Always 4 horses in the box ($5/combo, $60 total).
 
-18. **Trifecta box:** 4+ horses minimum. Include any horse scoring 3+ not already in your box.
+18. **Trifecta box:** 4 horses, $1/combo ($24 total). Include the fave + top scored horses. Keep this lean — tris are bonus upside, not the primary exotic.
     - *Read from:* Score rankings.
 
 19. **Final check:** Any horse scoring 3+ that isn't in your exotics = red flag, reconsider.
@@ -313,7 +310,7 @@ This is the prompt workflow — every step is a gate. Do not skip steps or proce
 20. **Pace scenario narrative.** How does the race set up? Who benefits from the likely pace shape?
 21. **Favorite vulnerability thesis.** State the fave's weakness and who profits.
 22. **Key angles.** Call out recent-life and troubled-trip horses at a price — these are the core value plays.
-23. **Conviction level.** Strong trigger (clear vulnerability + style match + price) or marginal? Exacta exclusion is a conviction play — fire only when strong.
+23. **Conviction level.** Strong trigger (clear vulnerability + style match + price) or marginal? Doubling the win stake is a conviction play — fire only when strong.
 24. **Final picks with reasoning.** One sentence per bet explaining WHY.
 
 ### Signal Evolution
@@ -338,6 +335,7 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 | Date | Track | Races | W-L | Wagered | Collected | P/L | ROI |
 |------|-------|-------|-----|---------|-----------|-----|-----|
 | 2026-05-24 | Churchill Downs | 6 (R5-R10) | 2-4 | $554 | $611.40 | +$57.40 | +10.4% |
+| 2026-06-06 | Saratoga (Belmont Day) | 12 (1 skipped) | 3-9 | $1,564 | $2,434 | +$870 | +56% |
 
 ## Signal Hit Log
 
@@ -351,17 +349,49 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 | 5/24 | R9 | S6 | Write Off Jerry | 6/1 | LOST |
 | 5/24 | R7 | S7 | Frosted Bull | 5/2 | 3rd |
 | 5/24 | R7 | S9 | Muir Woods | 12/1 | LOST |
+| 6/6 | R2 | S4 | Contrary Thinking | 17/1 | 2nd ✅ |
+| 6/6 | R2 | Recent Life | #9 | — | WON ✅ |
+| 6/6 | R3 | S2 | Intellect | 4/5 | 4th ❌ |
+| 6/6 | R4 | Trigger A | Coach Albert Lady | 8/1 | LOST (fave won) ❌ |
+| 6/6 | R5 | Troubled Trip | Marketplaceofideas | 9/2 | WON ✅ |
+| 6/6 | R5 | Beat Vulnerable Fave | Marketplaceofideas | 9/2 | WON ✅ |
+| 6/6 | R9 | Beat Vulnerable Fave | Reef Runner | 4/1 | WON ✅ |
+| 6/6 | R10 | S6 | #7 (best Beyer) | — | 2nd ✅ |
+| 6/6 | R13 | S9 | Golden Tempo | 5/1 | WON ✅ |
+
+## Strategy Form Charts
+
+Each signal/strategy is tracked like a horse — with a record, conditions, and trend.
+
+| Strategy | Fires | W | P | S | Win% | ITM% | ROI | Best Conditions | Trend |
+|----------|-------|---|---|---|------|------|-----|-----------------|-------|
+| Beat Vulnerable Fave | 3 | 2 | 0 | 0 | 67% | 67% | TBD | Routes, big fields | ↑ |
+| Troubled Trip | 2 | 1 | 0 | 0 | 50% | 50% | TBD | Turf, better post today | ↑ |
+| S9 (Earnings Leader) | 3 | 1 | 0 | 0 | 33% | 33% | TBD | Graded stakes | → |
+| S4 (Hot Barn) | 2 | 1 | 1 | 0 | 50% | 100% | TBD | >6/1 | ↑ |
+| S2 (Late Tote Action) | 3 | 1 | 0 | 0 | 33% | 33% | TBD | — | → |
+| S6 (Best Beyer) | 3 | 0 | 1 | 0 | 0% | 33% | TBD | — | → |
+| Trigger A (Traffic) | 3 | 0 | 0 | 0 | 0% | 0% | -100% | RETIRED | ↓ |
+
+### Reading the Form Chart
+- **Fires** = times the signal triggered and we acted on it
+- **W/P/S** = horse finished 1st / 2nd / 3rd
+- **ITM%** = in the money (top 3) rate
+- **ROI** = net P/L when this signal drove the pick
+- **Best Conditions** = sprint/route, dirt/turf, field size, class level
+- **Trend** = ↑ improving, → steady, ↓ declining
+
+(To be fully populated as database is built. Manual tracking until then.)
 
 ## Backlog (Prioritized)
 
-### Priority 1 — Model Updates
-- Rewrite "Exclude the Favorite from the Exacta" → convert to "key against" (fave stays IN boxes, never gets the win bet)
-- Bump S9 (earnings leader) to +2 in graded stakes only (stays +1 in claimers/allowance)
-- Trifecta sizing: $60 (5-horse at $1) → $24 (4-horse at $1)
-- Update Lifetime Record with Belmont Day 6/6/2026 numbers
-- Update Signal Hit Log with Belmont Day signal fires
-- Add Belmont Day to session records
-- Strategy form charts — treat each signal/BOLO/trigger like a horse with its own PPs. Track W/P/S rate, ROI when fired, conditions where it performs (sprint/route, dirt/turf, field size). Weight up strategies in peak form, retire ones that stop cashing.
+### Priority 1 — Model Updates ✅ (completed 6/6/2026)
+- ✅ Rewrite "Exclude the Favorite from the Exacta" → "Key Against the Favorite"
+- ✅ Bump S9 (earnings leader) to +2 in graded stakes only
+- ✅ Trifecta sizing: $60 → $24 (4-horse at $1)
+- ✅ Update Lifetime Record with Belmont Day 6/6/2026
+- ✅ Update Signal Hit Log with Belmont Day signal fires
+- ✅ Strategy form charts structure added (manual until DB built)
 
 ### Priority 2 — Database
 - **Build signal database (SQLite)** — track every bet, outcome, and signal fired. Tables: races, bets, signals_fired, comparisons (model vs Mike). Enables strategy-as-horse analysis and automated Signal Evolution rule.
