@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Logo } from '../components/Logo';
 
 interface Report {
   id: number;
@@ -59,12 +60,14 @@ export function Reports() {
         {/* Header */}
         <header className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
+            <div className="flex items-center gap-3">
+              <Logo className="w-12 h-12" />
+              <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
+            </div>
             <div className="font-sans text-sm">
               <span className="font-mono mr-4">{user?.email}</span>
               <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
             </div>
-          </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
             <Link to="/strategies" className="web-link">STRATEGIES</Link>
@@ -94,28 +97,44 @@ export function Reports() {
             No reports published yet. Check back after the next race day.
           </div>
         ) : (
-          <div className="space-y-4">
-            {reports.map(report => (
-              <div key={report.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-4">
-                <div className="shrink-0 flex flex-col items-center justify-center cursor-pointer hover:opacity-70">
-                  <svg width="48" height="60" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0 0H33L48 15V60H0V0Z" fill="#f5f5f5" stroke="black" strokeWidth="2"/>
-                    <path d="M33 0L48 15H33V0Z" fill="#ddd" stroke="black" strokeWidth="1"/>
-                    <text x="24" y="38" textAnchor="middle" fontFamily="monospace" fontSize="7" fontWeight="bold" fill="#c00">PDF</text>
-                    <text x="24" y="52" textAnchor="middle" fontFamily="monospace" fontSize="5" fill="#666">REPORT</text>
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-serif text-lg font-bold">{report.title}</h4>
-                    <span className={`font-mono font-bold text-sm ${report.roi_pct > 0 ? 'text-web-green' : 'text-web-red'}`}>
-                      {report.roi_pct > 0 ? '+' : ''}{report.roi_pct}% ROI
-                    </span>
-                  </div>
-                  <div className="font-mono text-xs text-gray-600 mb-2">
-                    {report.track} — {report.date} — {report.races_analyzed} races
-                  </div>
-                  <p className="font-serif text-sm">{report.summary}</p>
+          <div className="space-y-8">
+            {Object.entries(
+              reports.reduce((groups: Record<string, Report[]>, report) => {
+                const dateKey = report.date.split('T')[0];
+                if (!groups[dateKey]) groups[dateKey] = [];
+                groups[dateKey].push(report);
+                return groups;
+              }, {})
+            ).map(([date, dateReports]) => (
+              <div key={date}>
+                <h4 className="font-mono text-sm font-bold bg-black text-white inline-block px-2 py-1 mb-3">
+                  {date}
+                </h4>
+                <div className="space-y-3">
+                  {dateReports.map(report => (
+                    <div key={report.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-4">
+                      <div className="shrink-0 flex flex-col items-center justify-center cursor-pointer hover:opacity-70">
+                        <svg width="48" height="60" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M0 0H33L48 15V60H0V0Z" fill="#f5f5f5" stroke="black" strokeWidth="2"/>
+                          <path d="M33 0L48 15H33V0Z" fill="#ddd" stroke="black" strokeWidth="1"/>
+                          <text x="24" y="38" textAnchor="middle" fontFamily="monospace" fontSize="7" fontWeight="bold" fill="#c00">PDF</text>
+                          <text x="24" y="52" textAnchor="middle" fontFamily="monospace" fontSize="5" fill="#666">REPORT</text>
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-serif text-lg font-bold">{report.title}</h4>
+                          <span className={`font-mono font-bold text-sm ${report.roi_pct > 0 ? 'text-web-green' : 'text-web-red'}`}>
+                            {report.roi_pct > 0 ? '+' : ''}{report.roi_pct}% ROI
+                          </span>
+                        </div>
+                        <div className="font-mono text-xs text-gray-600 mb-2">
+                          {report.track} — {report.races_analyzed} races
+                        </div>
+                        <p className="font-serif text-sm">{report.summary}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
