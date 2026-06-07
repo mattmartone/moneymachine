@@ -5,7 +5,6 @@ import { Logo } from '../components/Logo';
 interface Strategy {
   name: string;
   type: string;
-  weight: number | null;
   description: string;
   active: boolean;
   win_rate: number | null;
@@ -15,10 +14,18 @@ interface Strategy {
   trend: string | null;
 }
 
+const TABS = [
+  { key: 'signal', label: 'SIGNALS' },
+  { key: 'bolo', label: 'BOLOs' },
+  { key: 'offensive', label: 'OFFENSIVE' },
+  { key: 'rule', label: 'RULES' },
+];
+
 export function Strategies() {
   const navigate = useNavigate();
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('signal');
 
   useEffect(() => {
     const token = localStorage.getItem('ftc_token');
@@ -46,6 +53,8 @@ export function Strategies() {
     navigate('/');
   };
 
+  const filtered = strategies.filter(s => s.type === activeTab);
+
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
       <div className="web-container max-w-4xl mx-auto">
@@ -71,15 +80,28 @@ export function Strategies() {
           STRATEGIES
         </h3>
 
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-1 font-sans font-bold text-sm border-2 ${activeTab === tab.key ? 'bg-white border-black shadow-inset' : 'bg-web-gray border-white border-r-black border-b-black shadow-outset'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="font-mono animate-blink p-4">Loading...</div>
-        ) : strategies.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="bg-white border-2 border-gray-400 p-8 text-center font-serif italic text-gray-500">
-            No strategies loaded.
+            No strategies in this category.
           </div>
         ) : (
           <div className="space-y-3">
-            {strategies.map(strat => (
+            {filtered.map(strat => (
               <div
                 key={strat.name}
                 className={`border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${!strat.active ? 'opacity-60 bg-gray-200' : 'bg-white'}`}
@@ -95,7 +117,6 @@ export function Strategies() {
                 </div>
                 <div className="p-3">
                   <p className="font-serif text-sm text-gray-700 mb-2">{strat.description}</p>
-                  <div className="font-mono text-xs text-gray-400 mb-3 uppercase">{strat.type}</div>
                   <div className="flex items-center justify-end">
                     <div className="flex gap-6 font-mono text-sm">
                       {strat.win_rate !== null && (
@@ -119,6 +140,7 @@ export function Strategies() {
                     </div>
                   </div>
                 </div>
+              </div>
             ))}
           </div>
         )}
