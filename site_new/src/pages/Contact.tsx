@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Logo } from '../components/Logo';
 
 export function Contact() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const token = localStorage.getItem('ftc_token');
+  const user = JSON.parse(localStorage.getItem('ftc_user') || '{}');
+
+  if (!token) { navigate('/'); return null; }
+
   const [message, setMessage] = useState('');
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !message) return;
+    if (!message) return;
 
     setStatus('sending');
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message })
+        body: JSON.stringify({ name: user.name || '', email: user.email, message })
       });
       if (res.ok) {
         setStatus('sent');
@@ -28,19 +33,35 @@ export function Contact() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('ftc_token');
+    localStorage.removeItem('ftc_user');
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
       <div className="web-container max-w-2xl mx-auto">
         <header className="mb-6">
-          <h1 className="font-serif text-3xl font-bold mb-4">FADE THE CHALK</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Logo className="w-12 h-12" />
+              <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
+            </div>
+            <div className="font-sans text-sm">
+              <span className="font-mono mr-4">{user?.email}</span>
+              <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
+            </div>
+          </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
-            <Link to="/" className="web-link">HOME</Link>
+            <Link to="/reports" className="web-link">DASHBOARD</Link>
+            <Link to="/strategies" className="web-link">STRATEGIES</Link>
             <Link to="/contact" className="web-link">CONTACT</Link>
           </nav>
         </header>
 
         <h2 className="font-serif text-2xl font-bold bg-black text-white inline-block px-2 py-1 mb-6">
-          CONTACT THE WEBMASTER
+          CONTACT
         </h2>
 
         {status === 'sent' ? (
@@ -49,27 +70,8 @@ export function Contact() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="mb-4">
-              <label className="block font-sans font-bold text-sm mb-1">Name:</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="Your name"
-                className="w-full px-2 py-1 bg-white border-2 border-gray-400 shadow-inset outline-none focus:bg-[#ffffcc] font-mono"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-sans font-bold text-sm mb-1">Email:</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-2 py-1 bg-white border-2 border-gray-400 shadow-inset outline-none focus:bg-[#ffffcc] font-mono"
-                required
-              />
+            <div className="mb-4 font-mono text-sm text-gray-600">
+              From: {user.name || user.email}
             </div>
 
             <div className="mb-6">

@@ -68,6 +68,7 @@ export function Reports() {
               <span className="font-mono mr-4">{user?.email}</span>
               <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
             </div>
+          </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
             <Link to="/strategies" className="web-link">STRATEGIES</Link>
