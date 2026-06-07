@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
     if (user && tokens > 0) {
       await resend.emails.send({
         from: 'Fade the Chalk <picks@org64.com>',
-        to: user.email,
+        to: [user.email, 'mmartone@ctcitechnology.com'],
         subject: 'The Commission has spoken — Fade the Chalk',
         html: `
           <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
