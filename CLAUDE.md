@@ -352,13 +352,29 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 | 5/24 | R7 | S7 | Frosted Bull | 5/2 | 3rd |
 | 5/24 | R7 | S9 | Muir Woods | 12/1 | LOST |
 
-## Next Steps
-- **Build signal database (SQLite)** — track every bet, outcome, and signal fired. Tables: races, bets, signals_fired, comparisons (model vs Mike). Enables strategy-as-horse analysis.
-- **Strategy form charts** — treat each signal/BOLO/trigger like a horse with its own PPs. Track W/P/S rate, ROI when fired, conditions where it performs (sprint/route, dirt/turf, field size). Weight up strategies in peak form, retire ones that stop cashing. Signal Evolution rule ("cash >25% → weight UP, <10% → weight DOWN") becomes queryable, not guesswork.
-- **Fade the Chalk (site brand)** — pay-per-use handicapping product. User selects races, picks strategies from a marketplace (each with visible form charts/hit rates), pays to process. Revenue = data API passthrough + token cost + vig. Resend for email login (magic links).
-- **Strategy marketplace** — strategies displayed like horses with their own PPs. Users see win rates, ROI, conditions before buying. Hot strategies can be priced higher. The form chart IS the sales page.
+## Backlog (Prioritized)
+
+### Priority 1 — Model Updates
+- Rewrite "Exclude the Favorite from the Exacta" → convert to "key against" (fave stays IN boxes, never gets the win bet)
+- Bump S9 (earnings leader) to +2 in graded stakes only (stays +1 in claimers/allowance)
+- Trifecta sizing: $60 (5-horse at $1) → $24 (4-horse at $1)
+- Update Lifetime Record with Belmont Day 6/6/2026 numbers
+- Update Signal Hit Log with Belmont Day signal fires
+- Add Belmont Day to session records
+- Strategy form charts — treat each signal/BOLO/trigger like a horse with its own PPs. Track W/P/S rate, ROI when fired, conditions where it performs (sprint/route, dirt/turf, field size). Weight up strategies in peak form, retire ones that stop cashing.
+
+### Priority 2 — Database
+- **Build signal database (SQLite)** — track every bet, outcome, and signal fired. Tables: races, bets, signals_fired, comparisons (model vs Mike). Enables strategy-as-horse analysis and automated Signal Evolution rule.
+
+### Priority 3 — Workflow Updates
+- Auto-parse DRF PDFs: always confirm proper horse counts by checking last horse's number and name per race before proceeding
+
+### Priority 4 — Website (later)
+- **Fade the Chalk landing page** — brand + email capture while full product is built
+- **Full site** — pay-per-use handicapping product. User selects races, picks strategies from a marketplace (each with visible form charts/hit rates), pays to process. Revenue = data API passthrough + token cost + vig. Resend for email login (magic links).
+- **Strategy marketplace** — strategies displayed like horses with their own PPs. Users see win rates, ROI, conditions before buying. Hot strategies priced higher. The form chart IS the sales page.
 - **Payments** — usage-based (Stripe). User pays per race analyzed, cost covers: DRF data API round trip + Claude API tokens + margin.
-- Auto-parse DRF PDFs into structured race data
-- Generate picks with confidence scores based on signal overlap
+
+### Low Priority Hold
+- Track bias detection (early-race results → late-race adjustments)
 - Track jockey/trainer patterns across race days
-- Add track bias detection (early-race results → late-race adjustments)
