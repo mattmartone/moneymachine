@@ -57,11 +57,11 @@ export default async function handler(req: any, res: any) {
             <h1 style="font-family: serif; margin-bottom: 4px;">FADE THE CHALK</h1>
             <hr style="border: 1px solid black;"/>
             <p style="font-size: 16px;">${user.name ? user.name.split(' ')[0] : 'Friend'},</p>
-            <p style="font-size: 16px;">Matt, the omnipotent admin and Capo di Tutti Capi, Leader of the Fade The Chalk Commission has allotted you <strong>${tokens.toLocaleString()} tokens</strong>.</p>
-            <p style="font-size: 16px;">Your balance: <strong>${user.tokens.toLocaleString()} tokens</strong></p>
+            <p style="font-size: 16px;">The Commission has convened. Matt — the omnipotent admin, Capo di Tutti Capi, and undisputed Leader of the Fade The Chalk Commission — has seen fit to allot you <strong>${tokens.toLocaleString()} tokens</strong>.</p>
+            <p style="font-size: 16px;">Consider yourself a made man. Your balance: <strong>${user.tokens.toLocaleString()} tokens</strong></p>
             <hr style="border: 1px solid #ccc;"/>
-            <p style="font-size: 14px;">Head to <strong>MY LAB</strong> to upload a race book and put the model to work.</p>
-            <p style="font-size: 12px; color: #666; margin-top: 24px;">1,000,000 tokens ≈ 3 full card analyses with all strategies selected.</p>
+            <p style="font-size: 14px;">Now go earn. Head to <strong>MY LAB</strong>, upload a race book, and let the model do the heavy lifting. Don't waste what's been given to you.</p>
+            <p style="font-size: 12px; color: #666; margin-top: 24px;">1,000,000 tokens ≈ 3 full card analyses. Use 'em wisely — or don't. Either way, the house always knows.</p>
           </div>
         `
       });

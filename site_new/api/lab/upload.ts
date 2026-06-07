@@ -97,13 +97,13 @@ export default async function handler(req: any, res: any) {
     await resend.emails.send({
       from: 'Fade the Chalk <picks@org64.com>',
       to: user.email,
-      subject: 'Your analysis is being processed — Fade the Chalk',
+      subject: 'The job is in — Fade the Chalk',
       html: `
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
           <h1 style="font-family: serif;">FADE THE CHALK</h1>
-          <p>We received your race book (<strong>${filename}</strong>).</p>
-          <p>Your analysis is being processed. We'll deliver your picks report to this email once it's ready.</p>
-          <p style="font-size: 12px; color: #666; margin-top: 16px;">${cost.toLocaleString()} tokens deducted. Remaining: ${(user.tokens - cost).toLocaleString()}</p>
+          <p>We got the book (<strong>${filename}</strong>). The crew's on it.</p>
+          <p>Your picks report gets delivered to this address when it's done. Sit tight — we don't rush the work, but we don't sleep on it either.</p>
+          <p style="font-size: 12px; color: #666; margin-top: 16px;">${cost.toLocaleString()} tokens off your tab. Remaining: ${(user.tokens - cost).toLocaleString()}</p>
         </div>
       `
     });
