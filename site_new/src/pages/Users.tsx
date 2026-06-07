@@ -8,6 +8,7 @@ interface User {
   email: string;
   created_at: string;
   membership_status: string;
+  subscription_status: string;
   tokens: number;
   lifetime_tokens_used: number;
   reports_downloaded: number;
@@ -113,8 +114,10 @@ export function Users() {
                     <div>{u.lifetime_tokens_used?.toLocaleString()}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500">Status</div>
-                    <div className={`font-bold ${u.membership_status === 'active' ? 'text-web-green' : 'text-web-blue'}`}>{u.membership_status}</div>
+                    <div className="text-xs text-gray-500">Subscription</div>
+                    <div className={`font-bold ${u.subscription_status === 'active' ? 'text-web-green' : 'text-gray-500'}`}>
+                      {u.subscription_status === 'active' ? 'ACTIVE' : u.subscription_status === 'cancelled' ? 'CANCELLED' : 'FREE'}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Billed</div>

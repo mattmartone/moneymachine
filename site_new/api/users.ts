@@ -31,7 +31,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows } = await query(
-      `SELECT id, name, email, created_at, membership_status, tokens, lifetime_tokens_used, reports_downloaded, lifetime_billed
+      `SELECT id, name, email, created_at, membership_status, subscription_status, tokens, lifetime_tokens_used, reports_downloaded, lifetime_billed
        FROM users ORDER BY created_at DESC`
     );
 
