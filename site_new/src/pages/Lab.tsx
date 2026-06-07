@@ -85,6 +85,18 @@ export function Lab() {
   const selectAll = () => setSelectedStrategies(strategies.map(s => s.name));
   const selectNone = () => setSelectedStrategies([]);
 
+  const readFileAsBase64 = (f: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(f);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || selectedStrategies.length === 0) return;
@@ -94,10 +106,11 @@ export function Lab() {
     setErrorMsg('');
 
     try {
+      const fileData = await readFileAsBase64(file);
       const res = await fetch('/api/lab/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ filename: file.name, strategies: selectedStrategies })
+        body: JSON.stringify({ filename: file.name, strategies: selectedStrategies, fileData })
       });
 
       const data = await res.json();

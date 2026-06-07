@@ -1,12 +1,13 @@
 import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
+import { put } from '@vercel/blob';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const config = {
-  api: { bodyParser: false }
+  api: { bodyParser: { sizeLimit: '20mb' } }
 };
 
 export default async function handler(req: any, res: any) {
@@ -27,35 +28,41 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Get user info
     const { rows: userRows } = await query(`SELECT email, name, tokens FROM users WHERE id = $1`, [decoded.userId]);
     const user = userRows[0];
-
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // 15,000 tokens per strategy selected (~300K for full card with all strategies)
-    // $10/mo = 1,000,000 tokens = ~3 full card analyses
-    const cost = Array.isArray(strategies) ? strategies.length * 15000 : 300000;
+    const { filename, strategies, fileData } = req.body;
+    const selectedStrategies = Array.isArray(strategies) ? strategies : ['all'];
+
+    const cost = selectedStrategies.length * 15000;
     if (user.tokens < cost) {
       return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: user.tokens });
     }
 
-    const filename = req.body?.filename || 'race_book.pdf';
-    const strategies = req.body?.strategies || ['all'];
-    const track = 'Extracted from PDF';
+    // Store PDF in Vercel Blob
+    let blobUrl = 'no-file';
+    if (fileData) {
+      const buffer = Buffer.from(fileData, 'base64');
+      const blob = await put(`uploads/${decoded.userId}/${Date.now()}-${filename}`, buffer, {
+        access: 'public',
+        contentType: 'application/pdf'
+      });
+      blobUrl = blob.url;
+    }
 
     // Create upload record
     const { rows: uploadRows } = await query(
       `INSERT INTO uploads (user_id, filename, track, race_date, storage_path)
-       VALUES ($1, $2, $3, CURRENT_DATE, 'pending') RETURNING id`,
-      [decoded.userId, filename, track]
+       VALUES ($1, $2, $3, CURRENT_DATE, $4) RETURNING id`,
+      [decoded.userId, filename, 'Extracted from PDF', blobUrl]
     );
 
     // Create analysis record
     const { rows: analysisRows } = await query(
       `INSERT INTO analyses (user_id, upload_id, strategies_used, status, tokens_spent)
        VALUES ($1, $2, $3, 'pending', $4) RETURNING id`,
-      [decoded.userId, uploadRows[0].id, JSON.stringify(strategies), cost]
+      [decoded.userId, uploadRows[0].id, JSON.stringify(selectedStrategies), cost]
     );
 
     // Deduct tokens
@@ -64,7 +71,7 @@ export default async function handler(req: any, res: any) {
       [cost, decoded.userId]
     );
 
-    // Email admin about new order
+    // Email admin about new order (include blob link)
     const { rows: adminRows } = await query(`SELECT email FROM users WHERE role = 'admin'`);
     const adminEmails = adminRows.map((r: any) => r.email);
 
@@ -76,9 +83,9 @@ export default async function handler(req: any, res: any) {
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
           <h2 style="font-family: serif;">New Analysis Order</h2>
           <p><strong>From:</strong> ${user.name || 'No name'} (${user.email})</p>
-          <p><strong>File:</strong> ${filename}</p>
-          <p><strong>Strategies:</strong> ${Array.isArray(strategies) ? strategies.join(', ') : 'All'}</p>
-          <p><strong>Tokens charged:</strong> ${cost}</p>
+          <p><strong>File:</strong> <a href="${blobUrl}">${filename}</a></p>
+          <p><strong>Strategies:</strong> ${selectedStrategies.join(', ')}</p>
+          <p><strong>Tokens charged:</strong> ${cost.toLocaleString()}</p>
           <p><strong>Analysis ID:</strong> ${analysisRows[0].id}</p>
           <hr/>
           <p>Process the analysis and deliver the report to ${user.email}</p>
@@ -94,9 +101,9 @@ export default async function handler(req: any, res: any) {
       html: `
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
           <h1 style="font-family: serif;">FADE THE CHALK</h1>
-          <p>We received your race book for <strong>${track}</strong>.</p>
+          <p>We received your race book (<strong>${filename}</strong>).</p>
           <p>Your analysis is being processed. We'll deliver your picks report to this email once it's ready.</p>
-          <p style="font-size: 12px; color: #666; margin-top: 16px;">${cost} tokens deducted. Remaining: ${user.tokens - cost}</p>
+          <p style="font-size: 12px; color: #666; margin-top: 16px;">${cost.toLocaleString()} tokens deducted. Remaining: ${(user.tokens - cost).toLocaleString()}</p>
         </div>
       `
     });
