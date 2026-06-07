@@ -71,17 +71,19 @@ export function Strategies() {
           </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
-            <Link to="/strategies" className="web-link">MARKETPLACE</Link>
-            <Link to="/board" className="web-link">BOARD</Link>
-            <Link to="/submit" className="web-link">SUBMIT</Link>
-            <Link to="/leaderboard" className="web-link">LEADERBOARD</Link>
+            <Link to="/strategies" className="web-link">STRATEGIES MARKETPLACE</Link>
+            <Link to="/board" className="web-link">BULLETIN BOARD</Link>
             <Link to="/contact" className="web-link">CONTACT</Link>
           </nav>
         </header>
 
-        <h3 className="font-serif text-xl font-bold mb-4 border-b-2 border-black pb-1">
-          STRATEGIES
-        </h3>
+        <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-1">
+          <h3 className="font-serif text-xl font-bold">STRATEGIES MARKETPLACE</h3>
+          <div className="flex gap-4 font-sans text-sm font-bold">
+            <Link to="/submit" className="web-link">SUBMIT YOURS</Link>
+            <Link to="/leaderboard" className="web-link">LEADERBOARD</Link>
+          </div>
+        </div>
 
         {/* Tabs */}
         <div className="flex gap-1 mb-4">

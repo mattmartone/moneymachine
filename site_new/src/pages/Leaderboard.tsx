@@ -53,10 +53,8 @@ export function Leaderboard() {
           </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
-            <Link to="/strategies" className="web-link">MARKETPLACE</Link>
-            <Link to="/board" className="web-link">BOARD</Link>
-            <Link to="/submit" className="web-link">SUBMIT</Link>
-            <Link to="/leaderboard" className="web-link">LEADERBOARD</Link>
+            <Link to="/strategies" className="web-link">STRATEGIES MARKETPLACE</Link>
+            <Link to="/board" className="web-link">BULLETIN BOARD</Link>
             <Link to="/contact" className="web-link">CONTACT</Link>
           </nav>
         </header>
@@ -69,7 +67,6 @@ export function Leaderboard() {
           <div className="font-mono animate-blink p-4">Loading...</div>
         ) : leaders.length === 0 ? (
           <div className="bg-white border-2 border-gray-400 p-8 text-center font-serif italic text-gray-500">
-            No handicappers on the board yet. <Link to="/submit" className="web-link">Submit a strategy</Link> to get started.
           </div>
         ) : (
           <div className="overflow-x-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white">
