@@ -14,6 +14,7 @@ import { Strategies } from './pages/Strategies';
 import { Contact } from './pages/Contact';
 import { Users } from './pages/Users';
 import { Board } from './pages/Board';
+import { Post } from './pages/Post';
 
 function Landing() {
   return (
@@ -48,6 +49,7 @@ export function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/strategies" element={<Strategies />} />
         <Route path="/board" element={<Board />} />
+        <Route path="/board/:id" element={<Post />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/users" element={<Users />} />
       </Routes>
