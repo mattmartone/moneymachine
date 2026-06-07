@@ -21,7 +21,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows } = await query(
-      `SELECT name, type, weight, description, active, win_rate, itm_rate, form, best_conditions, trend
+      `SELECT name, type, description, active, win_rate, itm_rate, form, best_conditions, trend
        FROM strategies ORDER BY active DESC, win_rate DESC NULLS LAST`
     );
 

@@ -94,7 +94,8 @@ export function Strategies() {
                   )}
                 </div>
                 <div className="p-3">
-                  <p className="font-serif text-sm text-gray-700 mb-3">{strat.description}</p>
+                  <p className="font-serif text-sm text-gray-700 mb-2">{strat.description}</p>
+                  <div className="font-mono text-xs text-gray-400 mb-3 uppercase">{strat.type}</div>
                   <div className="flex items-center justify-end">
                     <div className="flex gap-6 font-mono text-sm">
                       {strat.win_rate !== null && (
