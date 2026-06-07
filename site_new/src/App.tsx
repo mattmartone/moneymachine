@@ -12,6 +12,8 @@ import { Onboard } from './pages/Onboard';
 import { Reports } from './pages/Reports';
 import { Strategies } from './pages/Strategies';
 import { Contact } from './pages/Contact';
+import { Users } from './pages/Users';
+import { Board } from './pages/Board';
 
 function Landing() {
   return (
@@ -45,7 +47,9 @@ export function App() {
         <Route path="/onboard" element={<Onboard />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/strategies" element={<Strategies />} />
+        <Route path="/board" element={<Board />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/users" element={<Users />} />
       </Routes>
     </BrowserRouter>
   );

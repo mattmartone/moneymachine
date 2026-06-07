@@ -73,6 +73,7 @@ export function Reports() {
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
             <Link to="/strategies" className="web-link">STRATEGIES</Link>
+            <Link to="/board" className="web-link">BOARD</Link>
             <Link to="/contact" className="web-link">CONTACT</Link>
           </nav>
         </header>
