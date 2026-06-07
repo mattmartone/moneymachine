@@ -336,6 +336,7 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 |------|-------|-------|-----|---------|-----------|-----|-----|
 | 2026-05-24 | Churchill Downs | 6 (R5-R10) | 2-4 | $554 | $611.40 | +$57.40 | +10.4% |
 | 2026-06-06 | Saratoga (Belmont Day) | 12 (1 skipped) | 3-9 | $1,564 | $2,434 | +$870 | +56% |
+| 2026-06-07 | Saratoga | 6 (R6-R11) | 2-4 | $904 | $1,339.75 | +$435.75 | +48% |
 
 ## Signal Hit Log
 
@@ -358,6 +359,12 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 | 6/6 | R9 | Beat Vulnerable Fave | Reef Runner | 4/1 | WON ✅ |
 | 6/6 | R10 | S6 | #7 (best Beyer) | — | 2nd ✅ |
 | 6/6 | R13 | S9 | Golden Tempo | 5/1 | WON ✅ |
+| 6/7 | R11 | S3 (Odds Drift) | King Farro | 4/1 | WON ✅ |
+| 6/7 | R11 | Doubled Stake (Vuln+Long) | King Farro | 4/1 | WON ✅ |
+| 6/7 | R10 | Keep Fave in Exotics | Long Pour | 4/1 | 1st (EX/TRI hit) ✅ |
+| 6/7 | R11 | Keep Fave in Exotics | Irish Goodbye | 5/2 | 2nd (EX/TRI hit) ✅ |
+| 6/7 | R8 | Keep Fave in Exotics | Slay the Day | 3/5 | 1st (EX/TRI hit) ✅ |
+| 6/7 | R7 | Doubled Stake (Vuln+Long) | Bridle a Butterfly | — | LOST ❌ |
 
 ## Strategy Form Charts
 
