@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows } = await query(
-      `SELECT tokens, membership_status, lifetime_tokens_used, reports_downloaded, lifetime_earned
+      `SELECT tokens, membership_status, lifetime_tokens_used, reports_downloaded, lifetime_billed, role
        FROM users WHERE id = $1`,
       [decoded.userId]
     );

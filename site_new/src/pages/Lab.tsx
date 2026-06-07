@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Logo } from '../components/Logo';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppNav } from '../components/AppNav';
 
 interface Analysis {
   id: number;
@@ -117,34 +117,10 @@ export function Lab() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('ftc_token');
-    localStorage.removeItem('ftc_user');
-    navigate('/');
-  };
-
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
       <div className="web-container max-w-3xl mx-auto">
-        <header className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Logo className="w-14 h-14" />
-              <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
-            </div>
-            <div className="font-sans text-sm">
-              <span className="font-mono mr-4">{storedUser?.email}</span>
-              <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
-            </div>
-          </div>
-          <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
-            <Link to="/reports" className="web-link">DASHBOARD</Link>
-            <Link to="/strategies" className="web-link">STRATEGIES MARKETPLACE</Link>
-            <Link to="/lab" className="web-link">MY LAB</Link>
-            <Link to="/board" className="web-link">BULLETIN BOARD</Link>
-            <Link to="/contact" className="web-link">CONTACT</Link>
-          </nav>
-        </header>
+        <AppNav />
 
         <h3 className="font-serif text-xl font-bold mb-2 border-b-2 border-black pb-1">
           MY LAB

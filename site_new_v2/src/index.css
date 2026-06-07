@@ -1,0 +1,40 @@
+/* CRITICAL: THE FOLLOWING TAILWIND IMPORTS MUST NEVER BE DELETED OR REORDERED — DO NOT DELETE THIS COMMENT */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* END TAILWIND IMPORTS — ALL OTHER CSS MUST GO BELOW THIS LINE */
+
+body {
+  @apply bg-web-gray text-black antialiased;
+  /* Classic Web 1.0 tiled background effect (optional, keeping it solid gray for readability) */
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2rVq1X8GBgYGJgYAAgwADc4C+8X2+zMAAAAASUVORK5CYII=');
+}
+/* Custom utilities for Web 1.0 aesthetics */
+.web-container {
+  @apply max-w-4xl mx-auto bg-web-paper border-2 border-black p-4 md:p-8 my-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+}
+.web-link {
+  @apply text-web-blue underline hover:text-web-red;
+}
+.web-hr {
+  @apply border-t-2 border-web-darkgray border-b-2 border-b-white my-6;
+}
+.web-table {
+  @apply w-full border-collapse border-2 border-black bg-white;
+}
+.web-table th, .web-table td {
+  @apply border border-black p-2 text-left;
+}
+.web-table th {
+  @apply bg-web-gray font-bold;
+}
+/* Blink animation for that authentic 90s feel (used sparingly) */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}

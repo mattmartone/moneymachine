@@ -16,7 +16,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows } = await query(
-      `SELECT s.user_id, s.expires_at, u.email, u.name, u.onboarded
+      `SELECT s.user_id, s.expires_at, u.email, u.name, u.onboarded, u.role
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.token = $1 AND s.used = false`,
@@ -52,7 +52,8 @@ export default async function handler(req: any, res: any) {
         id: session.user_id,
         email: session.email,
         name: session.name,
-        onboarded: session.onboarded
+        onboarded: session.onboarded,
+        role: session.role || 'member'
       }
     });
   } catch (err: any) {

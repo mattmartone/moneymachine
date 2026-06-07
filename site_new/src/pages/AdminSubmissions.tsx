@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Logo } from '../components/Logo';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppNav } from '../components/AppNav';
 
 interface Submission {
   id: number;
@@ -22,7 +22,6 @@ export function AdminSubmissions() {
   const [notes, setNotes] = useState('');
   const [stratName, setStratName] = useState('');
 
-  const storedUser = JSON.parse(localStorage.getItem('ftc_user') || '{}');
   const token = localStorage.getItem('ftc_token');
 
   useEffect(() => {
@@ -59,33 +58,10 @@ export function AdminSubmissions() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('ftc_token');
-    localStorage.removeItem('ftc_user');
-    navigate('/');
-  };
-
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
       <div className="web-container max-w-5xl mx-auto">
-        <header className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Logo className="w-14 h-14" />
-              <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
-            </div>
-            <div className="font-sans text-sm">
-              <span className="font-mono mr-4">{storedUser?.email}</span>
-              <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
-            </div>
-          </div>
-          <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
-            <Link to="/reports" className="web-link">DASHBOARD</Link>
-            <Link to="/strategies" className="web-link">MARKETPLACE</Link>
-            <Link to="/users" className="web-link text-web-red">MEMBERS</Link>
-            <Link to="/admin/submissions" className="web-link text-web-red">REVIEW</Link>
-          </nav>
-        </header>
+        <AppNav />
 
         <h3 className="font-serif text-xl font-bold mb-4 border-b-2 border-black pb-1">
           SUBMISSION REVIEW QUEUE
