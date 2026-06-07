@@ -19,6 +19,7 @@ import { Submit } from './pages/Submit';
 import { AdminSubmissions } from './pages/AdminSubmissions';
 import { Leaderboard } from './pages/Leaderboard';
 import { Lab } from './pages/Lab';
+import { MemberDetail } from './pages/MemberDetail';
 
 function Landing() {
   return (
@@ -60,6 +61,7 @@ export function App() {
         <Route path="/admin/submissions" element={<AdminSubmissions />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/users/:id" element={<MemberDetail />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,4 +1,5 @@
 import { query } from '../db.js';
+import { logComm } from '../lib/logComm.js';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
 import { put } from '@vercel/blob';
@@ -94,10 +95,12 @@ export default async function handler(req: any, res: any) {
     });
 
     // Confirm to user
+    const confirmSubject = 'The job is in — Fade the Chalk';
+    const confirmBody = `We got the book (${filename}). The crew's on it. ${cost.toLocaleString()} tokens off your tab. Remaining: ${(user.tokens - cost).toLocaleString()}.`;
     await resend.emails.send({
       from: 'Fade the Chalk <picks@org64.com>',
-      to: [user.email, 'mmartone@ctcitechnology.com'],
-      subject: 'The job is in — Fade the Chalk',
+      to: user.email,
+      subject: confirmSubject,
       html: `
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
           <h1 style="font-family: serif;">FADE THE CHALK</h1>
@@ -107,6 +110,7 @@ export default async function handler(req: any, res: any) {
         </div>
       `
     });
+    await logComm(decoded.userId, 'order_confirmation', confirmSubject, confirmBody);
 
     return res.status(201).json({ success: true, analysis_id: analysisRows[0].id, tokens_spent: cost });
   } catch (err: any) {

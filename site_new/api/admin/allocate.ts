@@ -1,4 +1,5 @@
 import { query } from '../db.js';
+import { logComm } from '../lib/logComm.js';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
 
@@ -48,10 +49,12 @@ export default async function handler(req: any, res: any) {
 
     // Notify user of token allocation
     if (user && tokens > 0) {
+      const subject = 'The Commission has spoken — Fade the Chalk';
+      const body = `The Commission has convened. Matt — the omnipotent admin, Capo di Tutti Capi, and undisputed Leader of the Fade The Chalk Commission — has seen fit to allot you ${tokens.toLocaleString()} tokens. Consider yourself a made man. Your balance: ${user.tokens.toLocaleString()} tokens.`;
       await resend.emails.send({
         from: 'Fade the Chalk <picks@org64.com>',
-        to: [user.email, 'mmartone@ctcitechnology.com'],
-        subject: 'The Commission has spoken — Fade the Chalk',
+        to: user.email,
+        subject,
         html: `
           <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
             <h1 style="font-family: serif; margin-bottom: 4px;">FADE THE CHALK</h1>
@@ -65,6 +68,7 @@ export default async function handler(req: any, res: any) {
           </div>
         `
       });
+      await logComm(user_id, 'allocation', subject, body);
     }
 
     return res.status(200).json({ success: true, new_balance: user?.tokens });

@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { query } from '../db.js';
+import { logComm } from '../lib/logComm.js';
 import crypto from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -41,7 +42,7 @@ export default async function handler(req: any, res: any) {
 
     await resend.emails.send({
       from: 'Fade the Chalk <picks@org64.com>',
-      to: [email, 'mmartone@ctcitechnology.com'],
+      to: email,
       subject: 'Your login link — Fade the Chalk',
       html: `
         <div style="font-family: monospace; max-width: 500px; margin: 0 auto; border: 2px solid black; padding: 24px;">
@@ -54,6 +55,7 @@ export default async function handler(req: any, res: any) {
         </div>
       `
     });
+    await logComm(userId, 'login_link', 'Your login link — Fade the Chalk', 'Magic link sent');
 
     return res.status(200).json({ sent: true });
   } catch (err: any) {

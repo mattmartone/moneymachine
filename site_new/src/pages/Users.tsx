@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AppNav } from '../components/AppNav';
 
 interface User {
@@ -95,7 +95,7 @@ export function Users() {
               <div key={u.id} className="bg-white border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-serif font-bold text-lg">{u.name || '—'}</div>
+                    <Link to={`/users/${u.id}`} className="font-serif font-bold text-lg web-link">{u.name || '—'}</Link>
                     <div className="font-mono text-xs text-gray-600">{u.email}</div>
                   </div>
                   <div className="font-mono text-xs text-gray-500">
