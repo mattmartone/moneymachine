@@ -21,7 +21,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows } = await query(
-      `SELECT id, title, track, date, races_analyzed, roi_pct, summary, created_at
+      `SELECT id, title, track, date, races_analyzed, roi_pct, summary, content_url, created_at
        FROM reports ORDER BY date DESC`
     );
 
