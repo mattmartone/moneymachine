@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { query } from '../db';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
@@ -26,11 +26,15 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Name required' });
   }
 
-  await sql`
-    UPDATE users
-    SET name = ${name}, source = ${source || null}, onboarded = true
-    WHERE id = ${decoded.userId}
-  `;
+  try {
+    await query(
+      `UPDATE users SET name = $1, source = $2, onboarded = true WHERE id = $3`,
+      [name, source || null, decoded.userId]
+    );
 
-  return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true });
+  } catch (err: any) {
+    console.error('onboard error:', err);
+    return res.status(500).json({ error: err.message || 'Internal error' });
+  }
 }

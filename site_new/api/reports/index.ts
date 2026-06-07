@@ -1,4 +1,4 @@
-import { sql } from '@vercel/postgres';
+import { query } from '../db';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
@@ -19,11 +19,15 @@ export default async function handler(req: any, res: any) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { rows } = await sql`
-    SELECT id, title, track, date, races_analyzed, roi_pct, summary, created_at
-    FROM reports
-    ORDER BY date DESC
-  `;
+  try {
+    const { rows } = await query(
+      `SELECT id, title, track, date, races_analyzed, roi_pct, summary, created_at
+       FROM reports ORDER BY date DESC`
+    );
 
-  return res.status(200).json({ reports: rows });
+    return res.status(200).json({ reports: rows });
+  } catch (err: any) {
+    console.error('reports error:', err);
+    return res.status(500).json({ error: err.message || 'Internal error' });
+  }
 }
