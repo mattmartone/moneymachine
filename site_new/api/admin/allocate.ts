@@ -1,7 +1,9 @@
 import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
+import { Resend } from 'resend';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -37,7 +39,35 @@ export default async function handler(req: any, res: any) {
       `UPDATE users SET tokens = tokens + $1 WHERE id = $2`,
       [tokens, user_id]
     );
-    return res.status(200).json({ success: true });
+
+    // Get updated user info
+    const { rows: userRows } = await query(
+      `SELECT email, name, tokens FROM users WHERE id = $1`, [user_id]
+    );
+    const user = userRows[0];
+
+    // Notify user of token allocation
+    if (user && tokens > 0) {
+      await resend.emails.send({
+        from: 'Fade the Chalk <picks@org64.com>',
+        to: user.email,
+        subject: 'Your account has been activated — Fade the Chalk',
+        html: `
+          <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
+            <h1 style="font-family: serif; margin-bottom: 4px;">FADE THE CHALK</h1>
+            <hr style="border: 1px solid black;"/>
+            <p style="font-size: 16px;">Hey${user.name ? ` ${user.name.split(' ')[0]}` : ''},</p>
+            <p style="font-size: 16px;"><strong>${tokens.toLocaleString()} tokens</strong> have been added to your account.</p>
+            <p style="font-size: 16px;">Your balance: <strong>${user.tokens.toLocaleString()} tokens</strong></p>
+            <hr style="border: 1px solid #ccc;"/>
+            <p style="font-size: 14px;">Head to <strong>MY LAB</strong> to upload a race book and get your first analysis.</p>
+            <p style="font-size: 12px; color: #666; margin-top: 24px;">1,000,000 tokens ≈ 3 full card analyses with all strategies selected.</p>
+          </div>
+        `
+      });
+    }
+
+    return res.status(200).json({ success: true, new_balance: user?.tokens });
   } catch (err: any) {
     console.error('allocate error:', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
