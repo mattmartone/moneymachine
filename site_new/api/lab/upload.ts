@@ -33,18 +33,16 @@ export default async function handler(req: any, res: any) {
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // 1000 tokens per full card analysis (10 races × 10 horses)
-    // $10/mo = 10,000 tokens = ~10 full card analyses
-    const cost = 1000;
+    // 100 tokens per strategy selected
+    // $10/mo = 10,000 tokens
+    const cost = Array.isArray(strategies) ? strategies.length * 100 : 1000;
     if (user.tokens < cost) {
       return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: user.tokens });
     }
 
-    // For now we can't parse multipart in Vercel serverless easily,
-    // so we'll accept JSON with the track name and note the PDF will come via email
-    // In production this would use Vercel Blob or Supabase Storage
-    const track = req.body?.track || req.query?.track || 'Unknown Track';
     const filename = req.body?.filename || 'race_book.pdf';
+    const strategies = req.body?.strategies || ['all'];
+    const track = 'Extracted from PDF';
 
     // Create upload record
     const { rows: uploadRows } = await query(
@@ -56,8 +54,8 @@ export default async function handler(req: any, res: any) {
     // Create analysis record
     const { rows: analysisRows } = await query(
       `INSERT INTO analyses (user_id, upload_id, strategies_used, status, tokens_spent)
-       VALUES ($1, $2, 'all', 'pending', $3) RETURNING id`,
-      [decoded.userId, uploadRows[0].id, cost]
+       VALUES ($1, $2, $3, 'pending', $4) RETURNING id`,
+      [decoded.userId, uploadRows[0].id, JSON.stringify(strategies), cost]
     );
 
     // Deduct tokens
@@ -78,8 +76,8 @@ export default async function handler(req: any, res: any) {
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
           <h2 style="font-family: serif;">New Analysis Order</h2>
           <p><strong>From:</strong> ${user.name || 'No name'} (${user.email})</p>
-          <p><strong>Track:</strong> ${track}</p>
-          <p><strong>Strategies:</strong> All</p>
+          <p><strong>File:</strong> ${filename}</p>
+          <p><strong>Strategies:</strong> ${Array.isArray(strategies) ? strategies.join(', ') : 'All'}</p>
           <p><strong>Tokens charged:</strong> ${cost}</p>
           <p><strong>Analysis ID:</strong> ${analysisRows[0].id}</p>
           <hr/>
