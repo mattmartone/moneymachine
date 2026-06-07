@@ -61,7 +61,7 @@ export function Strategies() {
         <header className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Logo className="w-18 h-18" />
+              <Logo className="w-14 h-14" />
               <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
             </div>
             <div className="font-sans text-sm">

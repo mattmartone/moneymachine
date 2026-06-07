@@ -10,6 +10,7 @@ interface Report {
   races_analyzed: number;
   roi_pct: number;
   summary: string;
+  content_url: string | null;
 }
 
 export function Reports() {
@@ -61,7 +62,7 @@ export function Reports() {
         <header className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Logo className="w-18 h-18" />
+              <Logo className="w-14 h-14" />
               <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
             </div>
             <div className="font-sans text-sm">
@@ -114,14 +115,25 @@ export function Reports() {
                 <div className="space-y-3">
                   {dateReports.map(report => (
                     <div key={report.id} className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-4">
-                      <div className="shrink-0 flex flex-col items-center justify-center cursor-pointer hover:opacity-70">
-                        <svg width="48" height="60" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M0 0H33L48 15V60H0V0Z" fill="#f5f5f5" stroke="black" strokeWidth="2"/>
-                          <path d="M33 0L48 15H33V0Z" fill="#ddd" stroke="black" strokeWidth="1"/>
-                          <text x="24" y="38" textAnchor="middle" fontFamily="monospace" fontSize="7" fontWeight="bold" fill="#c00">PDF</text>
-                          <text x="24" y="52" textAnchor="middle" fontFamily="monospace" fontSize="5" fill="#666">REPORT</text>
-                        </svg>
-                      </div>
+                      {report.content_url ? (
+                        <a href={report.content_url} target="_blank" rel="noopener noreferrer" className="shrink-0 flex flex-col items-center justify-center cursor-pointer hover:opacity-70">
+                          <svg width="48" height="60" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 0H33L48 15V60H0V0Z" fill="#f5f5f5" stroke="black" strokeWidth="2"/>
+                            <path d="M33 0L48 15H33V0Z" fill="#ddd" stroke="black" strokeWidth="1"/>
+                            <text x="24" y="38" textAnchor="middle" fontFamily="monospace" fontSize="7" fontWeight="bold" fill="#c00">PDF</text>
+                            <text x="24" y="52" textAnchor="middle" fontFamily="monospace" fontSize="5" fill="#666">REPORT</text>
+                          </svg>
+                        </a>
+                      ) : (
+                        <div className="shrink-0 flex flex-col items-center justify-center opacity-40">
+                          <svg width="48" height="60" viewBox="0 0 48 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 0H33L48 15V60H0V0Z" fill="#f5f5f5" stroke="black" strokeWidth="2"/>
+                            <path d="M33 0L48 15H33V0Z" fill="#ddd" stroke="black" strokeWidth="1"/>
+                            <text x="24" y="38" textAnchor="middle" fontFamily="monospace" fontSize="7" fontWeight="bold" fill="#c00">PDF</text>
+                            <text x="24" y="52" textAnchor="middle" fontFamily="monospace" fontSize="5" fill="#666">REPORT</text>
+                          </svg>
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-serif text-lg font-bold">{report.title}</h4>
