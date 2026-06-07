@@ -16,6 +16,20 @@ export default async function handler(req: any, res: any) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
+  // Ensure table exists
+  await query(`
+    CREATE TABLE IF NOT EXISTS user_strategies (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      logic TEXT NOT NULL,
+      conditions TEXT,
+      visibility TEXT DEFAULT 'private',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   if (req.method === 'GET') {
     try {
       const { rows } = await query(

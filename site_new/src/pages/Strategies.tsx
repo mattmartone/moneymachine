@@ -26,9 +26,11 @@ export function Strategies() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('signal');
+  const [favorited, setFavorited] = useState<Set<string>>(new Set());
+
+  const token = localStorage.getItem('ftc_token');
 
   useEffect(() => {
-    const token = localStorage.getItem('ftc_token');
     if (!token) { navigate('/'); return; }
 
     fetch('/api/strategies', {
@@ -43,7 +45,31 @@ export function Strategies() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    fetch('/api/lab/favorites', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.favorites) setFavorited(new Set(data.favorites.map((f: any) => f.name)));
+      })
+      .catch(() => {});
   }, [navigate]);
+
+  const toggleFavorite = async (name: string) => {
+    const isFav = favorited.has(name);
+    const method = isFav ? 'DELETE' : 'POST';
+    await fetch('/api/lab/favorites', {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ strategy_name: name })
+    });
+    setFavorited(prev => {
+      const next = new Set(prev);
+      if (isFav) next.delete(name); else next.add(name);
+      return next;
+    });
+  };
 
   const filtered = strategies.filter(s => s.type === activeTab);
 
@@ -112,7 +138,15 @@ export function Strategies() {
                 </div>
                 <div className="p-3">
                   <p className="font-serif text-sm text-gray-700 mb-2">{strat.description}</p>
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-between">
+                    {strat.active && (
+                      <button
+                        onClick={() => toggleFavorite(strat.name)}
+                        className={`font-sans text-xs font-bold px-2 py-1 border-2 shadow-outset active:shadow-inset ${favorited.has(strat.name) ? 'border-[#000080] bg-[#e6e6ff] text-[#000080]' : 'border-black bg-web-gray text-black'}`}
+                      >
+                        {favorited.has(strat.name) ? 'IN MY LIBRARY' : 'SAVE TO LIBRARY'}
+                      </button>
+                    )}
                     <div className="flex gap-6 font-mono text-sm">
                       {strat.win_rate !== null && (
                         <div className="text-center">
