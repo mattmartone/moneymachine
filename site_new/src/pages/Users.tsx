@@ -150,6 +150,18 @@ export function Users() {
                       onClick={() => { setEditingId(u.id); setEditTokens(String(u.tokens)); }}
                       className="px-3 py-1 bg-web-gray font-sans font-bold text-xs border border-black shadow-outset active:shadow-inset"
                     >EDIT BALANCE</button>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Delete ${u.name || u.email}? This removes their entire account.`)) return;
+                        await fetch('/api/admin/delete-user', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                          body: JSON.stringify({ user_id: u.id })
+                        });
+                        loadUsers();
+                      }}
+                      className="px-3 py-1 bg-[#ffe6e6] font-sans font-bold text-xs text-web-red border border-web-red shadow-outset active:shadow-inset ml-auto"
+                    >DELETE</button>
                   </div>
                 )}
               </div>
