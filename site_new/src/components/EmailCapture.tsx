@@ -11,24 +11,35 @@ export function EmailCapture({
   const [status, setStatus] = useState<
     'idle' | 'loading' | 'success' | 'error'>(
     'idle');
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes('@')) {
       setStatus('error');
       return;
     }
     setStatus('loading');
-    setTimeout(() => {
-      setStatus('success');
-      setEmail('');
-    }, 800);
+    try {
+      const res = await fetch('/api/auth/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        setStatus('success');
+        setEmail('');
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
   if (status === 'success') {
     return (
       <div
         className={`p-4 bg-[#e6ffe6] border-2 border-[#008000] text-[#008000] font-sans font-bold text-center ${className}`}>
-        
-        SUCCESS! You're on the list. First picks drop soon.
+
+        CHECK YOUR EMAIL. Click the magic link to get in.
       </div>);
 
   }

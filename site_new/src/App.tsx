@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { HowItWorks } from './components/HowItWorks';
@@ -6,7 +7,12 @@ import { TheModel } from './components/TheModel';
 import { PerformanceProof } from './components/PerformanceProof';
 import { FreeSample } from './components/FreeSample';
 import { Footer } from './components/Footer';
-export function App() {
+import { Verify } from './pages/Verify';
+import { Onboard } from './pages/Onboard';
+import { Reports } from './pages/Reports';
+import { Strategies } from './pages/Strategies';
+
+function Landing() {
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
       <div className="web-container">
@@ -25,6 +31,20 @@ export function App() {
         <hr className="web-hr" />
         <Footer />
       </div>
-    </div>);
+    </div>
+  );
+}
 
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/onboard" element={<Onboard />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/strategies" element={<Strategies />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
