@@ -32,8 +32,8 @@ export function AppNav() {
           <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
         </div>
         <div className="font-sans text-sm flex items-center gap-4">
-          <Link to="/shop" className="font-mono font-bold border-2 border-black px-2 py-1 shadow-outset hover:bg-[#ffffcc]">
-            {balance !== null ? `${balance.toLocaleString()} tokens` : '—'}
+          <Link to="/shop" className={`font-mono font-bold border-2 border-black px-2 py-1 shadow-outset hover:bg-[#ffffcc] ${balance === 0 ? 'bg-[#ffffcc] animate-pulse' : ''}`}>
+            {balance === null ? '—' : balance === 0 ? 'GET TOKENS' : `${balance.toLocaleString()} tokens`}
           </Link>
           <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
         </div>
