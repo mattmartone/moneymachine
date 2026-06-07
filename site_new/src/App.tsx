@@ -11,6 +11,7 @@ import { Verify } from './pages/Verify';
 import { Onboard } from './pages/Onboard';
 import { Reports } from './pages/Reports';
 import { Strategies } from './pages/Strategies';
+import { Contact } from './pages/Contact';
 
 function Landing() {
   return (
@@ -44,6 +45,7 @@ export function App() {
         <Route path="/onboard" element={<Onboard />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/strategies" element={<Strategies />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </BrowserRouter>
   );
