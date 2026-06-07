@@ -1,10 +1,20 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo } from './Logo';
 
 export function AppNav() {
   const navigate = useNavigate();
   const storedUser = JSON.parse(localStorage.getItem('ftc_user') || '{}');
+  const token = localStorage.getItem('ftc_token');
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => { if (data?.tokens !== undefined) setBalance(data.tokens); })
+      .catch(() => {});
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem('ftc_token');
@@ -21,8 +31,11 @@ export function AppNav() {
           <Logo className="w-14 h-14" />
           <h1 className="font-serif text-3xl font-bold">FADE THE CHALK</h1>
         </div>
-        <div className="font-sans text-sm">
-          <span className="font-mono mr-4">{storedUser?.email}</span>
+        <div className="font-sans text-sm flex items-center gap-4">
+          <Link to="/shop" className="font-mono font-bold border-2 border-black px-2 py-1 shadow-outset hover:bg-[#ffffcc]">
+            {balance !== null ? `${balance.toLocaleString()} tokens` : '—'}
+          </Link>
+          <span className="font-mono">{storedUser?.email}</span>
           <button onClick={handleLogout} className="web-link font-bold">LOG OUT</button>
         </div>
       </div>
