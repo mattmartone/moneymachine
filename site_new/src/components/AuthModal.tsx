@@ -14,38 +14,38 @@ export function AuthModal({
     if (isOpen) {
       setMode(initialMode);
       setError('');
+      setSent(false);
     }
   }, [isOpen, initialMode]);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   if (!isOpen) return null;
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address.');
       return;
     }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (res.ok) {
+        setSent(true);
+      } else {
+        setError('Something went wrong. Try again.');
+      }
+    } catch {
+      setError('Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
     }
-    if (mode === 'signup' && password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    // Simulate success
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      onClose();
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-    }, 2000);
   };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -57,125 +57,92 @@ export function AuthModal({
             onClick={onClose}
             className="bg-web-gray text-black border border-white border-r-black border-b-black px-1.5 leading-none hover:bg-gray-300 active:border-black active:border-r-white active:border-b-white"
             aria-label="Close">
-            
             X
           </button>
         </div>
 
         {/* Body */}
         <div className="p-4">
-          {success ?
-          <div className="p-4 bg-[#e6ffe6] border-2 border-[#008000] text-[#008000] font-bold text-center mb-4">
-              SUCCESS!{' '}
-              {mode === 'login' ?
-            'Logging in...' :
-            'Account created — 12 FREE picks unlocked!'}
-            </div> :
-
-          <>
+          {sent ? (
+            <div className="text-center">
+              <div className="p-4 bg-[#e6ffe6] border-2 border-[#008000] text-[#008000] font-bold mb-4">
+                LINK SENT!
+              </div>
+              <p className="font-serif text-lg mb-4">
+                Check your email for a magic link from <strong>picks@org64.com</strong>.
+              </p>
+              <p className="font-serif mb-4">
+                Click it to complete your signup and unlock your <span className="text-web-red font-bold">free race day analysis</span>.
+              </p>
+              <p className="font-mono text-xs text-gray-600">
+                Sent to: {email}
+              </p>
+            </div>
+          ) : (
+            <>
               {/* Tabs */}
               <div className="flex gap-2 mb-4 border-b-2 border-gray-400 pb-2">
                 <button
-                onClick={() => {
-                  setMode('login');
-                  setError('');
-                }}
-                className={`px-4 py-1 font-bold ${mode === 'login' ? 'bg-web-gray shadow-inset pt-1.5 pl-4.5' : 'bg-web-gray shadow-outset'}`}>
-                
+                  onClick={() => { setMode('login'); setError(''); }}
+                  className={`px-4 py-1 font-bold ${mode === 'login' ? 'bg-web-gray shadow-inset pt-1.5 pl-4.5' : 'bg-web-gray shadow-outset'}`}>
                   Log In
                 </button>
                 <button
-                onClick={() => {
-                  setMode('signup');
-                  setError('');
-                }}
-                className={`px-4 py-1 font-bold ${mode === 'signup' ? 'bg-web-gray shadow-inset pt-1.5 pl-4.5' : 'bg-web-gray shadow-outset'}`}>
-                
+                  onClick={() => { setMode('signup'); setError(''); }}
+                  className={`px-4 py-1 font-bold ${mode === 'signup' ? 'bg-web-gray shadow-inset pt-1.5 pl-4.5' : 'bg-web-gray shadow-outset'}`}>
                   Sign Up
                 </button>
               </div>
 
-              {mode === 'signup' &&
-            <div className="mb-4 bg-[#ffffcc] border-2 border-black p-2 text-center shadow-outset">
+              {mode === 'signup' && (
+                <div className="mb-4 bg-[#ffffcc] border-2 border-black p-2 text-center shadow-outset">
                   <span className="font-bold text-web-red">
                     ★ NEW MEMBER BONUS ★
                   </span>
                   <p className="text-sm font-bold text-black">
-                    Create an account &amp; get your first{' '}
-                    <span className="text-web-red">12 picks FREE</span>.
+                    Sign up &amp; get your first{' '}
+                    <span className="text-web-red">race day analysis FREE</span>.
                   </p>
                 </div>
-            }
+              )}
+
+              <p className="font-serif text-sm text-gray-700 mb-4">
+                No password needed. We'll email you a magic link to sign in.
+              </p>
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {error &&
-              <div className="text-web-red font-bold text-sm bg-[#ffe6e6] border border-web-red p-2">
+                {error && (
+                  <div className="text-web-red font-bold text-sm bg-[#ffe6e6] border border-web-red p-2">
                     * {error}
                   </div>
-              }
+                )}
 
                 <div>
                   <label className="block text-sm font-bold mb-1">
                     Email Address:
                   </label>
                   <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]" />
-                
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]"
+                  />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-bold mb-1">
-                    Password:
-                  </label>
-                  <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]" />
-                
-                </div>
-
-                {mode === 'signup' &&
-              <div>
-                    <label className="block text-sm font-bold mb-1">
-                      Confirm Password:
-                    </label>
-                    <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]" />
-                
-                  </div>
-              }
-
-                <div className="flex items-center justify-between pt-4">
+                <div className="pt-4">
                   <button
-                  type="submit"
-                  className="px-6 py-1 bg-web-gray font-bold shadow-outset active:shadow-inset active:pt-1.5 active:pl-6.5">
-                  
-                    {mode === 'login' ? 'Log In' : 'Create Account'}
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-1 bg-web-gray font-bold shadow-outset active:shadow-inset active:pt-1.5 active:pl-6.5 disabled:opacity-70">
+                    {loading ? 'Sending...' : mode === 'login' ? 'Send Magic Link' : 'Sign Up — Send Link'}
                   </button>
-
-                  {mode === 'login' &&
-                <a
-                  href="#"
-                  className="web-link text-sm"
-                  onClick={(e) => e.preventDefault()}>
-                  
-                      Forgot password?
-                    </a>
-                }
                 </div>
               </form>
             </>
-          }
+          )}
         </div>
       </div>
     </div>);
-
 }
