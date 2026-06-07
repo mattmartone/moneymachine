@@ -17,7 +17,7 @@ interface Strategy {
   description: string;
 }
 
-const TOKEN_COST_PER_STRATEGY = 100; // 100 tokens per strategy selected
+const TOKEN_COST_PER_STRATEGY = 15000; // 15,000 tokens per strategy (300K for all 20 strategies)
 
 export function Lab() {
   const navigate = useNavigate();
@@ -152,7 +152,7 @@ export function Lab() {
 
         <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
           <p className="font-bold mb-2">How it works:</p>
-          <p className="text-gray-700">Upload your DRF race book, select which strategies to run against it, and we'll deliver your picks report to your email. Token cost depends on how many strategies you select.</p>
+          <p className="text-gray-700">Upload your DRF race book, select which strategies to run against it, and we'll deliver your picks report to your email. Your $10/month subscription gives you 1,000,000 tokens — a full card analysis with all strategies costs ~300,000.</p>
         </div>
 
         {status === 'success' ? (

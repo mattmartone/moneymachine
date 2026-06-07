@@ -33,9 +33,9 @@ export default async function handler(req: any, res: any) {
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // 100 tokens per strategy selected
-    // $10/mo = 10,000 tokens
-    const cost = Array.isArray(strategies) ? strategies.length * 100 : 1000;
+    // 15,000 tokens per strategy selected (~300K for full card with all strategies)
+    // $10/mo = 1,000,000 tokens = ~3 full card analyses
+    const cost = Array.isArray(strategies) ? strategies.length * 15000 : 300000;
     if (user.tokens < cost) {
       return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: user.tokens });
     }
