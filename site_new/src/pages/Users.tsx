@@ -18,13 +18,18 @@ export function Users() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTokens, setEditTokens] = useState('');
 
   const storedUser = JSON.parse(localStorage.getItem('ftc_user') || '{}');
   const token = localStorage.getItem('ftc_token');
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
+    loadUsers();
+  }, [navigate, token]);
 
+  const loadUsers = () => {
     fetch('/api/users', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -37,7 +42,42 @@ export function Users() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [navigate, token]);
+  };
+
+  const handleAllocate = async (userId: number) => {
+    const amount = parseInt(editTokens);
+    if (isNaN(amount)) return;
+
+    await fetch('/api/admin/allocate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ user_id: userId, tokens: amount })
+    });
+
+    setEditingId(null);
+    setEditTokens('');
+    loadUsers();
+  };
+
+  const handleSetTokens = async (userId: number) => {
+    const newBalance = parseInt(editTokens);
+    if (isNaN(newBalance)) return;
+
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const diff = newBalance - user.tokens;
+
+    await fetch('/api/admin/allocate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ user_id: userId, tokens: diff })
+    });
+
+    setEditingId(null);
+    setEditTokens('');
+    loadUsers();
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('ftc_token');
@@ -61,9 +101,9 @@ export function Users() {
           </div>
           <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
             <Link to="/reports" className="web-link">DASHBOARD</Link>
-            <Link to="/strategies" className="web-link">STRATEGIES</Link>
-            <Link to="/contact" className="web-link">CONTACT</Link>
+            <Link to="/strategies" className="web-link">STRATEGIES MARKETPLACE</Link>
             <Link to="/users" className="web-link text-web-red">MEMBERS</Link>
+            <Link to="/admin/submissions" className="web-link text-web-red">REVIEW</Link>
           </nav>
         </header>
 
@@ -74,39 +114,70 @@ export function Users() {
         {loading ? (
           <div className="font-mono animate-blink p-4">Loading...</div>
         ) : (
-          <div className="overflow-x-auto border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white">
-            <table className="web-table font-mono text-xs w-full min-w-[800px]">
-              <thead>
-                <tr>
-                  <th className="py-2 px-2">Name</th>
-                  <th className="py-2 px-2">Email</th>
-                  <th className="py-2 px-2">Joined</th>
-                  <th className="py-2 px-2">Status</th>
-                  <th className="py-2 px-2">Tokens</th>
-                  <th className="py-2 px-2">Used</th>
-                  <th className="py-2 px-2">Reports</th>
-                  <th className="py-2 px-2">Billed</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id} className="hover:bg-[#ffffcc]">
-                    <td className="px-2 py-1 font-bold">{u.name || '—'}</td>
-                    <td className="px-2 py-1">{u.email}</td>
-                    <td className="px-2 py-1">{u.created_at?.split('T')[0]}</td>
-                    <td className="px-2 py-1">
-                      <span className={`font-bold ${u.membership_status === 'active' ? 'text-web-green' : u.membership_status === 'free' ? 'text-web-blue' : 'text-gray-500'}`}>
-                        {u.membership_status}
-                      </span>
-                    </td>
-                    <td className="px-2 py-1 font-bold">{u.tokens?.toLocaleString()}</td>
-                    <td className="px-2 py-1">{u.lifetime_tokens_used?.toLocaleString()}</td>
-                    <td className="px-2 py-1">{u.reports_downloaded}</td>
-                    <td className="px-2 py-1">${u.lifetime_billed?.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {users.map(u => (
+              <div key={u.id} className="bg-white border-2 border-black p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="font-serif font-bold text-lg">{u.name || '—'}</div>
+                    <div className="font-mono text-xs text-gray-600">{u.email}</div>
+                  </div>
+                  <div className="font-mono text-xs text-gray-500">
+                    Joined {u.created_at?.split('T')[0]}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4 font-mono text-sm mt-3 mb-3">
+                  <div>
+                    <div className="text-xs text-gray-500">Tokens</div>
+                    <div className="font-bold">{u.tokens?.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Used</div>
+                    <div>{u.lifetime_tokens_used?.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Status</div>
+                    <div className={`font-bold ${u.membership_status === 'active' ? 'text-web-green' : 'text-web-blue'}`}>{u.membership_status}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Billed</div>
+                    <div>${u.lifetime_billed?.toFixed(2)}</div>
+                  </div>
+                </div>
+
+                {editingId === u.id ? (
+                  <div className="flex gap-2 items-center mt-2 border-t border-gray-300 pt-2">
+                    <input
+                      type="number"
+                      value={editTokens}
+                      onChange={e => setEditTokens(e.target.value)}
+                      placeholder="New token balance"
+                      className="px-2 py-1 border border-gray-400 shadow-inset font-mono text-sm w-40"
+                    />
+                    <button
+                      onClick={() => handleSetTokens(u.id)}
+                      className="px-3 py-1 bg-[#008000] text-white font-bold text-xs border border-black shadow-outset active:shadow-inset"
+                    >SET</button>
+                    <button
+                      onClick={() => { setEditingId(null); setEditTokens(''); }}
+                      className="px-3 py-1 bg-web-gray font-bold text-xs border border-black shadow-outset active:shadow-inset"
+                    >CANCEL</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 mt-2 border-t border-gray-300 pt-2">
+                    <button
+                      onClick={() => { setEditingId(u.id); setEditTokens('1000000'); }}
+                      className="px-3 py-1 bg-web-gray font-sans font-bold text-xs border border-black shadow-outset active:shadow-inset"
+                    >ALLOCATE 1M</button>
+                    <button
+                      onClick={() => { setEditingId(u.id); setEditTokens(String(u.tokens)); }}
+                      className="px-3 py-1 bg-web-gray font-sans font-bold text-xs border border-black shadow-outset active:shadow-inset"
+                    >EDIT BALANCE</button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
