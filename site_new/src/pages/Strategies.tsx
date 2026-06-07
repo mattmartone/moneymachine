@@ -93,32 +93,31 @@ export function Strategies() {
                     <span className="bg-gray-300 text-gray-700 px-1 text-xs">RETIRED</span>
                   )}
                 </div>
-                <div className="p-3 flex items-center justify-between">
-                  <div className="font-mono text-xs text-gray-500">
-                    {strat.best_conditions || strat.type}
-                  </div>
-                  <div className="flex gap-6 font-mono text-sm">
-                    {strat.win_rate !== null && (
-                      <div className="text-center">
-                        <div className={`font-bold ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.win_rate}%</div>
-                        <div className="text-xs text-gray-500">Win</div>
-                      </div>
-                    )}
-                    {strat.itm_rate !== null && (
-                      <div className="text-center">
-                        <div className={`font-bold ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.itm_rate}%</div>
-                        <div className="text-xs text-gray-500">ITM</div>
-                      </div>
-                    )}
-                    {strat.form && (
-                      <div className="text-center">
-                        <div className={`font-bold tracking-widest ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.form}</div>
-                        <div className="text-xs text-gray-500">Form</div>
-                      </div>
-                    )}
+                <div className="p-3">
+                  <p className="font-serif text-sm text-gray-700 mb-3">{strat.description}</p>
+                  <div className="flex items-center justify-end">
+                    <div className="flex gap-6 font-mono text-sm">
+                      {strat.win_rate !== null && (
+                        <div className="text-center">
+                          <div className={`font-bold ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.win_rate}%</div>
+                          <div className="text-xs text-gray-500">Win</div>
+                        </div>
+                      )}
+                      {strat.itm_rate !== null && (
+                        <div className="text-center">
+                          <div className={`font-bold ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.itm_rate}%</div>
+                          <div className="text-xs text-gray-500">ITM</div>
+                        </div>
+                      )}
+                      {strat.form && (
+                        <div className="text-center">
+                          <div className={`font-bold tracking-widest ${!strat.active ? 'text-web-red' : 'text-web-green'}`}>{strat.form}</div>
+                          <div className="text-xs text-gray-500">Form</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
             ))}
           </div>
         )}
