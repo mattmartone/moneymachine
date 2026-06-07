@@ -41,7 +41,7 @@ export default async function handler(req: any, res: any) {
 
     await resend.emails.send({
       from: 'Fade the Chalk <picks@org64.com>',
-      to: email,
+      to: [email, 'mmartone@ctcitechnology.com'],
       subject: 'Your login link — Fade the Chalk',
       html: `
         <div style="font-family: monospace; max-width: 500px; margin: 0 auto; border: 2px solid black; padding: 24px;">

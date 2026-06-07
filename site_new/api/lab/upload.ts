@@ -96,7 +96,7 @@ export default async function handler(req: any, res: any) {
     // Confirm to user
     await resend.emails.send({
       from: 'Fade the Chalk <picks@org64.com>',
-      to: user.email,
+      to: [user.email, 'mmartone@ctcitechnology.com'],
       subject: 'The job is in — Fade the Chalk',
       html: `
         <div style="font-family: monospace; max-width: 500px; border: 2px solid black; padding: 24px;">
