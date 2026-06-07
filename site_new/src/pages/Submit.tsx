@@ -91,13 +91,34 @@ export function Submit() {
           SUBMIT A STRATEGY
         </h3>
 
+        <div className="bg-white border-2 border-black p-4 mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-serif">
+          <h4 className="font-bold text-lg mb-3">You're a handicapper. You have an edge. Turn it into earnings.</h4>
+
+          <div className="space-y-3 text-sm mb-4">
+            <div>
+              <p className="font-bold">How it works:</p>
+              <p className="text-gray-700">You submit a strategy — an idea for how to identify winning horses based on data in the DRF race book. Our AI evaluates it for uniqueness and feasibility. If approved, it goes live on the Strategies Marketplace.</p>
+            </div>
+
+            <div>
+              <p className="font-bold">How you earn:</p>
+              <p className="text-gray-700">Every time a user selects your strategy for their race day analysis, you earn. More usage = more earnings. Like a horse banking purse money every time it runs — your strategy earns every time it's used.</p>
+            </div>
+
+            <div>
+              <p className="font-bold">The opportunity:</p>
+              <p className="text-gray-700">Top handicappers on our <a href="/leaderboard" className="web-link">leaderboard</a> grow their career earnings with every race day. You already have the knowledge — submit it, let it work for you.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
           <p className="font-bold mb-2">Approval criteria:</p>
           <ol className="list-decimal list-inside space-y-1">
             <li><strong>Unique</strong> — not a duplicate of an existing strategy on the marketplace.</li>
-            <li><strong>Executable</strong> — based on data available in the DRF race book (past performances, speed figures, jockey/trainer stats, running styles, odds, etc.).</li>
+            <li><strong>Executable</strong> — must be based on data available in the DRF race book (past performances, speed figures, jockey/trainer stats, running styles, odds, post positions, workout lines, etc.).</li>
           </ol>
-          <p className="mt-2 text-gray-700">The more detail you provide about how to execute with race book data, the faster we can review. We may follow up for clarification.</p>
+          <p className="mt-2 text-gray-700">The more detail you provide about how your strategy uses race book data, the faster we can review. We may follow up for clarification.</p>
         </div>
 
         {status === 'success' && (

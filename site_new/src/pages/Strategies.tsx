@@ -85,6 +85,21 @@ export function Strategies() {
           </div>
         </div>
 
+        <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset relative">
+          <div className="absolute -top-3 -left-1 bg-black text-white font-sans font-bold text-xs px-2 py-0.5">HOW THIS WORKS</div>
+          <div className="font-serif text-sm space-y-3 mt-2">
+            <p>
+              <strong>Fade the Chalk uses AI to process DRF race book data through strategies to analyze races and develop betting recommendations.</strong> Each strategy below scores horses differently — looking for different edges in the data.
+            </p>
+            <p>
+              <strong>As a player:</strong> select the strategies you want applied to your race day. The more strategies you select, the more dimensions of analysis you get. Check out, and receive your picks.
+            </p>
+            <p>
+              <strong>As a handicapper:</strong> the base strategies here come from the Fade the Chalk commission. But handicappers in this community can <Link to="/submit" className="web-link font-bold">submit their own</Link> for approval. Approved strategies go live on this marketplace — and you earn every time someone uses yours. Grow your career earnings like a horse grows purse money. See who's leading on the <Link to="/leaderboard" className="web-link font-bold">leaderboard</Link>.
+            </p>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 mb-4">
           {TABS.map(tab => (
