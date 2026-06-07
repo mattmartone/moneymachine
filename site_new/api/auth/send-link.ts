@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { query } from '../db';
+import { query } from '../db.js';
 import crypto from 'crypto';
 
 const resend = new Resend(process.env.RESEND_API_KEY);

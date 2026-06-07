@@ -1,4 +1,4 @@
-import { query } from '../db';
+import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
