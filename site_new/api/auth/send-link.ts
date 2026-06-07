@@ -10,17 +10,19 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email } = req.body;
+  const { email: rawEmail } = req.body;
 
-  if (!email || !email.includes('@')) {
+  if (!rawEmail || !rawEmail.includes('@')) {
     return res.status(400).json({ error: 'Valid email required' });
   }
+
+  const email = rawEmail.toLowerCase().trim();
 
   try {
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 15 * 60 * 1000);
 
-    // Upsert user
+    // Upsert user (email stored lowercase)
     await query(
       `INSERT INTO users (email, created_at) VALUES ($1, NOW()) ON CONFLICT (email) DO NOTHING`,
       [email]
