@@ -1,8 +1,12 @@
 import { Pool } from 'pg';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+const connectionString = (process.env.POSTGRES_URL || '').replace(/\?.*$/, '');
+
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL + '?sslmode=require',
-  ssl: { rejectUnauthorized: false }
+  connectionString,
+  ssl: true
 });
 
 export async function query(text: string, params?: any[]) {
