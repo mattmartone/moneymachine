@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
   try {
     const { rows } = await query(
       `SELECT id, title, track, date, races_analyzed, roi_pct, summary, content_url, created_at
-       FROM reports ORDER BY date DESC`
+       FROM reports ORDER BY date DESC, created_at DESC`
     );
 
     return res.status(200).json({ reports: rows });
