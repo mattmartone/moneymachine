@@ -97,6 +97,10 @@ export function Reports() {
                         <button
                           disabled={downloading === report.id}
                           onClick={async () => {
+                            const confirmed = window.confirm(
+                              `Download "${report.title}"?\n\nThis will cost 1,000 tokens from your balance.`
+                            );
+                            if (!confirmed) return;
                             setDownloading(report.id);
                             const token = localStorage.getItem('ftc_token');
                             try {
