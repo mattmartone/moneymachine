@@ -1,0 +1,334 @@
+{
+  "raceNumber": 4,
+  "timestamp": "May 31, 8:20 PM",
+  "prompt": {
+    "race": {
+      "number": 4,
+      "name": "Claiming $16,000",
+      "distance": "6 Furlongs",
+      "surface": "Dirt",
+      "postTime": "2:14 ET",
+      "purse": "$55,000",
+      "condition": "CLM $16K. 4YO+. 123 lbs.",
+      "horses": [
+        {
+          "number": 1,
+          "name": "Illini",
+          "ml": "20/1",
+          "jockey": "Cedillo Abel",
+          "trainer": "Vanden Berg Brittany A",
+          "notes": "Life 19-5-3-1, $79K. Heart to Heart. Beyer 80."
+        },
+        {
+          "number": 2,
+          "name": "Lord Majesty",
+          "ml": "5/2",
+          "jockey": "Mendoza Amir",
+          "trainer": "David Carlos A",
+          "notes": "Life 15-4-3-2, $92K. Lord Nelson. FAV. Trainer Uplift. Beyer 75."
+        },
+        {
+          "number": 3,
+          "name": "Forty Love",
+          "ml": "6/1",
+          "jockey": "Saez Luis",
+          "trainer": "Hernandez Jr Sandino R",
+          "notes": "SCRATCHED."
+        },
+        {
+          "number": 4,
+          "name": "Upturned Brim",
+          "ml": "9/2",
+          "jockey": "Concepcion Axel",
+          "trainer": "Cano Williams",
+          "notes": "Life 23-3-8-5, $98K. Competitive Edge. Highest Speed Rating. Beyer 80."
+        },
+        {
+          "number": 5,
+          "name": "Sawyer Fox",
+          "ml": "10/1",
+          "jockey": "Elliott Jane",
+          "trainer": "Catalano Wayne M",
+          "notes": "Life 12-4-2-0, $109K."
+        },
+        {
+          "number": 6,
+          "name": "Raising Kane",
+          "ml": "12/1",
+          "jockey": "Asmussen Keith J",
+          "trainer": "Asmussen Steven M",
+          "notes": "Life 19-3-1-2, $89K. Girvin. Asmussen 16%. Trainer Uplift."
+        },
+        {
+          "number": 7,
+          "name": "Bebedouro",
+          "ml": "3/1",
+          "jockey": "Gaffalione Tyler",
+          "trainer": "Sharp Joe",
+          "notes": "Life 22-3-1-3, $137K. Fell Swoop. Sharp 16%. Trainer Uplift. Beyer 79."
+        },
+        {
+          "number": 8,
+          "name": "Top Gun Tommy",
+          "ml": "4/1",
+          "jockey": "Torres Cristian A",
+          "trainer": "Shorter Aaron",
+          "notes": "Life 47-13-14-7, $495K. Mineshaft. Beyer 94. Massive earnings."
+        }
+      ],
+      "scratches": [
+        3
+      ]
+    },
+    "signals": [
+      {
+        "id": "B1",
+        "name": "Elite jockey on bomb",
+        "weight": 3,
+        "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something.",
+        "active": true,
+        "detection": "Identify the top-5 jockeys at the current meet by win count from their stats (format: \"JOCKEY NAME (starts wins 2nds 3rds pct)\"). Top riders include Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL. If any top-5 jockey is riding a horse whose ML or live odds is 12/1 or higher, this signal FIRES (+3).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name and ML odds are always in the DRF data."
+      },
+      {
+        "id": "B2",
+        "name": "Late tote action",
+        "weight": 3,
+        "description": "Horse drops 3+ points from ML by post time. Sharp money = information.",
+        "active": true,
+        "detection": "Compare the LIVE ODDS field (if entered) to the ML odds. If live odds are 3+ points shorter than ML (e.g., ML 8/1 → Live 5/1), this signal FIRES (+3). If no live odds entered, this signal CANNOT be evaluated.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually before execution. Not available from DRF PDF alone."
+      },
+      {
+        "id": "B3",
+        "name": "Odds drift on quality",
+        "weight": 2,
+        "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift.",
+        "active": true,
+        "detection": "Check if horse was ML favorite or co-favorite (lowest/tied-lowest ML in field). Then check LIVE ODDS — if live odds have drifted to 4/1 or higher, this signal FIRES (+2). Requires live odds to evaluate drift.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually. ML is in DRF but drift requires live comparison."
+      },
+      {
+        "id": "B4",
+        "name": "Hot barn at a price",
+        "weight": 2,
+        "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception.",
+        "active": true,
+        "detection": "In the trainer stats (format: \"Trainer Name (starts wins 2nds 3rds pct)\"), read the pct value (last number, e.g. .17 = 17%). If pct >= .15 AND the horse ML or live odds is 6/1 or higher, this signal FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Trainer win% and ML are both in DRF data."
+      },
+      {
+        "id": "B5",
+        "name": "Distance stretch to sire sweet spot",
+        "weight": 2,
+        "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking.",
+        "active": true,
+        "detection": "Check the sire name and the race distance. Research the sire's progeny stats — if this sire's winners peak at today's distance AND the horse has never run this distance before (check past race distances in running lines), this signal FIRES (+2). Common examples: Candy Ride progeny excel at 9f+, Into Mischief at 7f-8.5f.",
+        "dataStatus": "yellow",
+        "dataNote": "Sire is in DRF data. Sire distance stats require general knowledge. Horse distance history is in running lines but may be truncated."
+      },
+      {
+        "id": "B6",
+        "name": "Best Beyer in field",
+        "weight": 1,
+        "description": "Highest speed figure among live starters. Proven fastest horse in here.",
+        "active": true,
+        "detection": "Find the Beyer Speed Figure for each horse (listed as \"Beyer XX\" in notes or extracted from past performance lines). The horse with the single highest Beyer figure among live starters gets this signal FIRED (+1).",
+        "dataStatus": "green",
+        "dataNote": "Beyer figures are in the DRF data for each horse."
+      },
+      {
+        "id": "B7",
+        "name": "Blinkers change",
+        "weight": 1,
+        "description": "Trainer making an equipment move = intent. Something different today.",
+        "active": true,
+        "detection": "Look for \"FIRST TIME BLINKERS\", \"Blinkers ON\", or \"Blinkers OFF\" notation in the horse data. Any blinker equipment change (adding or removing) triggers this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "Blinker changes are noted in DRF program data."
+      },
+      {
+        "id": "B8",
+        "name": "Track bias alignment",
+        "weight": 1,
+        "description": "Horse's running style (speed/stalker/closer) matches today's track pattern.",
+        "active": true,
+        "detection": "Determine each horse's running style from their past race descriptions (pressed/led = speed, stalked/tracked = stalker, rallied/closed = closer). Then check if today's early race results favor a particular style. If the horse's style matches the emerging bias, FIRE (+1). If no races run yet today, cannot evaluate.",
+        "dataStatus": "red",
+        "dataNote": "Requires observation of today's early race results. Not available from DRF PDF or before races begin. Toggle off for early races."
+      },
+      {
+        "id": "B9",
+        "name": "Earnings leader in class",
+        "weight": 1,
+        "description": "Most $ earned among starters at this class level. Proven they belong.",
+        "active": true,
+        "detection": "Parse lifetime earnings from each horse (format: \"$XX,XXX\" or \"$XXK\" in life stats). The horse with the highest lifetime earnings among live starters gets this signal FIRED (+1). Note: In claimers, high earnings can mean inconsistency — use with context.",
+        "dataStatus": "green",
+        "dataNote": "Lifetime earnings are in DRF life record for every horse."
+      },
+      {
+        "id": "B10",
+        "name": "First-timer + expensive pedigree",
+        "weight": 1,
+        "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run.",
+        "active": true,
+        "detection": "Check if horse has 0 lifetime starts (Life: 0-0-0-0 or \"FTS\"). If yes, check sire stud fee (listed after sire name, e.g. \"$250,000\") or auction purchase price (e.g. \"KEESEP23 $150,000\"). If stud fee >= $100K OR purchase price >= $100K, this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "FTS status, sire fee, and purchase price are all in DRF data."
+      },
+      {
+        "id": "B11",
+        "name": "Good jockey / good trainer on bad horse",
+        "weight": 2,
+        "description": "Top connections on a horse the public has dismissed. They see something the market doesn't.",
+        "active": true,
+        "detection": "Identify top-tier jockeys (Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL) and top-tier trainers (Cox, Baffert, Asmussen, Walsh, Walden, McPeek, Pletcher, Maker, McCarthy, Sharp, Jacobson). If BOTH jockey AND trainer are top-tier but the horse is 8/1 or higher, the public is dismissing a horse that elite connections chose to run. FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name, trainer name, and ML odds are all in DRF data."
+      }
+    ],
+    "rules": [
+      {
+        "id": "R1",
+        "name": "Win never the favorite",
+        "description": "Win bet is never the chalk. We find value — the fav goes in exotics only.",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Win must be 7/2+",
+        "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot.",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Trifecta minimum 4 horses",
+        "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes.",
+        "active": true
+      },
+      {
+        "id": "R4",
+        "name": "Fav always in exotics",
+        "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude.",
+        "active": true
+      },
+      {
+        "id": "R5",
+        "name": "Scratches require full rebuild",
+        "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch.",
+        "active": true
+      },
+      {
+        "id": "R6",
+        "name": "Tri must include exacta horses",
+        "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)",
+        "active": true
+      }
+    ],
+    "liveOdds": {}
+  },
+  "result": {
+    "win": {
+      "horse": 5,
+      "name": "Sawyer Fox",
+      "odds": "10/1",
+      "reason": "Best form in the field with 33% lifetime win rate and $109K earnings. Consistent at this claiming level with proven ability to close the deal. Value play at 10/1 against a weak favorite showing only a 75 Beyer."
+    },
+    "exacta": {
+      "horses": [
+        2,
+        5,
+        8
+      ]
+    },
+    "trifecta": {
+      "horses": [
+        2,
+        5,
+        7,
+        8
+      ]
+    },
+    "notes": "If #5 moves below 7/2, pivot win bet to #6 Raising Kane (12/1, Asmussen barn). If #2 scratches, rebuild entire race - favorite removal changes pace dynamics.",
+    "analysis": "Wide-open $16K claimer at 6F where class and consistency matter most. #2 Lord Majesty is a vulnerable favorite with the lowest Beyer (75) among contenders. #8 Top Gun Tommy brings a monster 94 Beyer and $495K in lifetime earnings - the proven commodity stepping down. #5 Sawyer Fox shows best win percentage (33%) and represents value at 10/1 against a soft favorite. #7 Bebedouro adds Gaffalione (elite meet rider) on a Sharp barn firing at 16% - can't leave that combo out of the tri in a claimer where any horse can hit the board. Pace likely competitive with multiple speed types in a sprint, favoring horses who can settle and finish. The win bet targets form and value; the exotics cover the favorite, the speed standout, and elite connections.",
+    "signalBreakdown": [
+      {
+        "id": "B1",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Elite jockey on bomb (>12/1) - Gaffalione is on #7 at 3/1, not a bomb. No top-5 meet jockey riding a longshot in this field."
+      },
+      {
+        "id": "B2",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Late tote action - No live odds data provided. Cannot evaluate without post-time odds comparison to morning line. Requires manual input before race."
+      },
+      {
+        "id": "B3",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Odds drift on quality - No live odds data provided. Cannot detect drift from ML without current tote board. Requires manual input."
+      },
+      {
+        "id": "B4",
+        "fired": true,
+        "horses": [
+          6
+        ],
+        "reasoning": "Hot barn at price - #6 Raising Kane: Asmussen barn shows 16% win rate at meet and horse is 12/1 ML. Signal fires - Hall of Fame trainer at double-digit odds is value."
+      },
+      {
+        "id": "B5",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Distance stretch to sire sweet spot - Insufficient distance history and sire progeny data in provided DRF excerpt. Would need full past performance running lines and sire reports."
+      },
+      {
+        "id": "B6",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "Best Beyer in field - #8 Top Gun Tommy shows 94 Beyer, significantly higher than any other horse (next best: #1 and #4 at 80). Clear speed figure advantage."
+      },
+      {
+        "id": "B7",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Blinkers change - No equipment changes (blinkers on/off, first-time blinkers) noted in the provided data for any horse."
+      },
+      {
+        "id": "B8",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Track bias alignment - No early race results available to establish today's track bias (speed favoring vs. closer favoring). Cannot evaluate without observing R1-R3 outcomes."
+      },
+      {
+        "id": "B9",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "Earnings leader in class - #8 Top Gun Tommy has $495K lifetime earnings, massively higher than any other starter (next: #7 at $137K). Proven money-earner."
+      },
+      {
+        "id": "B10",
+        "fired": false,
+        "horses": [],
+        "reasoning": "First-timer + expensive pedigree - All horses have race experience (Life stats show starts for all). No first-time starters in this field."
+      },
+      {
+        "id": "B11",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Elite jockey + elite trainer on bad horse (8/1+) - #6 has elite trainer Asmussen at 12/1, but jockey Asmussen Keith J (likely family but not top-5 meet rider). No clear elite-jockey + elite-trainer combo on a longshot."
+      }
+    ]
+  }
+}

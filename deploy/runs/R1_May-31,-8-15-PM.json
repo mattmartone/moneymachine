@@ -1,0 +1,313 @@
+{
+  "raceNumber": 1,
+  "timestamp": "May 31, 8:15 PM",
+  "prompt": {
+    "race": {
+      "number": 1,
+      "name": "Claiming $20,000",
+      "distance": "6 Furlongs",
+      "surface": "Dirt",
+      "postTime": "12:45 ET",
+      "purse": "$50,000",
+      "condition": "CLM $20K. 3YO+ Fillies/Mares. 120 lbs; Older 125.",
+      "horses": [
+        {
+          "number": 1,
+          "name": "Moroder",
+          "ml": "4/1",
+          "jockey": "Ortiz Jr Irad",
+          "trainer": "Hamm Timothy E",
+          "notes": "B.g(12,12,24) 4 (May) KEESEP23 $15,000. Sire: Runhappy (Super Saver) $7,500. Dam: Do the Dance. Life 8-2-1-1 $44,760. 2026: 4-2-0-1 $37,860. D.Fst 8-2-1-1. Beyer par 74. ORTIZ JR (141 38 26 19.27). Trainer Hamm Timothy (6 1 1 0 .17). Last 3 races: 14May26-6Tp fst 6f won by 4x; 23Apr26-6Tp fst 5½f won $4.47; 7Feb26-2Tam fst 6f 3rd. Back-to-back wins at Turfway Park. Gold;Black Inverted Chevron $20K claim."
+        },
+        {
+          "number": 2,
+          "name": "Aerate",
+          "ml": "9/5",
+          "jockey": "Asmussen Keith J",
+          "trainer": "Asmussen Steven M",
+          "notes": "B.f. 4 (Jan). Sire: Candy Ride*Arg (Ride the Rails) $60,000. Dam: Duru (Broken Vow). Life 7-2-0-0 $37,860. 2026: 4-2-0-0 $37,860. D.Fst 12-1-2-1 $55,166. Beyer 72. ASMUSSEN K J (22 5 3 2 .23). Trainer Asmussen Steven M (63 11 8 7 .17). Royal Blue/White Halves. $20K claim. Last: 8May26-3CD fst 7f won; 19Apr26-10P fst 6f 2nd; 18Mar26-6OP fst 6f won. Co-favorite."
+        },
+        {
+          "number": 3,
+          "name": "Homie",
+          "ml": "12/1",
+          "jockey": "Torres Jaime A",
+          "trainer": "Cano Williams",
+          "notes": "Dk.b/br g(01.26,23) 4 (May). Sire: Mendelssohn (Scat Daddy) $15,000. Dam: Fishing*GB (Dansili*GB). Life 7-2-0-0 $37,118. 2026: 5-2-0-0 $7,756. D.Fst: 0-0-0-0. Beyer 70. TORRES J A (53 4 5 8 .08). Trainer Cano Williams (2 0 0 1 .00). Teal/White Belt. $20K claim. Last: 14May26-6Tp fst 6½f 1st; 10Apr26-8Tp fst 6f 2nd. 2 wins at Turfway, first time CD dirt. Previously all synthetic/turf racing."
+        },
+        {
+          "number": 4,
+          "name": "Shadow Coast",
+          "ml": "5/2",
+          "jockey": "Saez Luis",
+          "trainer": "Crichton Rohan G",
+          "notes": "B.c. 4 (Apr) OBSOPN24 $145,000. Sire: West Coast (Flatter) $5,000. Dam: Barryspepper (Quality Road). Life 14-2-0-2 $108,724. 2026: 3-1-0-1 $26,806. D.Fst 9-1-0-2 $37,660. Beyer 75. SAEZ L (101 17 12 13 .17). Trainer Crichton Rohan G (15 2 1 2 .13). Pink/Pink Cap. $20K claim. FAV. HIGHEST SPEED RATING. Last: 22Apr26-5Kee fst 6f 4th; 25Mar26-8CD fst 6f won; 28Jan26-5Tam fst 6f 4th. $145K purchase, class dropper from allowance level."
+        },
+        {
+          "number": 5,
+          "name": "Gallo De Fuego",
+          "ml": "9/2",
+          "jockey": "Saez Gabriel",
+          "trainer": "Roberts Joe B",
+          "notes": "Dk.b/br g(01.27,23) 5 (Apr). Sire: Into Mischief (Harlan's Holiday) $250,000. Dam: Special Vintage (Domaino). Life 14-2-1-3 $88,501. 2026: 7-1-1-0 $29,926. D.Fst 6-0-1-3 $25,375. Beyer 72. SAEZ G (49 1 5 4 .02). Trainer Roberts Joe B (6 0 0 2 .00). Red/Black Diamonds. $20K claim. Last: 28Apr26-2Kee fst 7f 7th; 28Feb26-5FG fst 6f 4th; 15Feb26-3FG fst 5½f 6th. Into Mischief sire but 0-for-6 on dirt fast. Dropping in class."
+        },
+        {
+          "number": 6,
+          "name": "League Of Legends",
+          "ml": "6/1",
+          "jockey": "Arrieta Francisco",
+          "trainer": "Morse Randy L",
+          "notes": "B.g(08,08,20) 8 (May) KEESEP18 $12,000. Sire: Atreides (Medaglia d'Oro) $2,800. Dam: Fine Insticts (Tale of the Cat). Life 14-1-4-3 $50,015. 2026: 4-0-0-2 $10,415. D.Fst 8-1-0-2 $31,620. Beyer 64. ARRIETA F (29 3 4 1 .10). Trainer Morse Randy L (9 0 1 3 .00). Blue/White Hoops. $20K claim. Last: 18May26-5CD slys 6f 5th; 10Apr26-7Kee fst 6f 3rd; 18Mar26-5OP fst 6f 6th. 8-year-old, minor form. Trainer 0% wins at meet."
+        }
+      ]
+    },
+    "signals": [
+      {
+        "id": "B1",
+        "name": "Elite jockey on bomb",
+        "weight": 3,
+        "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something.",
+        "active": true,
+        "detection": "Identify the top-5 jockeys at the current meet by win count from their stats (format: \"JOCKEY NAME (starts wins 2nds 3rds pct)\"). Top riders include Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL. If any top-5 jockey is riding a horse whose ML or live odds is 12/1 or higher, this signal FIRES (+3).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name and ML odds are always in the DRF data."
+      },
+      {
+        "id": "B2",
+        "name": "Late tote action",
+        "weight": 3,
+        "description": "Horse drops 3+ points from ML by post time. Sharp money = information.",
+        "active": true,
+        "detection": "Compare the LIVE ODDS field (if entered) to the ML odds. If live odds are 3+ points shorter than ML (e.g., ML 8/1 → Live 5/1), this signal FIRES (+3). If no live odds entered, this signal CANNOT be evaluated.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually before execution. Not available from DRF PDF alone."
+      },
+      {
+        "id": "B3",
+        "name": "Odds drift on quality",
+        "weight": 2,
+        "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift.",
+        "active": true,
+        "detection": "Check if horse was ML favorite or co-favorite (lowest/tied-lowest ML in field). Then check LIVE ODDS — if live odds have drifted to 4/1 or higher, this signal FIRES (+2). Requires live odds to evaluate drift.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually. ML is in DRF but drift requires live comparison."
+      },
+      {
+        "id": "B4",
+        "name": "Hot barn at a price",
+        "weight": 2,
+        "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception.",
+        "active": true,
+        "detection": "In the trainer stats (format: \"Trainer Name (starts wins 2nds 3rds pct)\"), read the pct value (last number, e.g. .17 = 17%). If pct >= .15 AND the horse ML or live odds is 6/1 or higher, this signal FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Trainer win% and ML are both in DRF data."
+      },
+      {
+        "id": "B5",
+        "name": "Distance stretch to sire sweet spot",
+        "weight": 2,
+        "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking.",
+        "active": true,
+        "detection": "Check the sire name and the race distance. Research the sire's progeny stats — if this sire's winners peak at today's distance AND the horse has never run this distance before (check past race distances in running lines), this signal FIRES (+2). Common examples: Candy Ride progeny excel at 9f+, Into Mischief at 7f-8.5f.",
+        "dataStatus": "yellow",
+        "dataNote": "Sire is in DRF data. Sire distance stats require general knowledge. Horse distance history is in running lines but may be truncated."
+      },
+      {
+        "id": "B6",
+        "name": "Best Beyer in field",
+        "weight": 1,
+        "description": "Highest speed figure among live starters. Proven fastest horse in here.",
+        "active": true,
+        "detection": "Find the Beyer Speed Figure for each horse (listed as \"Beyer XX\" in notes or extracted from past performance lines). The horse with the single highest Beyer figure among live starters gets this signal FIRED (+1).",
+        "dataStatus": "green",
+        "dataNote": "Beyer figures are in the DRF data for each horse."
+      },
+      {
+        "id": "B7",
+        "name": "Blinkers change",
+        "weight": 1,
+        "description": "Trainer making an equipment move = intent. Something different today.",
+        "active": true,
+        "detection": "Look for \"FIRST TIME BLINKERS\", \"Blinkers ON\", or \"Blinkers OFF\" notation in the horse data. Any blinker equipment change (adding or removing) triggers this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "Blinker changes are noted in DRF program data."
+      },
+      {
+        "id": "B8",
+        "name": "Track bias alignment",
+        "weight": 1,
+        "description": "Horse's running style (speed/stalker/closer) matches today's track pattern.",
+        "active": true,
+        "detection": "Determine each horse's running style from their past race descriptions (pressed/led = speed, stalked/tracked = stalker, rallied/closed = closer). Then check if today's early race results favor a particular style. If the horse's style matches the emerging bias, FIRE (+1). If no races run yet today, cannot evaluate.",
+        "dataStatus": "red",
+        "dataNote": "Requires observation of today's early race results. Not available from DRF PDF or before races begin. Toggle off for early races."
+      },
+      {
+        "id": "B9",
+        "name": "Earnings leader in class",
+        "weight": 1,
+        "description": "Most $ earned among starters at this class level. Proven they belong.",
+        "active": true,
+        "detection": "Parse lifetime earnings from each horse (format: \"$XX,XXX\" or \"$XXK\" in life stats). The horse with the highest lifetime earnings among live starters gets this signal FIRED (+1). Note: In claimers, high earnings can mean inconsistency — use with context.",
+        "dataStatus": "green",
+        "dataNote": "Lifetime earnings are in DRF life record for every horse."
+      },
+      {
+        "id": "B10",
+        "name": "First-timer + expensive pedigree",
+        "weight": 1,
+        "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run.",
+        "active": true,
+        "detection": "Check if horse has 0 lifetime starts (Life: 0-0-0-0 or \"FTS\"). If yes, check sire stud fee (listed after sire name, e.g. \"$250,000\") or auction purchase price (e.g. \"KEESEP23 $150,000\"). If stud fee >= $100K OR purchase price >= $100K, this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "FTS status, sire fee, and purchase price are all in DRF data."
+      },
+      {
+        "id": "B11",
+        "name": "Good jockey / good trainer on bad horse",
+        "weight": 2,
+        "description": "Top connections on a horse the public has dismissed. They see something the market doesn't.",
+        "active": true,
+        "detection": "Identify top-tier jockeys (Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL) and top-tier trainers (Cox, Baffert, Asmussen, Walsh, Walden, McPeek, Pletcher, Maker, McCarthy, Sharp, Jacobson). If BOTH jockey AND trainer are top-tier but the horse is 8/1 or higher, the public is dismissing a horse that elite connections chose to run. FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name, trainer name, and ML odds are all in DRF data."
+      }
+    ],
+    "rules": [
+      {
+        "id": "R1",
+        "name": "Win never the favorite",
+        "description": "Win bet is never the chalk. We find value — the fav goes in exotics only.",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Win must be 7/2+",
+        "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot.",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Trifecta minimum 4 horses",
+        "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes.",
+        "active": true
+      },
+      {
+        "id": "R4",
+        "name": "Fav always in exotics",
+        "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude.",
+        "active": true
+      },
+      {
+        "id": "R5",
+        "name": "Scratches require full rebuild",
+        "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch.",
+        "active": true
+      },
+      {
+        "id": "R6",
+        "name": "Tri must include exacta horses",
+        "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)",
+        "active": true
+      }
+    ],
+    "liveOdds": {}
+  },
+  "result": {
+    "win": {
+      "horse": 1,
+      "name": "Moroder",
+      "odds": "4/1",
+      "reason": "Elite jockey Ortiz Jr (27% meet win rate) on a horse with back-to-back wins and strong dirt form (8-2-1-1). Highest value at a price among non-favorites at 7/2+. Beyer 74 is competitive in this field and the hot form off Turfway victories gives him the edge over weaker longshots."
+    },
+    "exacta": {
+      "horses": [
+        1,
+        2,
+        4
+      ]
+    },
+    "trifecta": {
+      "horses": [
+        1,
+        2,
+        4,
+        6
+      ]
+    },
+    "notes": "If #1 Moroder moves to favoritism or drifts below 7/2, pivot win bet to #6 League Of Legends at 6/1 as the only remaining 7/2+ option with any form. If #4 Shadow Coast scratches, rebuild entirely around pace dynamics.",
+    "analysis": "This is a competitive $20K claimer at 6 furlongs with the favorite Shadow Coast (#4) holding the highest Beyer (75) and proven CD form, making him a must-use in exotics. The pace should be honest with multiple speed types, favoring horses that can press or stalk. Our win bet targets value: Moroder (#1) brings elite connections (Ortiz Jr) and red-hot form (back-to-back Turfway wins) at 4/1, satisfying the 7/2+ requirement while the favorite is eliminated. Aerate (#2) gets Asmussen's 17% barn and already won at CD this meet at 7f, making her dangerous at any trip. The exacta captures the three horses with the best combination of form, class, and connections. The trifecta adds League Of Legends (#6) for required width despite being an 8-year-old with fading form—necessary to satisfy the 4-horse minimum. Note that Homie (#3) is dismissed entirely due to 0-for-0 dirt fast record and first-time CD surface switch, while Gallo De Fuego (#5) is ignored for being 0-for-6 on dirt fast despite the Into Mischief pedigree.",
+    "signalBreakdown": [
+      {
+        "id": "B1",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Elite jockey on bomb requires a top-3 meet rider on a 12/1+ horse. Ortiz Jr is on #1 Moroder but only at 4/1. Homie is 12/1 but Torres is not elite (8% win rate). Signal did not fire."
+      },
+      {
+        "id": "B2",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Late tote action requires live odds comparison to ML. No live odds were provided in this analysis, so signal cannot be evaluated. Needs manual input before post time."
+      },
+      {
+        "id": "B3",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Odds drift on quality requires live odds showing a former ML favorite drifting to 4/1+. No live odds available, cannot evaluate. Needs manual input."
+      },
+      {
+        "id": "B4",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Hot barn at a price requires trainer >15% win rate at meet on a horse >6/1. Steven Asmussen (#2) is 17% but Aerate is only 9/5. Hamm (#1) is 17% but Moroder is 4/1. No qualifying horses."
+      },
+      {
+        "id": "B5",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Distance stretch to sire sweet spot did not fire. All horses have run at or near 6f before. Into Mischief (#5) excels at 7f-8.5f but is shortening to 6f, not stretching. No first-time distance unlocks."
+      },
+      {
+        "id": "B6",
+        "fired": true,
+        "horses": [
+          4
+        ],
+        "reasoning": "Best Beyer in field fires for Shadow Coast with a 75 figure, the highest among all live starters. Moroder 74, Aerate 72, Gallo 72, Homie 70, League 64."
+      },
+      {
+        "id": "B7",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Blinkers change requires notation of equipment changes (on/off/first time). No blinker changes mentioned in the DRF data for any horse."
+      },
+      {
+        "id": "B8",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Track bias alignment requires observation of today's early race results to determine if speed/stalkers/closers are winning. This is R1, first race of the card, so no prior results available. Cannot evaluate."
+      },
+      {
+        "id": "B9",
+        "fired": true,
+        "horses": [
+          4
+        ],
+        "reasoning": "Earnings leader in class fires for Shadow Coast with $108,724 lifetime, the highest in this field. Gallo De Fuego $88,501, League $50,015, Moroder $44,760, Aerate $37,860, Homie $37,118."
+      },
+      {
+        "id": "B10",
+        "fired": false,
+        "horses": [],
+        "reasoning": "First-timer with expensive pedigree requires 0 lifetime starts plus $100K+ stud fee or purchase. All horses in this field have multiple starts. Does not apply."
+      },
+      {
+        "id": "B11",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Good jockey/good trainer on bad horse requires both elite connections on a horse 8/1+. Ortiz Jr (elite) is on Moroder but Hamm is not elite trainer. Steven Asmussen (elite) is on Aerate but she's only 9/5. No horse qualifies."
+      }
+    ]
+  }
+}

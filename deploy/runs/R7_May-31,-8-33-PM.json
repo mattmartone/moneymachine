@@ -1,0 +1,341 @@
+{
+  "raceNumber": 7,
+  "timestamp": "May 31, 8:33 PM",
+  "prompt": {
+    "race": {
+      "number": 7,
+      "name": "Allowance $141K — Turf",
+      "distance": "5½ Furlongs",
+      "surface": "Turf",
+      "postTime": "3:51 ET",
+      "purse": "$141,000",
+      "condition": "Alw 141000C. Fillies 3YO. Turf. 122 lbs.",
+      "horses": [
+        {
+          "number": 1,
+          "name": "Beach Heist",
+          "ml": "2/1",
+          "jockey": "Prat Flavien",
+          "trainer": "Walden William",
+          "notes": "Life 2-1-0-1, $82K. Omaha Beach. Prat + Walden 30%. FAV. Beyer NA."
+        },
+        {
+          "number": 2,
+          "name": "Omaha Bay",
+          "ml": "12/1",
+          "jockey": "Hernandez Jr Brian J",
+          "trainer": "Wilkes Ian R",
+          "notes": "Life 3-1-0-0, $56K. Star Actress."
+        },
+        {
+          "number": 3,
+          "name": "Should've",
+          "ml": "6/1",
+          "jockey": "Mendoza Amir",
+          "trainer": "Ward Wesley A",
+          "notes": "SCRATCHED."
+        },
+        {
+          "number": 4,
+          "name": "Snappy Comeback",
+          "ml": "15/1",
+          "jockey": "Saez Luis",
+          "trainer": "D'Angelo Jose F",
+          "notes": "Life 5-2-0-0, $136K. Vapour. Beyer 24."
+        },
+        {
+          "number": 5,
+          "name": "Snow Face Princess",
+          "ml": "12/1",
+          "jockey": "Geroux Florent",
+          "trainer": "Asmussen Steven M",
+          "notes": "Life 6-2-1-0, $35K. Asmussen 16%."
+        },
+        {
+          "number": 6,
+          "name": "Sapphire Beach (Ire)",
+          "ml": "5/2",
+          "jockey": "Ortiz Jose L",
+          "trainer": "Arnold II George R",
+          "notes": "Life 6-2-2-0, $189K. No Nay Never. Beyer NA."
+        },
+        {
+          "number": 7,
+          "name": "Mony Mony",
+          "ml": "4/1",
+          "jockey": "Ortiz Jr Irad",
+          "trainer": "Sharp Joe",
+          "notes": "Life 7-3-0-1, $197K. Munnings. ORTIZ JR + Sharp 16%. Highest Speed Rating."
+        },
+        {
+          "number": 8,
+          "name": "Secret Hideaway (Ire)",
+          "ml": "8/1",
+          "jockey": "Gaffalione Tyler",
+          "trainer": "Walsh Brendan P",
+          "notes": "Life 6-1-1-0, $58K. Starspangledbanner. Walsh 16%. FIRST TIME BLINKERS. Beyer 71."
+        }
+      ],
+      "scratches": [
+        3
+      ]
+    },
+    "signals": [
+      {
+        "id": "B1",
+        "name": "Elite jockey on bomb",
+        "weight": 3,
+        "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something.",
+        "active": true,
+        "detection": "Identify the top-5 jockeys at the current meet by win count from their stats (format: \"JOCKEY NAME (starts wins 2nds 3rds pct)\"). Top riders include Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL. If any top-5 jockey is riding a horse whose ML or live odds is 12/1 or higher, this signal FIRES (+3).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name and ML odds are always in the DRF data."
+      },
+      {
+        "id": "B2",
+        "name": "Late tote action",
+        "weight": 3,
+        "description": "Horse drops 3+ points from ML by post time. Sharp money = information.",
+        "active": true,
+        "detection": "Compare the LIVE ODDS field (if entered) to the ML odds. If live odds are 3+ points shorter than ML (e.g., ML 8/1 → Live 5/1), this signal FIRES (+3). If no live odds entered, this signal CANNOT be evaluated.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually before execution. Not available from DRF PDF alone."
+      },
+      {
+        "id": "B3",
+        "name": "Odds drift on quality",
+        "weight": 2,
+        "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift.",
+        "active": true,
+        "detection": "Check if horse was ML favorite or co-favorite (lowest/tied-lowest ML in field). Then check LIVE ODDS — if live odds have drifted to 4/1 or higher, this signal FIRES (+2). Requires live odds to evaluate drift.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually. ML is in DRF but drift requires live comparison."
+      },
+      {
+        "id": "B4",
+        "name": "Hot barn at a price",
+        "weight": 2,
+        "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception.",
+        "active": true,
+        "detection": "In the trainer stats (format: \"Trainer Name (starts wins 2nds 3rds pct)\"), read the pct value (last number, e.g. .17 = 17%). If pct >= .15 AND the horse ML or live odds is 6/1 or higher, this signal FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Trainer win% and ML are both in DRF data."
+      },
+      {
+        "id": "B5",
+        "name": "Distance stretch to sire sweet spot",
+        "weight": 2,
+        "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking.",
+        "active": true,
+        "detection": "Check the sire name and the race distance. Research the sire's progeny stats — if this sire's winners peak at today's distance AND the horse has never run this distance before (check past race distances in running lines), this signal FIRES (+2). Common examples: Candy Ride progeny excel at 9f+, Into Mischief at 7f-8.5f.",
+        "dataStatus": "yellow",
+        "dataNote": "Sire is in DRF data. Sire distance stats require general knowledge. Horse distance history is in running lines but may be truncated."
+      },
+      {
+        "id": "B6",
+        "name": "Best Beyer in field",
+        "weight": 1,
+        "description": "Highest speed figure among live starters. Proven fastest horse in here.",
+        "active": true,
+        "detection": "Find the Beyer Speed Figure for each horse (listed as \"Beyer XX\" in notes or extracted from past performance lines). The horse with the single highest Beyer figure among live starters gets this signal FIRED (+1).",
+        "dataStatus": "green",
+        "dataNote": "Beyer figures are in the DRF data for each horse."
+      },
+      {
+        "id": "B7",
+        "name": "Blinkers change",
+        "weight": 1,
+        "description": "Trainer making an equipment move = intent. Something different today.",
+        "active": true,
+        "detection": "Look for \"FIRST TIME BLINKERS\", \"Blinkers ON\", or \"Blinkers OFF\" notation in the horse data. Any blinker equipment change (adding or removing) triggers this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "Blinker changes are noted in DRF program data."
+      },
+      {
+        "id": "B8",
+        "name": "Track bias alignment",
+        "weight": 1,
+        "description": "Horse's running style (speed/stalker/closer) matches today's track pattern.",
+        "active": true,
+        "detection": "Determine each horse's running style from their past race descriptions (pressed/led = speed, stalked/tracked = stalker, rallied/closed = closer). Then check if today's early race results favor a particular style. If the horse's style matches the emerging bias, FIRE (+1). If no races run yet today, cannot evaluate.",
+        "dataStatus": "red",
+        "dataNote": "Requires observation of today's early race results. Not available from DRF PDF or before races begin. Toggle off for early races."
+      },
+      {
+        "id": "B9",
+        "name": "Earnings leader in class",
+        "weight": 1,
+        "description": "Most $ earned among starters at this class level. Proven they belong.",
+        "active": true,
+        "detection": "Parse lifetime earnings from each horse (format: \"$XX,XXX\" or \"$XXK\" in life stats). The horse with the highest lifetime earnings among live starters gets this signal FIRED (+1). Note: In claimers, high earnings can mean inconsistency — use with context.",
+        "dataStatus": "green",
+        "dataNote": "Lifetime earnings are in DRF life record for every horse."
+      },
+      {
+        "id": "B10",
+        "name": "First-timer + expensive pedigree",
+        "weight": 1,
+        "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run.",
+        "active": true,
+        "detection": "Check if horse has 0 lifetime starts (Life: 0-0-0-0 or \"FTS\"). If yes, check sire stud fee (listed after sire name, e.g. \"$250,000\") or auction purchase price (e.g. \"KEESEP23 $150,000\"). If stud fee >= $100K OR purchase price >= $100K, this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "FTS status, sire fee, and purchase price are all in DRF data."
+      },
+      {
+        "id": "B11",
+        "name": "Good jockey / good trainer on bad horse",
+        "weight": 2,
+        "description": "Top connections on a horse the public has dismissed. They see something the market doesn't.",
+        "active": true,
+        "detection": "Identify top-tier jockeys (Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL) and top-tier trainers (Cox, Baffert, Asmussen, Walsh, Walden, McPeek, Pletcher, Maker, McCarthy, Sharp, Jacobson). If BOTH jockey AND trainer are top-tier but the horse is 8/1 or higher, the public is dismissing a horse that elite connections chose to run. FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name, trainer name, and ML odds are all in DRF data."
+      }
+    ],
+    "rules": [
+      {
+        "id": "R1",
+        "name": "Win never the favorite",
+        "description": "Win bet is never the chalk. We find value — the fav goes in exotics only.",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Win must be 7/2+",
+        "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot.",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Trifecta minimum 4 horses",
+        "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes.",
+        "active": true
+      },
+      {
+        "id": "R4",
+        "name": "Fav always in exotics",
+        "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude.",
+        "active": true
+      },
+      {
+        "id": "R5",
+        "name": "Scratches require full rebuild",
+        "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch.",
+        "active": true
+      },
+      {
+        "id": "R6",
+        "name": "Tri must include exacta horses",
+        "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)",
+        "active": true
+      }
+    ],
+    "liveOdds": {}
+  },
+  "result": {
+    "win": {
+      "horse": 8,
+      "name": "Secret Hideaway",
+      "odds": "8/1",
+      "reason": "Fires six signals - highest in field. Beyer 71 best figure by far. First-time blinkers from Walsh (16% barn) signals intent. Gaffalione (elite) + Walsh (elite) on dismissed 8/1 horse triggers B11 - they see something the public doesn't."
+    },
+    "exacta": {
+      "horses": [
+        1,
+        7,
+        8
+      ]
+    },
+    "trifecta": {
+      "horses": [
+        1,
+        6,
+        7,
+        8
+      ]
+    },
+    "notes": "If #8 moves below 7/2, pivot win bet to #7 Mony Mony at 4/1. Favorite #1 Beach Heist must stay in all exotics per Rule R4.",
+    "analysis": "Short turf sprint for 3YO fillies. Beach Heist is the rightful favorite with Prat and a 30% combo, but Rule R1 forces us to find value elsewhere. Secret Hideaway is that value - her six triggered signals are the most in the field, led by the equipment change (first-time blinkers from a 16% barn) and best Beyer figure (71 vs next-best 24). The B11 signal captures the key insight: Gaffalione and Walsh are both elite, yet this horse is 8/1. They don't waste mounts or equipment moves. Mony Mony is the earnings leader ($197K) with Ortiz Jr aboard and the highest speed rating - she's getting proper respect at 4/1. Sapphire Beach (5/2) rounds out the trifecta with consistent form (4 of 6 ITM) and Ortiz JL. The exacta box captures the favorite, our value play, and the class horse. Trifecta adds the second choice for coverage.",
+    "signalBreakdown": [
+      {
+        "id": "B1",
+        "fired": true,
+        "horses": [
+          4
+        ],
+        "reasoning": "Elite jockey Saez (top-5 rider at meet) chose #4 Snappy Comeback at ML 15/1. This signals insider confidence despite the public dismissal."
+      },
+      {
+        "id": "B2",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Late tote action signal requires live odds comparison to morning line. No live odds data provided in race data - cannot evaluate."
+      },
+      {
+        "id": "B3",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Odds drift signal requires live odds to compare against ML favorites. No live odds available - cannot evaluate."
+      },
+      {
+        "id": "B4",
+        "fired": true,
+        "horses": [
+          5,
+          8
+        ],
+        "reasoning": "#5 Snow Face Princess: Asmussen 16% trainer win rate at meet, running at 12/1 (>6/1). #8 Secret Hideaway: Walsh 16% trainer win rate, running at 8/1 (>6/1). Both are hot barns running horses the public is underlaying."
+      },
+      {
+        "id": "B5",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Distance stretch to sire sweet spot requires full past performance distance history and sire progeny stats by distance. Insufficient data in DRF extract to evaluate confidently."
+      },
+      {
+        "id": "B6",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "#8 Secret Hideaway has Beyer 71 - the only meaningful speed figure in the field. #4 shows Beyer 24 which is very slow. #7 noted as 'Highest Speed Rating' but no specific Beyer listed. #8's 71 is definitively the best."
+      },
+      {
+        "id": "B7",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "#8 Secret Hideaway shows 'FIRST TIME BLINKERS' - equipment change indicates trainer intent and a planned tactical adjustment for this race."
+      },
+      {
+        "id": "B8",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Track bias alignment requires observation of early race results to identify which running styles (speed/stalker/closer) are winning today. This is R7 so earlier races have run, but no bias data was provided in race materials."
+      },
+      {
+        "id": "B9",
+        "fired": true,
+        "horses": [
+          7
+        ],
+        "reasoning": "#7 Mony Mony has lifetime earnings of $197K - highest in field. Next closest: #6 Sapphire Beach $189K, #4 Snappy Comeback $136K. Mony Mony is the earnings leader among starters."
+      },
+      {
+        "id": "B10",
+        "fired": false,
+        "horses": [],
+        "reasoning": "First-time starter signal requires a horse with 0 lifetime starts. All horses in this field have race experience (minimum Life 2-1-0-1). No debuts."
+      },
+      {
+        "id": "B11",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "#8 Secret Hideaway at 8/1 has both elite jockey (Gaffalione - explicitly listed as top-5) AND elite trainer (Walsh - explicitly listed as top-tier). The public has dismissed this combination at 8/1. Elite connections don't waste opportunities - they see value the market doesn't."
+      }
+    ]
+  }
+}

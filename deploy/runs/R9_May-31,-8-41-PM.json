@@ -1,0 +1,384 @@
+{
+  "raceNumber": 9,
+  "timestamp": "May 31, 8:41 PM",
+  "prompt": {
+    "race": {
+      "number": 9,
+      "name": "Allowance OC $125K/N1X",
+      "distance": "1 Mile",
+      "surface": "Dirt",
+      "postTime": "4:56 ET",
+      "purse": "$127,000",
+      "condition": "AOC $125K/N1X. 3YO. 122 lbs. KTDF.",
+      "horses": [
+        {
+          "number": 1,
+          "name": "Lighter",
+          "ml": "15/1",
+          "jockey": "Gaffalione Tyler",
+          "trainer": "Brisset Rodolphe",
+          "notes": "Life 1-1-0-0, $19K. Constitution (Tapit). Beyer NA."
+        },
+        {
+          "number": 2,
+          "name": "Gun Range",
+          "ml": "9/2",
+          "jockey": "Alvarado Junior",
+          "trainer": "Ward Wesley A",
+          "notes": "SCRATCHED."
+        },
+        {
+          "number": 3,
+          "name": "Western Warrior",
+          "ml": "20/1",
+          "jockey": "Ortiz Jose L",
+          "trainer": "Casse Mark E",
+          "notes": "Life 8-3-0-0, $112K. Essential Quality (Tapit). Beyer 77."
+        },
+        {
+          "number": 4,
+          "name": "Rebel Instinct",
+          "ml": "3/1",
+          "jockey": "Ortiz Jr Irad",
+          "trainer": "Cox Brad H",
+          "notes": "Life 2-1-1-0, $64K. Into Mischief (Harlan's Holiday). FAV. ORTIZ JR + Cox. Hot Trainer. Beyer 85."
+        },
+        {
+          "number": 5,
+          "name": "Envision",
+          "ml": "12/1",
+          "jockey": "Prat Flavien",
+          "trainer": "Walden William",
+          "notes": "SCRATCHED. Prat + Walden."
+        },
+        {
+          "number": 6,
+          "name": "Memory",
+          "ml": "4/1",
+          "jockey": "Garcia Martin",
+          "trainer": "Baffert Bob",
+          "notes": "Life 3-1-0-0, $44K. Uncle Mo (Indian Charlie). Baffert. Highest Speed Rating. Beyer 93."
+        },
+        {
+          "number": 7,
+          "name": "Blue Forty Two",
+          "ml": "20/1",
+          "jockey": "Gutierrez Mario",
+          "trainer": "Sells Rachel",
+          "notes": "Life 9-1-3-3, $108K. Audible (Into Mischief). Beyer 83."
+        },
+        {
+          "number": 8,
+          "name": "Noble Affair",
+          "ml": "10/1",
+          "jockey": "Geroux Florent",
+          "trainer": "Asmussen Steven M",
+          "notes": "Life 4-1-1-2, $77K. Vekoma. Asmussen 16%. Beyer 77."
+        },
+        {
+          "number": 9,
+          "name": "Biloba",
+          "ml": "20/1",
+          "jockey": "Bejarano Rafael",
+          "trainer": "Moquett Ron",
+          "notes": "Life 4-1-3-0, $131K. Essential Quality (Tapit). Beyer 80."
+        },
+        {
+          "number": 10,
+          "name": "I Did I Did",
+          "ml": "15/1",
+          "jockey": "Hernandez Jr Brian J",
+          "trainer": "Maker Michael J",
+          "notes": "Life 8-1-2-0, $140K. Curlin (Smart Strike). Maker! Hot Trainer. Beyer 75."
+        },
+        {
+          "number": 11,
+          "name": "Prize Pick",
+          "ml": "6/1",
+          "jockey": "Saez Luis",
+          "trainer": "Lynch Brian A",
+          "notes": "Life 6-1-1-1, $107K. Tiz the Law (Constitution). Beyer 80."
+        },
+        {
+          "number": 12,
+          "name": "J J Grey",
+          "ml": "12/1",
+          "jockey": "Esquivel Emmanuel",
+          "trainer": "McPeek Kenneth G",
+          "notes": "SCRATCHED. McPeek."
+        },
+        {
+          "number": 13,
+          "name": "Volendam",
+          "ml": "AE",
+          "jockey": "Curtis B",
+          "trainer": "Maker Michael J",
+          "notes": "SCRATCHED. Also Eligible."
+        }
+      ],
+      "scratches": [
+        2,
+        5,
+        12,
+        13
+      ]
+    },
+    "signals": [
+      {
+        "id": "B1",
+        "name": "Elite jockey on bomb",
+        "weight": 3,
+        "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something.",
+        "active": true,
+        "detection": "Identify the top-5 jockeys at the current meet by win count from their stats (format: \"JOCKEY NAME (starts wins 2nds 3rds pct)\"). Top riders include Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL. If any top-5 jockey is riding a horse whose ML or live odds is 12/1 or higher, this signal FIRES (+3).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name and ML odds are always in the DRF data."
+      },
+      {
+        "id": "B2",
+        "name": "Late tote action",
+        "weight": 3,
+        "description": "Horse drops 3+ points from ML by post time. Sharp money = information.",
+        "active": true,
+        "detection": "Compare the LIVE ODDS field (if entered) to the ML odds. If live odds are 3+ points shorter than ML (e.g., ML 8/1 → Live 5/1), this signal FIRES (+3). If no live odds entered, this signal CANNOT be evaluated.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually before execution. Not available from DRF PDF alone."
+      },
+      {
+        "id": "B3",
+        "name": "Odds drift on quality",
+        "weight": 2,
+        "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift.",
+        "active": true,
+        "detection": "Check if horse was ML favorite or co-favorite (lowest/tied-lowest ML in field). Then check LIVE ODDS — if live odds have drifted to 4/1 or higher, this signal FIRES (+2). Requires live odds to evaluate drift.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually. ML is in DRF but drift requires live comparison."
+      },
+      {
+        "id": "B4",
+        "name": "Hot barn at a price",
+        "weight": 2,
+        "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception.",
+        "active": true,
+        "detection": "In the trainer stats (format: \"Trainer Name (starts wins 2nds 3rds pct)\"), read the pct value (last number, e.g. .17 = 17%). If pct >= .15 AND the horse ML or live odds is 6/1 or higher, this signal FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Trainer win% and ML are both in DRF data."
+      },
+      {
+        "id": "B5",
+        "name": "Distance stretch to sire sweet spot",
+        "weight": 2,
+        "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking.",
+        "active": true,
+        "detection": "Check the sire name and the race distance. Research the sire's progeny stats — if this sire's winners peak at today's distance AND the horse has never run this distance before (check past race distances in running lines), this signal FIRES (+2). Common examples: Candy Ride progeny excel at 9f+, Into Mischief at 7f-8.5f.",
+        "dataStatus": "yellow",
+        "dataNote": "Sire is in DRF data. Sire distance stats require general knowledge. Horse distance history is in running lines but may be truncated."
+      },
+      {
+        "id": "B6",
+        "name": "Best Beyer in field",
+        "weight": 1,
+        "description": "Highest speed figure among live starters. Proven fastest horse in here.",
+        "active": true,
+        "detection": "Find the Beyer Speed Figure for each horse (listed as \"Beyer XX\" in notes or extracted from past performance lines). The horse with the single highest Beyer figure among live starters gets this signal FIRED (+1).",
+        "dataStatus": "green",
+        "dataNote": "Beyer figures are in the DRF data for each horse."
+      },
+      {
+        "id": "B7",
+        "name": "Blinkers change",
+        "weight": 1,
+        "description": "Trainer making an equipment move = intent. Something different today.",
+        "active": true,
+        "detection": "Look for \"FIRST TIME BLINKERS\", \"Blinkers ON\", or \"Blinkers OFF\" notation in the horse data. Any blinker equipment change (adding or removing) triggers this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "Blinker changes are noted in DRF program data."
+      },
+      {
+        "id": "B8",
+        "name": "Track bias alignment",
+        "weight": 1,
+        "description": "Horse's running style (speed/stalker/closer) matches today's track pattern.",
+        "active": true,
+        "detection": "Determine each horse's running style from their past race descriptions (pressed/led = speed, stalked/tracked = stalker, rallied/closed = closer). Then check if today's early race results favor a particular style. If the horse's style matches the emerging bias, FIRE (+1). If no races run yet today, cannot evaluate.",
+        "dataStatus": "red",
+        "dataNote": "Requires observation of today's early race results. Not available from DRF PDF or before races begin. Toggle off for early races."
+      },
+      {
+        "id": "B9",
+        "name": "Earnings leader in class",
+        "weight": 1,
+        "description": "Most $ earned among starters at this class level. Proven they belong.",
+        "active": true,
+        "detection": "Parse lifetime earnings from each horse (format: \"$XX,XXX\" or \"$XXK\" in life stats). The horse with the highest lifetime earnings among live starters gets this signal FIRED (+1). Note: In claimers, high earnings can mean inconsistency — use with context.",
+        "dataStatus": "green",
+        "dataNote": "Lifetime earnings are in DRF life record for every horse."
+      },
+      {
+        "id": "B10",
+        "name": "First-timer + expensive pedigree",
+        "weight": 1,
+        "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run.",
+        "active": true,
+        "detection": "Check if horse has 0 lifetime starts (Life: 0-0-0-0 or \"FTS\"). If yes, check sire stud fee (listed after sire name, e.g. \"$250,000\") or auction purchase price (e.g. \"KEESEP23 $150,000\"). If stud fee >= $100K OR purchase price >= $100K, this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "FTS status, sire fee, and purchase price are all in DRF data."
+      },
+      {
+        "id": "B11",
+        "name": "Good jockey / good trainer on bad horse",
+        "weight": 2,
+        "description": "Top connections on a horse the public has dismissed. They see something the market doesn't.",
+        "active": true,
+        "detection": "Identify top-tier jockeys (Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL) and top-tier trainers (Cox, Baffert, Asmussen, Walsh, Walden, McPeek, Pletcher, Maker, McCarthy, Sharp, Jacobson). If BOTH jockey AND trainer are top-tier but the horse is 8/1 or higher, the public is dismissing a horse that elite connections chose to run. FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name, trainer name, and ML odds are all in DRF data."
+      }
+    ],
+    "rules": [
+      {
+        "id": "R1",
+        "name": "Win never the favorite",
+        "description": "Win bet is never the chalk. We find value — the fav goes in exotics only.",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Win must be 7/2+",
+        "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot.",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Trifecta minimum 4 horses",
+        "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes.",
+        "active": true
+      },
+      {
+        "id": "R4",
+        "name": "Fav always in exotics",
+        "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude.",
+        "active": true
+      },
+      {
+        "id": "R5",
+        "name": "Scratches require full rebuild",
+        "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch.",
+        "active": true
+      },
+      {
+        "id": "R6",
+        "name": "Tri must include exacta horses",
+        "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)",
+        "active": true
+      }
+    ],
+    "liveOdds": {}
+  },
+  "result": {
+    "win": {
+      "horse": 6,
+      "name": "Memory",
+      "odds": "4/1",
+      "reason": "Beyer 93 dominates this field by 8+ points over the favorite and 16 points over most runners. Baffert barn, Uncle Mo sire, at 4/1 when the figures say this should be the chalk. Classic overlay - the public went with Ortiz Jr/Cox connections on #4, but Memory's speed figure screams they're the best horse in here. B6 signal fired (best Beyer), and at 4/1 (qualifies as 7/2+), this is the value play the strategy demands."
+    },
+    "exacta": {
+      "horses": [
+        4,
+        6,
+        8
+      ]
+    },
+    "trifecta": {
+      "horses": [
+        3,
+        4,
+        6,
+        8
+      ]
+    },
+    "notes": "If Memory moves to favoritism before post (drops below 7/2), pivot win bet to #8 Noble Affair (10/1, hot Asmussen barn, 4 signal points). If both Memory and Noble Affair drop below 7/2, pivot to #3 Western Warrior (20/1, highest signal score at 5 points, elite Ortiz JL/Casse combo on longshot).",
+    "analysis": "This race sets up as a classic figure-vs-connections overlay situation. The public installed #4 Rebel Instinct (Ortiz Jr/Cox) as the 3/1 favorite on brand-name connections and solid 85 Beyer, but #6 Memory's 93 Beyer is a different class - that's an 8-point edge, which at this level translates to multiple lengths. Baffert doesn't run them if they're not live. At 4/1, Memory is the overlay the strategy seeks - form says they should be shorter. The exacta box covers the favorite (required), our win bet Memory, and the value angle #8 Noble Affair (Asmussen 16% hot barn, 4 signal points at 10/1). Trifecta adds #3 Western Warrior, who scored 5 signal points (B1+B11: elite Ortiz JL on a 20/1 bomb for respected Casse barn). Four-horse tri gives us the width Rule R3 demands after the 3-horse box whiff on Day 1. If Memory's figure holds and Baffert has them ready, this is a takeover spot at a square price.",
+    "signalBreakdown": [
+      {
+        "id": "B1",
+        "fired": true,
+        "horses": [
+          1,
+          3
+        ],
+        "reasoning": "Elite jockey on bomb signal. Gaffalione (top-5 jockey) on #1 Lighter at 15/1, and Ortiz JL (top-5) on #3 Western Warrior at 20/1. Both are elite riders choosing longshots over shorter-priced mounts - they see something. Fires on both."
+      },
+      {
+        "id": "B2",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Late tote action signal cannot be evaluated - no live odds provided yet. Requires manual input at post time to compare ML vs live odds for 3+ point drops."
+      },
+      {
+        "id": "B3",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Odds drift on quality signal cannot be evaluated - no live odds provided. Would need to see if any horse that was ML favorite/co-fav has drifted to 4/1+ at post time."
+      },
+      {
+        "id": "B4",
+        "fired": true,
+        "horses": [
+          8,
+          10
+        ],
+        "reasoning": "Hot barn at a price signal. #8 Noble Affair: Asmussen confirmed at 16% (>15% threshold) running at 10/1 (>6/1) - fires. #10 I Did I Did: Maker noted as 'Hot Trainer' running at 15/1 (>6/1) - fires. #4 Rebel Instinct has Cox hot barn but is 3/1 (below 6/1 threshold) so does not fire."
+      },
+      {
+        "id": "B5",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Distance stretch to sire sweet spot signal. Race is 1 mile (8f). Curlin on #10 typically wants 9f+, so 8f isn't the unlock distance. Into Mischief, Essential Quality, Uncle Mo, Constitution all handle 8f in their normal range. No clear first-time distance stretch-out pattern detected with available data."
+      },
+      {
+        "id": "B6",
+        "fired": true,
+        "horses": [
+          6
+        ],
+        "reasoning": "Best Beyer in field signal. #6 Memory's 93 Beyer is the clear highest - next best is #4 at 85, then #7 at 83. Memory's figure dominates by 8+ points. Single best figure in the race fires on Memory only."
+      },
+      {
+        "id": "B7",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Blinkers change signal. No blinker equipment changes (on or off) noted in the provided data for any horse."
+      },
+      {
+        "id": "B8",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Track bias alignment signal cannot be evaluated yet - requires observation of earlier races today to determine if speed/stalkers/closers are favored. Not available from DRF data alone or before races begin."
+      },
+      {
+        "id": "B9",
+        "fired": true,
+        "horses": [
+          10
+        ],
+        "reasoning": "Earnings leader in class signal. #10 I Did I Did has the highest lifetime earnings in the field at $140K, ahead of #9 Biloba ($131K) and #3 Western Warrior ($112K). Most proven earner at this level fires on #10."
+      },
+      {
+        "id": "B10",
+        "fired": false,
+        "horses": [],
+        "reasoning": "First-timer + expensive pedigree signal. No true first-time starters (0-0-0-0 life) in this field. All horses have at least 1 career start. Signal does not apply."
+      },
+      {
+        "id": "B11",
+        "fired": true,
+        "horses": [
+          3,
+          8
+        ],
+        "reasoning": "Good jockey + good trainer on bad horse (both top-tier, 8/1+). #3 Western Warrior: Ortiz JL (elite) + Casse (top trainer) at 20/1 - public dismissing a horse with elite connections, fires. #8 Noble Affair: Geroux (strong rider) + Asmussen (top trainer) at 10/1 - hot barn at a price with solid jockey, fires. #10 I Did I Did has Maker (top trainer) but Hernandez Jr isn't top-tier, so doesn't fire (needs both)."
+      }
+    ]
+  }
+}

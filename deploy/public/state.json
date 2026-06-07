@@ -1,0 +1,1169 @@
+{
+  "rules": [
+    {
+      "id": "R1",
+      "name": "Win never the favorite",
+      "active": true,
+      "description": "Win bet is never the chalk. We find value — the fav goes in exotics only."
+    },
+    {
+      "id": "R2",
+      "name": "Win must be 7/2+",
+      "active": true,
+      "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot."
+    },
+    {
+      "id": "R3",
+      "name": "Trifecta minimum 4 horses",
+      "active": true,
+      "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes."
+    },
+    {
+      "id": "R4",
+      "name": "Fav always in exotics",
+      "active": true,
+      "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude."
+    },
+    {
+      "id": "R5",
+      "name": "Scratches require full rebuild",
+      "active": true,
+      "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch."
+    },
+    {
+      "id": "R6",
+      "name": "Tri must include exacta horses",
+      "active": true,
+      "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)"
+    }
+  ],
+  "signals": [
+    {
+      "id": "B1",
+      "name": "Elite jockey on bomb",
+      "weight": 3,
+      "active": true,
+      "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something."
+    },
+    {
+      "id": "B2",
+      "name": "Late tote action",
+      "weight": 3,
+      "active": true,
+      "description": "Horse drops 3+ points from ML by post time. Sharp money = information."
+    },
+    {
+      "id": "B3",
+      "name": "Odds drift on quality",
+      "weight": 2,
+      "active": true,
+      "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift."
+    },
+    {
+      "id": "B4",
+      "name": "Hot barn at a price",
+      "weight": 2,
+      "active": true,
+      "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception."
+    },
+    {
+      "id": "B5",
+      "name": "Distance stretch to sire sweet spot",
+      "weight": 2,
+      "active": true,
+      "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking."
+    },
+    {
+      "id": "B6",
+      "name": "Best Beyer in field",
+      "weight": 1,
+      "active": true,
+      "description": "Highest speed figure among live starters. Proven fastest horse in here."
+    },
+    {
+      "id": "B7",
+      "name": "Blinkers change",
+      "weight": 1,
+      "active": true,
+      "description": "Trainer making an equipment move = intent. Something different today."
+    },
+    {
+      "id": "B8",
+      "name": "Track bias alignment",
+      "weight": 1,
+      "active": true,
+      "description": "Horse's running style (speed/stalker/closer) matches today's track pattern."
+    },
+    {
+      "id": "B9",
+      "name": "Earnings leader in class",
+      "weight": 1,
+      "active": true,
+      "description": "Most $ earned among starters at this class level. Proven they belong."
+    },
+    {
+      "id": "B10",
+      "name": "First-timer + expensive pedigree",
+      "weight": 1,
+      "active": true,
+      "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run."
+    },
+    {
+      "id": "B11",
+      "name": "Good jockey / good trainer on bad horse",
+      "weight": 2,
+      "active": true,
+      "description": "Top connections on a horse the public has dismissed. They see something the market doesn't."
+    }
+  ],
+  "liveOdds": {},
+  "scratches": {
+    "4": [
+      3
+    ],
+    "5": [
+      4
+    ],
+    "6": [
+      4,
+      7
+    ],
+    "7": [
+      3
+    ],
+    "8": [
+      5
+    ],
+    "9": [
+      2,
+      5,
+      12,
+      13
+    ],
+    "10": [
+      12
+    ]
+  },
+  "recommendations": {
+    "0": {
+      "win": {
+        "horse": 1,
+        "name": "Moroder",
+        "odds": "4/1",
+        "reason": "Elite jockey Ortiz Jr (27% meet win rate) on a horse with back-to-back wins and strong dirt form (8-2-1-1). Highest value at a price among non-favorites at 7/2+. Beyer 74 is competitive in this field and the hot form off Turfway victories gives him the edge over weaker longshots."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          2,
+          4
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          2,
+          4,
+          6
+        ]
+      },
+      "notes": "If #1 Moroder moves to favoritism or drifts below 7/2, pivot win bet to #6 League Of Legends at 6/1 as the only remaining 7/2+ option with any form. If #4 Shadow Coast scratches, rebuild entirely around pace dynamics.",
+      "analysis": "This is a competitive $20K claimer at 6 furlongs with the favorite Shadow Coast (#4) holding the highest Beyer (75) and proven CD form, making him a must-use in exotics. The pace should be honest with multiple speed types, favoring horses that can press or stalk. Our win bet targets value: Moroder (#1) brings elite connections (Ortiz Jr) and red-hot form (back-to-back Turfway wins) at 4/1, satisfying the 7/2+ requirement while the favorite is eliminated. Aerate (#2) gets Asmussen's 17% barn and already won at CD this meet at 7f, making her dangerous at any trip. The exacta captures the three horses with the best combination of form, class, and connections. The trifecta adds League Of Legends (#6) for required width despite being an 8-year-old with fading form—necessary to satisfy the 4-horse minimum. Note that Homie (#3) is dismissed entirely due to 0-for-0 dirt fast record and first-time CD surface switch, while Gallo De Fuego (#5) is ignored for being 0-for-6 on dirt fast despite the Into Mischief pedigree.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey on bomb requires a top-3 meet rider on a 12/1+ horse. Ortiz Jr is on #1 Moroder but only at 4/1. Homie is 12/1 but Torres is not elite (8% win rate). Signal did not fire."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action requires live odds comparison to ML. No live odds were provided in this analysis, so signal cannot be evaluated. Needs manual input before post time."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift on quality requires live odds showing a former ML favorite drifting to 4/1+. No live odds available, cannot evaluate. Needs manual input."
+        },
+        {
+          "id": "B4",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Hot barn at a price requires trainer >15% win rate at meet on a horse >6/1. Steven Asmussen (#2) is 17% but Aerate is only 9/5. Hamm (#1) is 17% but Moroder is 4/1. No qualifying horses."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot did not fire. All horses have run at or near 6f before. Into Mischief (#5) excels at 7f-8.5f but is shortening to 6f, not stretching. No first-time distance unlocks."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "Best Beyer in field fires for Shadow Coast with a 75 figure, the highest among all live starters. Moroder 74, Aerate 72, Gallo 72, Homie 70, League 64."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Blinkers change requires notation of equipment changes (on/off/first time). No blinker changes mentioned in the DRF data for any horse."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment requires observation of today's early race results to determine if speed/stalkers/closers are winning. This is R1, first race of the card, so no prior results available. Cannot evaluate."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "Earnings leader in class fires for Shadow Coast with $108,724 lifetime, the highest in this field. Gallo De Fuego $88,501, League $50,015, Moroder $44,760, Aerate $37,860, Homie $37,118."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-timer with expensive pedigree requires 0 lifetime starts plus $100K+ stud fee or purchase. All horses in this field have multiple starts. Does not apply."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Good jockey/good trainer on bad horse requires both elite connections on a horse 8/1+. Ortiz Jr (elite) is on Moroder but Hamm is not elite trainer. Steven Asmussen (elite) is on Aerate but she's only 9/5. No horse qualifies."
+        }
+      ]
+    },
+    "1": {
+      "win": {
+        "horse": 5,
+        "name": "Galatina",
+        "odds": "6/1",
+        "reason": "Hot barn signal fires (Asmussen 16% at meet), elite Hall of Fame trainer, second-highest earnings ($73K) proves class level, and 6/1 odds provide value. Asmussen barns cashing at this rate require respect regardless of inconsistent individual record."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          3,
+          5
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          3,
+          5,
+          7
+        ]
+      },
+      "notes": "If #5 Galatina moves under 7/2 by post, pivot win bet to #7 State Charmer (10/1, elite jockey Saez). Favorite #1 must stay in all exotics per Rule R4.",
+      "analysis": "This is a wide-open $30K claimer where form is unreliable but connections matter. The favorite Quinn's Promise is most proven but offers no value at 9/5. The real story is Don't Be Salty (#3) - Ortiz Jr taking the call with first-time blinkers for Sharp's hot barn (16%) and carrying the best speed figure. At 3/1 this horse can't be the win bet but anchors the exotics. Galatina gets the win call because Asmussen's 16% meet win rate is a hard signal - when this barn fires at that clip, you back them at 6/1 regardless of the 1-for-13 record. The trifecta adds State Charmer because Saez at 10/1 on a young, improving horse (50% ITM from limited starts) fits our 'elite jockey sees something' profile. Pace should set up for stalkers with multiple speed types contesting early.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockeys present (Ortiz Jr on #3, Ortiz JL on #6, Saez on #7, Lanerie on #1) but none on horses >12/1. #2 Fresh Out is 15/1 but Esquivel is not a top-tier rider."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action cannot be evaluated - requires live odds comparison to morning line. Manual input needed before post time."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift on quality cannot be evaluated - requires live odds to compare against morning line favorites. Manual input needed."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            2,
+            5
+          ],
+          "reasoning": "Hot barn signal fires on #2 Fresh Out (McPeek 16%, 15/1) and #5 Galatina (Asmussen 16%, 6/1). Sharp also at 16% on #3 but horse is only 3/1, under the 6/1 threshold."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot - insufficient data. Would need full past performance running lines showing each horse's distance history. Race is 1 mile; Into Mischief line (#3 Audible) typically excels 7f-8.5f so this is within range but not a clear first-time stretch."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            3
+          ],
+          "reasoning": "Best Beyer in field fires for #3 Don't Be Salty, which is noted as having the 'highest speed rating' in the field. #1 shows Beyer 67 but #3's is stated to be higher."
+        },
+        {
+          "id": "B7",
+          "fired": true,
+          "horses": [
+            3
+          ],
+          "reasoning": "Blinkers change fires for #3 Don't Be Salty - FIRST TIME BLINKERS noted in data. Equipment change signals trainer intent."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment cannot be evaluated - requires observation of today's early race results to determine if speed, stalkers, or closers are winning. This is R2, too early to establish pattern."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            1
+          ],
+          "reasoning": "Earnings leader fires for #1 Quinn's Promise at $92K lifetime, highest in field. #5 Galatina second at $73K, #6 Belle Ofthe Dance third at $54K."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-time starter with expensive pedigree - does not fire. All horses have lifetime starts. No FTS in this field."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey + elite trainer on bad horse (8/1+) - does not fire. #7 has Saez (elite) at 10/1 but Hamm is not elite trainer. #3 has both Ortiz Jr and Sharp (both elite) but only 3/1 odds, under 8/1 threshold."
+        }
+      ]
+    },
+    "2": {
+      "win": {
+        "horse": 4,
+        "name": "Whiskey Shot",
+        "odds": "9/2",
+        "reason": "Whiskey Shot fires on B6 (best Beyer 75 in field) and B9 (earnings leader at $81K). Asmussen hot barn (16%) running a lightly-raced Gun Runner colt with room to improve. At 9/2, he's the highest-quality horse at a legitimate price - proven speed figures and class above this level."
+      },
+      "exacta": {
+        "horses": [
+          3,
+          4,
+          6
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          3,
+          4,
+          6
+        ]
+      },
+      "notes": "If Whiskey Shot moves below 3/1 by post time, pivot win bet to #1 Hardtoblame (8/1, Asmussen hot barn). Watch for late money on #6 Il Cavallino - he's never won in 6 tries but hits the board consistently.",
+      "analysis": "Pace should be moderate with Fast Joker (#2) and the favorite Il Cavallino (#6) likely pressing early. This sets up well for Whiskey Shot's stalking style. Class-wise, this is the perfect spot for #4 - he's earned $81K lifetime which is 50% more than any other runner, and his Beyer 75 is the highest in the field. He's dropping from tougher spots and gets the Asmussen barn firing at 16%. The favorite #6 has never won (0-for-6) but places consistently, so he's a must-use in exotics. Stefan's Title (#3) gets Ortiz JL at 4/1, and Hardtoblame (#1) adds Asmussen depth at 8/1 for the trifecta. Gun Runner progeny (Whiskey Shot's sire) excel with pace to chase, and this race sets up perfectly for that. Best value is our win bet at 9/2 on the class of the field.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey on bomb requires top-tier rider (Ortiz Jr/Prat/Saez L/Gaffalione/Ortiz JL) on 12/1+ horse. No such combination exists - the longshot #7 at 15/1 has Graham (not elite)."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action cannot be evaluated - requires live odds comparison to morning line. No live odds entered yet."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift on quality cannot be evaluated - requires live odds to detect drift from ML favorite/co-favorite to 4/1+."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            1
+          ],
+          "reasoning": "Hot barn at price fires on #1 Hardtoblame. Steven Asmussen is 16% at meet (above 15% threshold) and Hardtoblame is 8/1 (above 6/1 threshold). Signal fires for +2 points."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot cannot be reliably evaluated - would need full past performance running lines to confirm each horse's distance history and sire progeny patterns. Data insufficient."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "Best Beyer in field fires on #4 Whiskey Shot with a 75 Beyer - highest among all starters. Others: #1/2/6 at 73, #7 at 56. Signal fires for +1 point."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Blinkers change - no equipment changes noted in the field data. No first-time blinkers or blinkers off annotations found."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment not available pre-race - requires observation of today's early race results to identify if speed/stalkers/closers are favored. This is Race 3, so insufficient data."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "Earnings leader in class fires on #4 Whiskey Shot with $81K lifetime earnings - highest in field. Others: #6 $57K, #5 $52K, #2 $50K, #1 $42K, #7 $35K, #3 $14K. Signal fires for +1 point."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-timer with expensive pedigree - no first-time starters in this field. All horses have lifetime race records."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Good jockey + good trainer on bad horse (8/1+) requires BOTH connections to be elite. #1 at 8/1 has Asmussen (elite trainer) but Rosado (not elite jockey). #7 at 15/1 has neither. No horse qualifies."
+        }
+      ]
+    },
+    "3": {
+      "win": {
+        "horse": 5,
+        "name": "Sawyer Fox",
+        "odds": "10/1",
+        "reason": "Best form in the field with 33% lifetime win rate and $109K earnings. Consistent at this claiming level with proven ability to close the deal. Value play at 10/1 against a weak favorite showing only a 75 Beyer."
+      },
+      "exacta": {
+        "horses": [
+          2,
+          5,
+          8
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          2,
+          5,
+          7,
+          8
+        ]
+      },
+      "notes": "If #5 moves below 7/2, pivot win bet to #6 Raising Kane (12/1, Asmussen barn). If #2 scratches, rebuild entire race - favorite removal changes pace dynamics.",
+      "analysis": "Wide-open $16K claimer at 6F where class and consistency matter most. #2 Lord Majesty is a vulnerable favorite with the lowest Beyer (75) among contenders. #8 Top Gun Tommy brings a monster 94 Beyer and $495K in lifetime earnings - the proven commodity stepping down. #5 Sawyer Fox shows best win percentage (33%) and represents value at 10/1 against a soft favorite. #7 Bebedouro adds Gaffalione (elite meet rider) on a Sharp barn firing at 16% - can't leave that combo out of the tri in a claimer where any horse can hit the board. Pace likely competitive with multiple speed types in a sprint, favoring horses who can settle and finish. The win bet targets form and value; the exotics cover the favorite, the speed standout, and elite connections.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey on bomb (>12/1) - Gaffalione is on #7 at 3/1, not a bomb. No top-5 meet jockey riding a longshot in this field."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action - No live odds data provided. Cannot evaluate without post-time odds comparison to morning line. Requires manual input before race."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift on quality - No live odds data provided. Cannot detect drift from ML without current tote board. Requires manual input."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            6
+          ],
+          "reasoning": "Hot barn at price - #6 Raising Kane: Asmussen barn shows 16% win rate at meet and horse is 12/1 ML. Signal fires - Hall of Fame trainer at double-digit odds is value."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot - Insufficient distance history and sire progeny data in provided DRF excerpt. Would need full past performance running lines and sire reports."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "Best Beyer in field - #8 Top Gun Tommy shows 94 Beyer, significantly higher than any other horse (next best: #1 and #4 at 80). Clear speed figure advantage."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Blinkers change - No equipment changes (blinkers on/off, first-time blinkers) noted in the provided data for any horse."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment - No early race results available to establish today's track bias (speed favoring vs. closer favoring). Cannot evaluate without observing R1-R3 outcomes."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "Earnings leader in class - #8 Top Gun Tommy has $495K lifetime earnings, massively higher than any other starter (next: #7 at $137K). Proven money-earner."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-timer + expensive pedigree - All horses have race experience (Life stats show starts for all). No first-time starters in this field."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey + elite trainer on bad horse (8/1+) - #6 has elite trainer Asmussen at 12/1, but jockey Asmussen Keith J (likely family but not top-5 meet rider). No clear elite-jockey + elite-trainer combo on a longshot."
+        }
+      ]
+    },
+    "4": {
+      "win": {
+        "horse": 3,
+        "name": "Admiral Hall",
+        "odds": "7/2",
+        "reason": "Elite connections with Gaffalione and hot trainer Jacobson, best Beyer in field (76), War Front pedigree, lightly raced with room to improve. Qualifies at exactly 7/2 and represents best value over the overbet favorite."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          3,
+          5
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          2,
+          3,
+          5
+        ]
+      },
+      "notes": "If #3 Admiral Hall moves below 7/2 to favoritism, pivot win bet to #5 Truly Legit at 4/1 (second-best Beyer, Into Mischief pedigree for distance).",
+      "analysis": "Small 5-horse starter allowance with limited pace pressure. Favorite #1 Baytown Bruiser is overbet at 9/5 given pedestrian record (2-for-23) despite highest earnings. Admiral Hall at 7/2 is the value play combining elite jockey Gaffalione with hot trainer Jacobson (explicitly noted), best available Beyer (76), and upside from limited experience (only 3 starts). War Front pedigree adds class. Truly Legit offers secondary value at 4/1 with Authentic/Into Mischief line suited to the mile and second-best Beyer (71). Exacta covers the favorite (likely to hit board in small field) plus top two value plays. Trifecta adds You Ain't Poppn at 6/1 for required 4-horse width based on decent 33% win rate. Signal scoring low across field - this race decided by class, connections, and form rather than explosive pattern signals.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockeys present (Geroux on #1, Gaffalione on #3) but none on a 12/1+ longshot. Signal requires elite jockey choosing a bomb over shorter-priced mounts."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - requires live odds vs morning line comparison. No live tote data provided."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - requires live odds to measure drift from morning line favorite. #1 is ML favorite at 9/5 but need live odds to check drift."
+        },
+        {
+          "id": "B4",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Jacobson explicitly noted as 'Hot Trainer' on #3 Admiral Hall, but horse is 7/2 (3.5/1), not 6/1+. Signal requires hot barn at 6/1 or higher."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - race is 1 mile, sires noted (War Front #3, Authentic/Into Mischief #5, Preservationist #1) but no past running lines showing distance history to confirm first-time stretch-out."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            3
+          ],
+          "reasoning": "Beyer figures: #3 Admiral Hall 76 (highest), #5 Truly Legit 71, #6 Versed 56, #1 NA. Admiral Hall has best speed figure in field."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "No equipment changes noted in data. No 'first time blinkers', 'blinkers on', or 'blinkers off' notations present."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - this is R5, would need results from R1-R4 to identify emerging track bias (speed vs closers winning). No early race result data provided."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            1
+          ],
+          "reasoning": "Lifetime earnings: #1 Baytown Bruiser $144K (highest), #6 Versed $81K, #5 Truly Legit $63K, #2 and #3 tied at $34K. Earnings leader is #1."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "All horses have multiple lifetime starts. No first-time starters in field. #3 Admiral Hall least experienced with 3 starts but not a debut."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockey + elite trainer combos present (#3 has Gaffalione + Jacobson), but #3 is 7/2, not 8/1+. Signal requires both elite connections on a horse the public has dismissed at 8/1 or higher."
+        }
+      ]
+    },
+    "5": {
+      "win": {
+        "horse": 9,
+        "name": "Vino Dominus",
+        "odds": "9/2",
+        "reason": "Vino Dominus has the best resume in this field: 2 wins from 7 starts, highest Beyer figure (70), and highest earnings ($27K). Signals B6 (best Beyer) and B9 (earnings leader) both fire here. At 9/2, we're getting value on a horse that should be closer to favoritism based on proven form and speed figures. The only horse with multiple wins and the experience edge over this weak maiden claiming field."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          5,
+          9
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          5,
+          9,
+          10
+        ]
+      },
+      "notes": "If #9 Vino Dominus moves to favoritism (shorter than #1 Carson), pivot win bet to #5 Paired (8/1) on the hot trainer angle. Jacobson is noted as a hot trainer and Paired shows the highest speed rating despite being 0-for-3. If both #9 and #5 drift to co-favoritism, pivot to #10 Tims (6/1) - 3 wins and proven form.",
+      "analysis": "This is a weak maiden claiming field where only two horses have multiple wins: Vino Dominus (2) and Tims (3). The pace sets up with limited early speed, likely making this a tactical race where class and speed figures matter more than running style. Carson is the ML favorite at 7/2 despite never winning - presumably on recent form or workouts not shown in the PPs. Vino Dominus presents clear value at 9/2 with the highest Beyer (70 vs field average around 50), proven winning ability, and highest earnings. Paired gets into the exotics on the hot trainer signal (Jacobson noted) and the highest speed rating note - at 8/1 with only 3 career starts, there's upside if the barn thinks they're ready. Tims rounds out the trifecta with 3 wins and $26K banked. The favorite Carson must be included per strategy rules despite the thinner resume. This exacta and tri structure captures the proven form horses (9, 10) while including the improving angle (5) and the public's choice (1).",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "Abel Cedillo is an elite Churchill rider (top-5 caliber) and is aboard Spring St. Dreamer at 20/1 ML odds. When a top jockey chooses a longshot over shorter-priced options, it signals inside information. However, Spring St. Dreamer is 0-for-3 with minimal earnings, making this a tough win bet despite the signal. Better suited as a trifecta depth horse if odds hold."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - no live odds data provided. This signal requires comparison of morning line odds to live tote odds at post time to detect sharp late money (3+ point drop from ML). Would need manual odds entry before race start."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - no live odds data provided. This signal detects when a morning line favorite or co-favorite drifts to 4/1+ on the live board, indicating quality that the public is overlooking. Requires live odds for drift comparison."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            5
+          ],
+          "reasoning": "Paired is trained by David Jacobson, who is explicitly noted as a 'Hot Trainer' in the data. At 8/1 ML odds, this meets the >6/1 threshold. Hot barns (>15% win rate at meet) running horses at a price are often underbet - the trainer wouldn't run unless the horse is ready. Paired has only 3 starts (0-0-0) but also shows 'Highest Speed Rating' in the field per notes, suggesting strong workouts or hidden form."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot definitively evaluate without full pedigree database access. Race distance is 1 mile. Sires noted: Hard Spun (Carson - versatile), Brody's Cause (Punkin Boy - middle distance), Lord Nelson (Big Nelson - potentially miler specialist), Always Dreaming (Spring St. Dreamer - classic 9f type), Special Vintage/Domaino (Vino Dominus - unknown), Lookin at Lucky (Whatever - classic distances), Knicks Go (Chasing Gray - speed/sprint specialist). None jump out as clear first-time-at-optimal-distance cases based on available data."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            9
+          ],
+          "reasoning": "Vino Dominus shows the highest Beyer Speed Figure in the field at 70. Next closest are Carson (60), Tims (52), and Whatever (43). A 10+ point Beyer edge in a maiden claiming field is significant - this horse has proven they can run faster than anyone else here. Best last-race Beyer is a core speed figure advantage."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "No blinkers equipment changes noted in the data provided. Would look for 'FIRST TIME BLINKERS', 'Blinkers ON', or 'Blinkers OFF' annotations. Equipment changes signal trainer intent - something is different today - but none are present in this race."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate - requires observation of today's early race results to identify if speed horses, stalkers, or closers are winning. Track bias develops through the card based on weather, track maintenance, and rail position. Since this is R6, we could potentially observe R1-R5 results, but that data was not provided. Signal disabled for this analysis."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            9
+          ],
+          "reasoning": "Vino Dominus has the highest lifetime earnings in the field at $27,000, narrowly ahead of Tims ($26K). In maidens, earnings indicate consistency and ability to hit the board. However, note that in claiming races, high earnings can sometimes indicate an inconsistent horse that's been around the block. In this context, Vino's earnings come from 7 starts with 2 wins and a third - that's quality form, not just showing up."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "No first-time starters in this race. All horses have at least 2 career starts (Carson 2, Punkin Boy 6, Mountain Grandeur 4, Paired 3, Big Nelson 6, Spring St. Dreamer 3, Vino Dominus 7, Tims 9, Whatever 8, Chasing Gray 4). Signal applies only to debut runners with expensive pedigrees (high stud fees or purchase prices), where connections paid premium money and expect a performance."
+        },
+        {
+          "id": "B11",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Looking for BOTH elite jockey AND elite trainer on a horse 8/1+. Elite jockeys in field: Rafael Bejarano (#3 Mountain Grandeur, 10/1) and Abel Cedillo (#8 Spring St. Dreamer, 20/1). Elite trainers: David Jacobson (#5 Paired, 8/1). None of these horses have BOTH connections together. Bejarano/Foley combo on #3 has the elite jockey but Foley isn't a top-tier barn. Cedillo/Shirer on #8 has elite jockey but Shirer isn't elite. Paired has elite trainer Jacobson but Machado isn't a top jockey. Signal doesn't fire."
+        }
+      ]
+    },
+    "6": {
+      "win": {
+        "horse": 8,
+        "name": "Secret Hideaway",
+        "odds": "8/1",
+        "reason": "Fires six signals - highest in field. Beyer 71 best figure by far. First-time blinkers from Walsh (16% barn) signals intent. Gaffalione (elite) + Walsh (elite) on dismissed 8/1 horse triggers B11 - they see something the public doesn't."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          7,
+          8
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          6,
+          7,
+          8
+        ]
+      },
+      "notes": "If #8 moves below 7/2, pivot win bet to #7 Mony Mony at 4/1. Favorite #1 Beach Heist must stay in all exotics per Rule R4.",
+      "analysis": "Short turf sprint for 3YO fillies. Beach Heist is the rightful favorite with Prat and a 30% combo, but Rule R1 forces us to find value elsewhere. Secret Hideaway is that value - her six triggered signals are the most in the field, led by the equipment change (first-time blinkers from a 16% barn) and best Beyer figure (71 vs next-best 24). The B11 signal captures the key insight: Gaffalione and Walsh are both elite, yet this horse is 8/1. They don't waste mounts or equipment moves. Mony Mony is the earnings leader ($197K) with Ortiz Jr aboard and the highest speed rating - she's getting proper respect at 4/1. Sapphire Beach (5/2) rounds out the trifecta with consistent form (4 of 6 ITM) and Ortiz JL. The exacta box captures the favorite, our value play, and the class horse. Trifecta adds the second choice for coverage.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "Elite jockey Saez (top-5 rider at meet) chose #4 Snappy Comeback at ML 15/1. This signals insider confidence despite the public dismissal."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action signal requires live odds comparison to morning line. No live odds data provided in race data - cannot evaluate."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift signal requires live odds to compare against ML favorites. No live odds available - cannot evaluate."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            5,
+            8
+          ],
+          "reasoning": "#5 Snow Face Princess: Asmussen 16% trainer win rate at meet, running at 12/1 (>6/1). #8 Secret Hideaway: Walsh 16% trainer win rate, running at 8/1 (>6/1). Both are hot barns running horses the public is underlaying."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot requires full past performance distance history and sire progeny stats by distance. Insufficient data in DRF extract to evaluate confidently."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "#8 Secret Hideaway has Beyer 71 - the only meaningful speed figure in the field. #4 shows Beyer 24 which is very slow. #7 noted as 'Highest Speed Rating' but no specific Beyer listed. #8's 71 is definitively the best."
+        },
+        {
+          "id": "B7",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "#8 Secret Hideaway shows 'FIRST TIME BLINKERS' - equipment change indicates trainer intent and a planned tactical adjustment for this race."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment requires observation of early race results to identify which running styles (speed/stalker/closer) are winning today. This is R7 so earlier races have run, but no bias data was provided in race materials."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            7
+          ],
+          "reasoning": "#7 Mony Mony has lifetime earnings of $197K - highest in field. Next closest: #6 Sapphire Beach $189K, #4 Snappy Comeback $136K. Mony Mony is the earnings leader among starters."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-time starter signal requires a horse with 0 lifetime starts. All horses in this field have race experience (minimum Life 2-1-0-1). No debuts."
+        },
+        {
+          "id": "B11",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "#8 Secret Hideaway at 8/1 has both elite jockey (Gaffalione - explicitly listed as top-5) AND elite trainer (Walsh - explicitly listed as top-tier). The public has dismissed this combination at 8/1. Elite connections don't waste opportunities - they see value the market doesn't."
+        }
+      ]
+    },
+    "7": {
+      "win": {
+        "horse": 8,
+        "name": "Delancey Street",
+        "odds": "12/1",
+        "reason": "Highest signal score at 5 points. Gaffalione/Casse are elite connections that don't waste FTS entries — both B1 and B11 fired. Street Sense sire can get 6.5f. At 12/1 this is exceptional value for a horse that could easily be 6/1 or 7/2 based on connections alone."
+      },
+      "exacta": {
+        "horses": [
+          8,
+          10,
+          11
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          7,
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      "notes": "If #8 takes heavy late money and drops below 7/1, pivot win bet to #9 Gadget Play (Into Mischief $250K with Saez at 8/1). If #11 scratches, rebuild entirely — the favorite scratch changes the whole dynamic.",
+      "analysis": "This maiden sprint sets up as a debut-horse lottery, but the connections tell the story. Campobasso (Prat/Baffert) is rightfully favored at 4/1 and must be in all exotics. Study (McCarthy hot trainer) at 5/1 is the logical second choice. But the value play is Delancey Street at 12/1 — Gaffalione and Casse on an FTS is a 'good jockey/good trainer on bad odds' situation. They chose this horse, they entered it here, and the public is dismissing it. Gadget Play adds exotic depth with his $250K Into Mischief pedigree and Saez, while Civic Charm (Mott) gives us another proven barn at a price. Five-horse trifecta provides the width Rule R3 demands after the 3-horse box failures on day one.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "Gaffalione (elite, top-3 meet rider) on #8 Delancey Street at 12/1. Elite jockey choosing a double-digit FTS over shorter-priced mounts signals insider confidence."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "No live odds data available from DRF PDF. Cannot evaluate late tote action without manual odds input at post time."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate odds drift without live odds comparison to morning line. Requires manual input."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            12
+          ],
+          "reasoning": "Asmussen at 16% win rate (exceeds 15% threshold) running #12 Interrogator at 15/1. Hot barn angle fires, though the Beyer 25 from debut is concerning."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "No horses stretching to optimal sire distance. 6.5f is standard sprint range for all these pedigrees. Street Sense and Into Mischief can handle it, but no unlocking distance stretch scenario."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            3
+          ],
+          "reasoning": "#3 Impractical has best proven Beyer at 73 among horses with race history. #1 shows 85 but that appears to be projection for FTS, not earned figure."
+        },
+        {
+          "id": "B7",
+          "fired": true,
+          "horses": [
+            2
+          ],
+          "reasoning": "#2 McCann explicitly noted as 'FIRST TIME BLINKERS' with Ortiz Jr. Equipment change signals trainer intent to wake this horse up."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Cannot evaluate without observing today's early race results. Track bias requires pattern recognition from completed races. Not available for analysis yet."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "#4 Hawkeye State leads field with $33K lifetime earnings despite no wins. Most proven at this class level by bankroll metric."
+        },
+        {
+          "id": "B10",
+          "fired": true,
+          "horses": [
+            9
+          ],
+          "reasoning": "#9 Gadget Play is Into Mischief FTS with $250K purchase price explicitly noted. Expensive pedigree signal fires — connections paid premium and expect performance."
+        },
+        {
+          "id": "B11",
+          "fired": true,
+          "horses": [
+            8
+          ],
+          "reasoning": "#8 Delancey Street has BOTH Gaffalione (elite jockey) AND Casse (elite trainer) at 12/1. When top-tier connections both choose a horse the public has at 8/1+, they see value the market doesn't. Textbook B11."
+        }
+      ]
+    },
+    "8": {
+      "win": {
+        "horse": 6,
+        "name": "Memory",
+        "odds": "4/1",
+        "reason": "Beyer 93 dominates this field by 8+ points over the favorite and 16 points over most runners. Baffert barn, Uncle Mo sire, at 4/1 when the figures say this should be the chalk. Classic overlay - the public went with Ortiz Jr/Cox connections on #4, but Memory's speed figure screams they're the best horse in here. B6 signal fired (best Beyer), and at 4/1 (qualifies as 7/2+), this is the value play the strategy demands."
+      },
+      "exacta": {
+        "horses": [
+          4,
+          6,
+          8
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          3,
+          4,
+          6,
+          8
+        ]
+      },
+      "notes": "If Memory moves to favoritism before post (drops below 7/2), pivot win bet to #8 Noble Affair (10/1, hot Asmussen barn, 4 signal points). If both Memory and Noble Affair drop below 7/2, pivot to #3 Western Warrior (20/1, highest signal score at 5 points, elite Ortiz JL/Casse combo on longshot).",
+      "analysis": "This race sets up as a classic figure-vs-connections overlay situation. The public installed #4 Rebel Instinct (Ortiz Jr/Cox) as the 3/1 favorite on brand-name connections and solid 85 Beyer, but #6 Memory's 93 Beyer is a different class - that's an 8-point edge, which at this level translates to multiple lengths. Baffert doesn't run them if they're not live. At 4/1, Memory is the overlay the strategy seeks - form says they should be shorter. The exacta box covers the favorite (required), our win bet Memory, and the value angle #8 Noble Affair (Asmussen 16% hot barn, 4 signal points at 10/1). Trifecta adds #3 Western Warrior, who scored 5 signal points (B1+B11: elite Ortiz JL on a 20/1 bomb for respected Casse barn). Four-horse tri gives us the width Rule R3 demands after the 3-horse box whiff on Day 1. If Memory's figure holds and Baffert has them ready, this is a takeover spot at a square price.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": true,
+          "horses": [
+            1,
+            3
+          ],
+          "reasoning": "Elite jockey on bomb signal. Gaffalione (top-5 jockey) on #1 Lighter at 15/1, and Ortiz JL (top-5) on #3 Western Warrior at 20/1. Both are elite riders choosing longshots over shorter-priced mounts - they see something. Fires on both."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Late tote action signal cannot be evaluated - no live odds provided yet. Requires manual input at post time to compare ML vs live odds for 3+ point drops."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Odds drift on quality signal cannot be evaluated - no live odds provided. Would need to see if any horse that was ML favorite/co-fav has drifted to 4/1+ at post time."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            8,
+            10
+          ],
+          "reasoning": "Hot barn at a price signal. #8 Noble Affair: Asmussen confirmed at 16% (>15% threshold) running at 10/1 (>6/1) - fires. #10 I Did I Did: Maker noted as 'Hot Trainer' running at 15/1 (>6/1) - fires. #4 Rebel Instinct has Cox hot barn but is 3/1 (below 6/1 threshold) so does not fire."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Distance stretch to sire sweet spot signal. Race is 1 mile (8f). Curlin on #10 typically wants 9f+, so 8f isn't the unlock distance. Into Mischief, Essential Quality, Uncle Mo, Constitution all handle 8f in their normal range. No clear first-time distance stretch-out pattern detected with available data."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            6
+          ],
+          "reasoning": "Best Beyer in field signal. #6 Memory's 93 Beyer is the clear highest - next best is #4 at 85, then #7 at 83. Memory's figure dominates by 8+ points. Single best figure in the race fires on Memory only."
+        },
+        {
+          "id": "B7",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Blinkers change signal. No blinker equipment changes (on or off) noted in the provided data for any horse."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias alignment signal cannot be evaluated yet - requires observation of earlier races today to determine if speed/stalkers/closers are favored. Not available from DRF data alone or before races begin."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            10
+          ],
+          "reasoning": "Earnings leader in class signal. #10 I Did I Did has the highest lifetime earnings in the field at $140K, ahead of #9 Biloba ($131K) and #3 Western Warrior ($112K). Most proven earner at this level fires on #10."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "First-timer + expensive pedigree signal. No true first-time starters (0-0-0-0 life) in this field. All horses have at least 1 career start. Signal does not apply."
+        },
+        {
+          "id": "B11",
+          "fired": true,
+          "horses": [
+            3,
+            8
+          ],
+          "reasoning": "Good jockey + good trainer on bad horse (both top-tier, 8/1+). #3 Western Warrior: Ortiz JL (elite) + Casse (top trainer) at 20/1 - public dismissing a horse with elite connections, fires. #8 Noble Affair: Geroux (strong rider) + Asmussen (top trainer) at 10/1 - hot barn at a price with solid jockey, fires. #10 I Did I Did has Maker (top trainer) but Hernandez Jr isn't top-tier, so doesn't fire (needs both)."
+        }
+      ]
+    },
+    "9": {
+      "win": {
+        "horse": 1,
+        "name": "Timestream",
+        "odds": "8/1",
+        "reason": "Highest signal score (5 points) in the field. Tied for best Beyer at 80 with the favorite but at 4x the price. Elite connections—Ortiz Jr riding for Asmussen with a 16% win rate combo. Fires on B4 (hot barn at price), B6 (best speed figure), and B11 (elite jockey + elite trainer on a dismissed horse). Public undervaluing proven speed and top-tier connections."
+      },
+      "exacta": {
+        "horses": [
+          1,
+          6,
+          11
+        ]
+      },
+      "trifecta": {
+        "horses": [
+          1,
+          4,
+          6,
+          11
+        ]
+      },
+      "notes": "If #1 Timestream moves below 7/2, pivot win bet to #6 Barracks at 10/1 (McPeek hot barn). Favorite #11 Happy Prince included in all exotics per Rule R4.",
+      "analysis": "Wide-open maiden claimer on turf with 6 first-time starters. Favorite #11 Happy Prince (5/2) has elite Gaffalione/Casse connections and tied-best Beyer 80 but offers no win value—goes in exotics only. The value is #1 Timestream at 8/1: tied-best Beyer, Ortiz Jr/Asmussen hot combo (16%), and multiple signal triggers despite public dismissal. #6 Barracks brings McPeek's 16% barn on a first-timer at 10/1. #4 Culture War adds depth with highest earnings ($55K) and most experience (9 starts). Trifecta box gives width with 4 horses covering elite connections, hot barns, and proven form. This is a form/connections angle against a field of mostly unproven horses.",
+      "signalBreakdown": [
+        {
+          "id": "B1",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Elite jockeys in field: Ortiz Jr (#1 at 8/1), Saez (#9 at 6/1), Gaffalione (#11 at 5/2). None riding horses at >12/1 odds. Signal requires top-5 jockey on bomb (12/1+)."
+        },
+        {
+          "id": "B2",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Live odds not provided. Cannot evaluate late tote action without comparison between morning line and post-time odds. Would need manual input of live odds to detect 3+ point drops indicating sharp money."
+        },
+        {
+          "id": "B3",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Live odds not provided. Favorite on ML is #11 Happy Prince at 5/2, but cannot determine if drifted to 4/1+ without live odds comparison. Requires manual input."
+        },
+        {
+          "id": "B4",
+          "fired": true,
+          "horses": [
+            1,
+            6
+          ],
+          "reasoning": "#1 Timestream: Asmussen + Ortiz Jr combo shows 16% win rate, horse at 8/1 qualifies (>6/1 threshold). #6 Barracks: McPeek listed at 16% meet win rate, horse at 10/1 qualifies. Both hot barns running horses the public is dismissing."
+        },
+        {
+          "id": "B5",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Race is 1 mile turf. Insufficient data on sire distance preferences and complete past distance history for each horse. Would need detailed pedigree stats (e.g., War Front progeny excel at turf routes) and full running lines to determine first-time optimal distance stretch-outs."
+        },
+        {
+          "id": "B6",
+          "fired": true,
+          "horses": [
+            1,
+            11
+          ],
+          "reasoning": "#1 Timestream and #11 Happy Prince both show Beyer 80, tied for best in field. Next-best is #4 Culture War at 69. Both horses have proven they can run fast enough to win this race based on speed figures."
+        },
+        {
+          "id": "B7",
+          "fired": true,
+          "horses": [
+            3
+          ],
+          "reasoning": "#3 Thespian shows 'FIRST TIME BLINKERS' notation. Equipment change after 3 winless starts indicates trainer intent—trying something different to get a reaction. Blinkers can sharpen focus."
+        },
+        {
+          "id": "B8",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Track bias cannot be evaluated without observing earlier race results from today's card. Would need to know if speed horses or closers have been winning to determine which running styles align with current track conditions."
+        },
+        {
+          "id": "B9",
+          "fired": true,
+          "horses": [
+            4
+          ],
+          "reasoning": "#4 Culture War has highest lifetime earnings at $55K, ahead of #11 Happy Prince ($49K), #2 Both Sides Of Bad ($22K), and all others. Most proven money-earner in this class level despite being winless."
+        },
+        {
+          "id": "B10",
+          "fired": false,
+          "horses": [],
+          "reasoning": "Six first-time starters in field (#5, #6, #7, #8, #9, #10). No stud fees or purchase prices explicitly provided in DRF data. Cannot determine which horses have $100K+ pedigree investments without additional auction/stud data."
+        },
+        {
+          "id": "B11",
+          "fired": true,
+          "horses": [
+            1
+          ],
+          "reasoning": "#1 Timestream has BOTH elite jockey (Ortiz Jr—top-5 at meet) AND elite trainer (Asmussen—Hall of Fame) at 8/1 odds. When top-tier connections run a horse the public dismisses, they see something the market doesn't. #9 has elite jockey Saez but trainer Bogle not top-tier. #6 has elite trainer McPeek but jockey Esquivel not elite—both need BOTH to qualify."
+        }
+      ]
+    }
+  }
+}

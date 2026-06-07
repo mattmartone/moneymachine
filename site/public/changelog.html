@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Machine — Strategy Changelog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .changelog { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .changelog__header { margin-bottom: 2rem; }
+        .changelog__title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--text-cream);
+            margin-bottom: 0.25rem;
+        }
+        .changelog__subtitle {
+            font-size: 0.8rem;
+            color: var(--text-body);
+            opacity: 0.7;
+        }
+        .changelog__back {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--accent-amber);
+            text-decoration: none;
+            letter-spacing: 0.05em;
+        }
+        .changelog__back:hover { text-decoration: underline; }
+        .changelog-entry {
+            border-left: 2px solid var(--accent-amber);
+            padding-left: 1.25rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+        .changelog-entry::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-amber);
+        }
+        .changelog-entry__date {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.25rem;
+        }
+        .changelog-entry__title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--text-cream);
+            margin-bottom: 0.5rem;
+        }
+        .changelog-entry__body {
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-body);
+        }
+        .changelog-entry__body ul {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0;
+        }
+        .changelog-entry__body li {
+            padding-left: 1rem;
+            position: relative;
+            margin-bottom: 0.35rem;
+        }
+        .changelog-entry__body li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--accent-amber);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+        .tag {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-right: 0.35rem;
+        }
+        .tag--rule { background: var(--danger); color: #fff; }
+        .tag--bolo { background: var(--accent-amber); color: var(--bg-base); }
+        .tag--strategy { background: var(--success); color: var(--bg-base); }
+        .tag--signal { background: #5b8abf; color: #fff; }
+        .tag--removed { background: #666; color: #fff; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header__brand">
+            <div>
+                <h1 class="header__title">Money Machine</h1>
+                <span class="header__subtitle">Strategy Changelog</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="changelog">
+        <a href="index.html" class="changelog__back">&larr; Back to Tracker</a>
+
+        <div class="changelog__header">
+            <h2 class="changelog__title">Strategy Changelog</h2>
+            <p class="changelog__subtitle">Everything we've added, changed, or removed — tracked over time.</p>
+        </div>
+
+        <!-- 2026-06-06 -->
+        <div class="changelog-entry">
+            <div class="changelog-entry__date">June 6, 2026 — Belmont Day</div>
+            <div class="changelog-entry__title">Major Strategy Overhaul</div>
+            <div class="changelog-entry__body">
+                <p><strong>New Hard Rules:</strong></p>
+                <ul>
+                    <li><span class="tag tag--rule">Rule</span> <strong>No short fields</strong> — skip any race with 5 or fewer horses</li>
+                    <li><span class="tag tag--rule">Rule</span> <strong>No maiden races</strong> — never bet MCL or MSW, form too unreliable</li>
+                    <li><span class="tag tag--rule">Rule</span> <strong>Sit out inside lone speed fave</strong> — pass when fave is post 1-3, E style, only speed in race (exception: pace duel present)</li>
+                    <li><span class="tag tag--rule">Rule</span> <strong>Exclude fave from exacta on sharp class drop</strong> — vulnerable favorite signal</li>
+                </ul>
+
+                <p><strong>New Skill Filters (BOLOs):</strong></p>
+                <ul>
+                    <li><span class="tag tag--bolo">BOLO</span> <strong>Layoff + no workouts</strong> — hard skip on 90+ day layoff with no works (exception: sharp workout pattern = fresh angle)</li>
+                    <li><span class="tag tag--bolo">BOLO</span> <strong>Sharp class drop</strong> — yellow flag; context determines play vs. avoid</li>
+                    <li><span class="tag tag--bolo">BOLO</span> <strong>Recent life</strong> — prefer horses with visible recent form; full checklist for identification</li>
+                    <li><span class="tag tag--bolo">BOLO</span> <strong>Troubled-trip angle</strong> — horses with genuine trouble last out are underbet next time; strongest when today's setup is cleaner</li>
+                </ul>
+
+                <p><strong>New Offensive Strategy:</strong></p>
+                <ul>
+                    <li><span class="tag tag--strategy">Strategy</span> <strong>Beat the vulnerable favorite</strong> — identify fave weakness (style + post + pace) and back the horse whose style profits from the same scenario</li>
+                    <li><span class="tag tag--strategy">Strategy</span> <strong>Pace makes the race</strong> — map E horses first; pace duel vs. lone speed determines the whole race read</li>
+                    <li><span class="tag tag--strategy">Strategy</span> <strong>Exacta exclusion triggers</strong> — leave fave out of exacta on traffic (inside non-E) or pace (speed in duel / closer with no pace) triggers</li>
+                </ul>
+
+                <p><strong>Staking:</strong></p>
+                <ul>
+                    <li><span class="tag tag--strategy">Strategy</span> <strong>Double stake on vulnerable fave in long field</strong> — 10+ horses + confirmed vulnerability = $100 win instead of $50</li>
+                </ul>
+
+                <p><strong>Infrastructure:</strong></p>
+                <ul>
+                    <li>Running-style personas (E / E/P / P / S) — tagged on every horse in field table</li>
+                    <li>Field-size glossary (short = 5 or fewer, long = 10+)</li>
+                    <li>Full execution sequence rewritten — 5 phases, 24 steps, every rule is a gate</li>
+                    <li>DRF data extraction methods added to every step — each rule knows exactly which fields to read</li>
+                </ul>
+
+                <p><strong>Removed:</strong></p>
+                <ul>
+                    <li><span class="tag tag--removed">Removed</span> <strong>S8 — Track bias alignment</strong> — requires live race-day observation, not executable from face book data</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2026-05-30 -->
+        <div class="changelog-entry">
+            <div class="changelog-entry__date">May 30, 2026</div>
+            <div class="changelog-entry__title">Foundation Established</div>
+            <div class="changelog-entry__body">
+                <p><strong>Core Strategy (v1):</strong></p>
+                <ul>
+                    <li><span class="tag tag--rule">Rule</span> <strong>Never bet the favorite to win</strong> — find value at 7/2 or higher</li>
+                    <li><span class="tag tag--rule">Rule</span> <strong>Win bet must be 7/2+</strong> — if pick moves to favoritism, pivot</li>
+                    <li><span class="tag tag--rule">Rule</span> <strong>Trifectas need width</strong> — minimum 4-horse box</li>
+                </ul>
+
+                <p><strong>Bet Structure:</strong></p>
+                <ul>
+                    <li>3 bets per race: Win ($50), Exacta Box ($2-$5/unit), Trifecta Box ($1/unit)</li>
+                    <li>Total race outlay: ~$86-$104</li>
+                </ul>
+
+                <p><strong>Signal Scoring System (S1-S10):</strong></p>
+                <ul>
+                    <li><span class="tag tag--signal">S1</span> Elite jockey on bomb (+3)</li>
+                    <li><span class="tag tag--signal">S2</span> Late tote action (+3) — live odds only</li>
+                    <li><span class="tag tag--signal">S3</span> Odds drift on quality (+2) — live odds only</li>
+                    <li><span class="tag tag--signal">S4</span> Trainer win% >15% at meet (+2)</li>
+                    <li><span class="tag tag--signal">S5</span> Distance stretch-out to sire sweet spot (+2)</li>
+                    <li><span class="tag tag--signal">S6</span> Best last-race Beyer in field (+1)</li>
+                    <li><span class="tag tag--signal">S7</span> Blinkers change (+1)</li>
+                    <li><span class="tag tag--signal">S9</span> Earnings leader in class (+1)</li>
+                    <li><span class="tag tag--signal">S10</span> First-time starter + expensive pedigree (+1)</li>
+                </ul>
+
+                <p><strong>Race Analysis Rules (12 principles):</strong></p>
+                <ul>
+                    <li>Start with the money, respect late action, elite jockey on bombs, odds drift = gift</li>
+                    <li>Scratches require rebuild, distance stretch-outs underbet, hot barns at a price</li>
+                    <li>Earnings aren't everything in claimers</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2026-05-24 -->
+        <div class="changelog-entry">
+            <div class="changelog-entry__date">May 24, 2026 — Day One</div>
+            <div class="changelog-entry__title">Money Machine Goes Live</div>
+            <div class="changelog-entry__body">
+                <ul>
+                    <li>First race day: Churchill Downs, Races 5-10</li>
+                    <li>Record: 2-4, wagered $554, collected $611.40, P/L +$57.40, ROI +10.4%</li>
+                    <li>Signal system validated — S2, S4 cashed; S1+S5 identified a 20/1 winner (missed)</li>
+                    <li>Lesson: 3-horse tri boxes are too tight (0/6) — expanded to 4+ minimum</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+node_modules/
+.next/
+*.jpg
+.DS_Store

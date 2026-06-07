@@ -1,0 +1,369 @@
+{
+  "raceNumber": 6,
+  "timestamp": "May 31, 8:28 PM",
+  "prompt": {
+    "race": {
+      "number": 6,
+      "name": "Maiden Claiming $12,500",
+      "distance": "1 Mile",
+      "surface": "Dirt",
+      "postTime": "3:19 ET",
+      "purse": "$35,000",
+      "condition": "MCL $12,500. Maidens 3YO+. 118 lbs; Older 125.",
+      "horses": [
+        {
+          "number": 1,
+          "name": "Carson",
+          "ml": "7/2",
+          "jockey": "Beschizza Adam",
+          "trainer": "Catalano Wayne M",
+          "notes": "Life 2-0-1-0, $9K. Hard Spun. FAV. Beyer 60."
+        },
+        {
+          "number": 2,
+          "name": "Punkin Boy",
+          "ml": "12/1",
+          "jockey": "Villarreal Oscar",
+          "trainer": "McCall III William P",
+          "notes": "Life 6-0-0-2, $8K. Brody's Cause."
+        },
+        {
+          "number": 3,
+          "name": "Mountain Grandeur",
+          "ml": "10/1",
+          "jockey": "Bejarano Rafael",
+          "trainer": "Foley Gregory D",
+          "notes": "Life 4-0-0-1, $9K."
+        },
+        {
+          "number": 4,
+          "name": "Tlahuicole",
+          "ml": "30/1",
+          "jockey": "Aragon Rolando",
+          "trainer": "Werre Danny",
+          "notes": "SCRATCHED."
+        },
+        {
+          "number": 5,
+          "name": "Paired",
+          "ml": "8/1",
+          "jockey": "Machado Luan",
+          "trainer": "Jacobson David",
+          "notes": "Life 3-0-0-0, $3K. Hot Trainer. Highest Speed Rating."
+        },
+        {
+          "number": 6,
+          "name": "Big Nelson",
+          "ml": "20/1",
+          "jockey": "Sheehy Danny",
+          "trainer": "King Barry L",
+          "notes": "Life 6-0-0-0, $4K. Lord Nelson."
+        },
+        {
+          "number": 7,
+          "name": "Turn And Run",
+          "ml": "15/1",
+          "jockey": "Morales Edgar",
+          "trainer": "Sweezey J K",
+          "notes": "SCRATCHED."
+        },
+        {
+          "number": 8,
+          "name": "Spring St. Dreamer",
+          "ml": "20/1",
+          "jockey": "Cedillo Abel",
+          "trainer": "Shirer Matt A",
+          "notes": "Life 3-0-0-0, $3K. Always Dreaming."
+        },
+        {
+          "number": 9,
+          "name": "Vino Dominus",
+          "ml": "9/2",
+          "jockey": "Torres Cristian A",
+          "trainer": "Drury Jr Thomas",
+          "notes": "Life 7-2-0-1, $27K. Special Vintage (Domaino). Beyer 70."
+        },
+        {
+          "number": 10,
+          "name": "Tims",
+          "ml": "6/1",
+          "jockey": "Esquivel Emmanuel",
+          "trainer": "Santamaria Carlos",
+          "notes": "Life 9-3-0-3, $26K. Beyer 52."
+        },
+        {
+          "number": 11,
+          "name": "Whatever",
+          "ml": "5/1",
+          "jockey": "Carrasco Victor R",
+          "trainer": "McGee Paul J",
+          "notes": "Life 8-0-0-4, $19K. Lookin at Lucky. Beyer 43."
+        },
+        {
+          "number": 12,
+          "name": "Chasing Gray",
+          "ml": "10/1",
+          "jockey": "Torres Jaime A",
+          "trainer": "Forster Grant T",
+          "notes": "Life 4-0-0-0, $2K. Knicks Go."
+        }
+      ],
+      "scratches": [
+        4,
+        7
+      ]
+    },
+    "signals": [
+      {
+        "id": "B1",
+        "name": "Elite jockey on bomb",
+        "weight": 3,
+        "description": "Top-3 meet rider chooses a >12/1 horse over shorter-priced mounts. They know something.",
+        "active": true,
+        "detection": "Identify the top-5 jockeys at the current meet by win count from their stats (format: \"JOCKEY NAME (starts wins 2nds 3rds pct)\"). Top riders include Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL. If any top-5 jockey is riding a horse whose ML or live odds is 12/1 or higher, this signal FIRES (+3).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name and ML odds are always in the DRF data."
+      },
+      {
+        "id": "B2",
+        "name": "Late tote action",
+        "weight": 3,
+        "description": "Horse drops 3+ points from ML by post time. Sharp money = information.",
+        "active": true,
+        "detection": "Compare the LIVE ODDS field (if entered) to the ML odds. If live odds are 3+ points shorter than ML (e.g., ML 8/1 → Live 5/1), this signal FIRES (+3). If no live odds entered, this signal CANNOT be evaluated.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually before execution. Not available from DRF PDF alone."
+      },
+      {
+        "id": "B3",
+        "name": "Odds drift on quality",
+        "weight": 2,
+        "description": "Was fav or co-fav on ML, now drifted to 4/1+. Form didn't change, just money flow. Gift.",
+        "active": true,
+        "detection": "Check if horse was ML favorite or co-favorite (lowest/tied-lowest ML in field). Then check LIVE ODDS — if live odds have drifted to 4/1 or higher, this signal FIRES (+2). Requires live odds to evaluate drift.",
+        "dataStatus": "yellow",
+        "dataNote": "Requires live odds entered manually. ML is in DRF but drift requires live comparison."
+      },
+      {
+        "id": "B4",
+        "name": "Hot barn at a price",
+        "weight": 2,
+        "description": "Trainer win% >15% at meet running a horse at >6/1. Barn cashing regardless of perception.",
+        "active": true,
+        "detection": "In the trainer stats (format: \"Trainer Name (starts wins 2nds 3rds pct)\"), read the pct value (last number, e.g. .17 = 17%). If pct >= .15 AND the horse ML or live odds is 6/1 or higher, this signal FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Trainer win% and ML are both in DRF data."
+      },
+      {
+        "id": "B5",
+        "name": "Distance stretch to sire sweet spot",
+        "weight": 2,
+        "description": "Horse getting their sire's optimal distance for the first time. Pedigree unlocking.",
+        "active": true,
+        "detection": "Check the sire name and the race distance. Research the sire's progeny stats — if this sire's winners peak at today's distance AND the horse has never run this distance before (check past race distances in running lines), this signal FIRES (+2). Common examples: Candy Ride progeny excel at 9f+, Into Mischief at 7f-8.5f.",
+        "dataStatus": "yellow",
+        "dataNote": "Sire is in DRF data. Sire distance stats require general knowledge. Horse distance history is in running lines but may be truncated."
+      },
+      {
+        "id": "B6",
+        "name": "Best Beyer in field",
+        "weight": 1,
+        "description": "Highest speed figure among live starters. Proven fastest horse in here.",
+        "active": true,
+        "detection": "Find the Beyer Speed Figure for each horse (listed as \"Beyer XX\" in notes or extracted from past performance lines). The horse with the single highest Beyer figure among live starters gets this signal FIRED (+1).",
+        "dataStatus": "green",
+        "dataNote": "Beyer figures are in the DRF data for each horse."
+      },
+      {
+        "id": "B7",
+        "name": "Blinkers change",
+        "weight": 1,
+        "description": "Trainer making an equipment move = intent. Something different today.",
+        "active": true,
+        "detection": "Look for \"FIRST TIME BLINKERS\", \"Blinkers ON\", or \"Blinkers OFF\" notation in the horse data. Any blinker equipment change (adding or removing) triggers this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "Blinker changes are noted in DRF program data."
+      },
+      {
+        "id": "B8",
+        "name": "Track bias alignment",
+        "weight": 1,
+        "description": "Horse's running style (speed/stalker/closer) matches today's track pattern.",
+        "active": true,
+        "detection": "Determine each horse's running style from their past race descriptions (pressed/led = speed, stalked/tracked = stalker, rallied/closed = closer). Then check if today's early race results favor a particular style. If the horse's style matches the emerging bias, FIRE (+1). If no races run yet today, cannot evaluate.",
+        "dataStatus": "red",
+        "dataNote": "Requires observation of today's early race results. Not available from DRF PDF or before races begin. Toggle off for early races."
+      },
+      {
+        "id": "B9",
+        "name": "Earnings leader in class",
+        "weight": 1,
+        "description": "Most $ earned among starters at this class level. Proven they belong.",
+        "active": true,
+        "detection": "Parse lifetime earnings from each horse (format: \"$XX,XXX\" or \"$XXK\" in life stats). The horse with the highest lifetime earnings among live starters gets this signal FIRED (+1). Note: In claimers, high earnings can mean inconsistency — use with context.",
+        "dataStatus": "green",
+        "dataNote": "Lifetime earnings are in DRF life record for every horse."
+      },
+      {
+        "id": "B10",
+        "name": "First-timer + expensive pedigree",
+        "weight": 1,
+        "description": "FTS with $100K+ stud fee or purchase price. Connections paid up and expect a run.",
+        "active": true,
+        "detection": "Check if horse has 0 lifetime starts (Life: 0-0-0-0 or \"FTS\"). If yes, check sire stud fee (listed after sire name, e.g. \"$250,000\") or auction purchase price (e.g. \"KEESEP23 $150,000\"). If stud fee >= $100K OR purchase price >= $100K, this signal FIRES (+1).",
+        "dataStatus": "green",
+        "dataNote": "FTS status, sire fee, and purchase price are all in DRF data."
+      },
+      {
+        "id": "B11",
+        "name": "Good jockey / good trainer on bad horse",
+        "weight": 2,
+        "description": "Top connections on a horse the public has dismissed. They see something the market doesn't.",
+        "active": true,
+        "detection": "Identify top-tier jockeys (Ortiz Jr, Prat, Saez L, Gaffalione, Ortiz JL) and top-tier trainers (Cox, Baffert, Asmussen, Walsh, Walden, McPeek, Pletcher, Maker, McCarthy, Sharp, Jacobson). If BOTH jockey AND trainer are top-tier but the horse is 8/1 or higher, the public is dismissing a horse that elite connections chose to run. FIRES (+2).",
+        "dataStatus": "green",
+        "dataNote": "Jockey name, trainer name, and ML odds are all in DRF data."
+      }
+    ],
+    "rules": [
+      {
+        "id": "R1",
+        "name": "Win never the favorite",
+        "description": "Win bet is never the chalk. We find value — the fav goes in exotics only.",
+        "active": true
+      },
+      {
+        "id": "R2",
+        "name": "Win must be 7/2+",
+        "description": "Win bet must be at least 7/2 odds. If our pick moves below that, pivot.",
+        "active": true
+      },
+      {
+        "id": "R3",
+        "name": "Trifecta minimum 4 horses",
+        "description": "No 3-horse tri boxes (0/6 day one). Need width — 4 or 5 horse boxes.",
+        "active": true
+      },
+      {
+        "id": "R4",
+        "name": "Fav always in exotics",
+        "description": "The favorite is always included in exacta and trifecta — they hit the board too often to exclude.",
+        "active": true
+      },
+      {
+        "id": "R5",
+        "name": "Scratches require full rebuild",
+        "description": "Don't just remove — re-evaluate pace, bias, and who benefits from the scratch.",
+        "active": true
+      },
+      {
+        "id": "R6",
+        "name": "Tri must include exacta horses",
+        "description": "Trifecta box ALWAYS contains the same horses as the exacta box. Never split them. (Added 5/30 — Mike's Mistake)",
+        "active": true
+      }
+    ],
+    "liveOdds": {}
+  },
+  "result": {
+    "win": {
+      "horse": 9,
+      "name": "Vino Dominus",
+      "odds": "9/2",
+      "reason": "Vino Dominus has the best resume in this field: 2 wins from 7 starts, highest Beyer figure (70), and highest earnings ($27K). Signals B6 (best Beyer) and B9 (earnings leader) both fire here. At 9/2, we're getting value on a horse that should be closer to favoritism based on proven form and speed figures. The only horse with multiple wins and the experience edge over this weak maiden claiming field."
+    },
+    "exacta": {
+      "horses": [
+        1,
+        5,
+        9
+      ]
+    },
+    "trifecta": {
+      "horses": [
+        1,
+        5,
+        9,
+        10
+      ]
+    },
+    "notes": "If #9 Vino Dominus moves to favoritism (shorter than #1 Carson), pivot win bet to #5 Paired (8/1) on the hot trainer angle. Jacobson is noted as a hot trainer and Paired shows the highest speed rating despite being 0-for-3. If both #9 and #5 drift to co-favoritism, pivot to #10 Tims (6/1) - 3 wins and proven form.",
+    "analysis": "This is a weak maiden claiming field where only two horses have multiple wins: Vino Dominus (2) and Tims (3). The pace sets up with limited early speed, likely making this a tactical race where class and speed figures matter more than running style. Carson is the ML favorite at 7/2 despite never winning - presumably on recent form or workouts not shown in the PPs. Vino Dominus presents clear value at 9/2 with the highest Beyer (70 vs field average around 50), proven winning ability, and highest earnings. Paired gets into the exotics on the hot trainer signal (Jacobson noted) and the highest speed rating note - at 8/1 with only 3 career starts, there's upside if the barn thinks they're ready. Tims rounds out the trifecta with 3 wins and $26K banked. The favorite Carson must be included per strategy rules despite the thinner resume. This exacta and tri structure captures the proven form horses (9, 10) while including the improving angle (5) and the public's choice (1).",
+    "signalBreakdown": [
+      {
+        "id": "B1",
+        "fired": true,
+        "horses": [
+          8
+        ],
+        "reasoning": "Abel Cedillo is an elite Churchill rider (top-5 caliber) and is aboard Spring St. Dreamer at 20/1 ML odds. When a top jockey chooses a longshot over shorter-priced options, it signals inside information. However, Spring St. Dreamer is 0-for-3 with minimal earnings, making this a tough win bet despite the signal. Better suited as a trifecta depth horse if odds hold."
+      },
+      {
+        "id": "B2",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Cannot evaluate - no live odds data provided. This signal requires comparison of morning line odds to live tote odds at post time to detect sharp late money (3+ point drop from ML). Would need manual odds entry before race start."
+      },
+      {
+        "id": "B3",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Cannot evaluate - no live odds data provided. This signal detects when a morning line favorite or co-favorite drifts to 4/1+ on the live board, indicating quality that the public is overlooking. Requires live odds for drift comparison."
+      },
+      {
+        "id": "B4",
+        "fired": true,
+        "horses": [
+          5
+        ],
+        "reasoning": "Paired is trained by David Jacobson, who is explicitly noted as a 'Hot Trainer' in the data. At 8/1 ML odds, this meets the >6/1 threshold. Hot barns (>15% win rate at meet) running horses at a price are often underbet - the trainer wouldn't run unless the horse is ready. Paired has only 3 starts (0-0-0) but also shows 'Highest Speed Rating' in the field per notes, suggesting strong workouts or hidden form."
+      },
+      {
+        "id": "B5",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Cannot definitively evaluate without full pedigree database access. Race distance is 1 mile. Sires noted: Hard Spun (Carson - versatile), Brody's Cause (Punkin Boy - middle distance), Lord Nelson (Big Nelson - potentially miler specialist), Always Dreaming (Spring St. Dreamer - classic 9f type), Special Vintage/Domaino (Vino Dominus - unknown), Lookin at Lucky (Whatever - classic distances), Knicks Go (Chasing Gray - speed/sprint specialist). None jump out as clear first-time-at-optimal-distance cases based on available data."
+      },
+      {
+        "id": "B6",
+        "fired": true,
+        "horses": [
+          9
+        ],
+        "reasoning": "Vino Dominus shows the highest Beyer Speed Figure in the field at 70. Next closest are Carson (60), Tims (52), and Whatever (43). A 10+ point Beyer edge in a maiden claiming field is significant - this horse has proven they can run faster than anyone else here. Best last-race Beyer is a core speed figure advantage."
+      },
+      {
+        "id": "B7",
+        "fired": false,
+        "horses": [],
+        "reasoning": "No blinkers equipment changes noted in the data provided. Would look for 'FIRST TIME BLINKERS', 'Blinkers ON', or 'Blinkers OFF' annotations. Equipment changes signal trainer intent - something is different today - but none are present in this race."
+      },
+      {
+        "id": "B8",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Cannot evaluate - requires observation of today's early race results to identify if speed horses, stalkers, or closers are winning. Track bias develops through the card based on weather, track maintenance, and rail position. Since this is R6, we could potentially observe R1-R5 results, but that data was not provided. Signal disabled for this analysis."
+      },
+      {
+        "id": "B9",
+        "fired": true,
+        "horses": [
+          9
+        ],
+        "reasoning": "Vino Dominus has the highest lifetime earnings in the field at $27,000, narrowly ahead of Tims ($26K). In maidens, earnings indicate consistency and ability to hit the board. However, note that in claiming races, high earnings can sometimes indicate an inconsistent horse that's been around the block. In this context, Vino's earnings come from 7 starts with 2 wins and a third - that's quality form, not just showing up."
+      },
+      {
+        "id": "B10",
+        "fired": false,
+        "horses": [],
+        "reasoning": "No first-time starters in this race. All horses have at least 2 career starts (Carson 2, Punkin Boy 6, Mountain Grandeur 4, Paired 3, Big Nelson 6, Spring St. Dreamer 3, Vino Dominus 7, Tims 9, Whatever 8, Chasing Gray 4). Signal applies only to debut runners with expensive pedigrees (high stud fees or purchase prices), where connections paid premium money and expect a performance."
+      },
+      {
+        "id": "B11",
+        "fired": false,
+        "horses": [],
+        "reasoning": "Looking for BOTH elite jockey AND elite trainer on a horse 8/1+. Elite jockeys in field: Rafael Bejarano (#3 Mountain Grandeur, 10/1) and Abel Cedillo (#8 Spring St. Dreamer, 20/1). Elite trainers: David Jacobson (#5 Paired, 8/1). None of these horses have BOTH connections together. Bejarano/Foley combo on #3 has the elite jockey but Foley isn't a top-tier barn. Cedillo/Shirer on #8 has elite jockey but Shirer isn't elite. Paired has elite trainer Jacobson but Machado isn't a top jockey. Signal doesn't fire."
+      }
+    ]
+  }
+}

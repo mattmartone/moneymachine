@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fade the Chalk — 2026 Belmont Stakes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: #1a1a1a;
+    line-height: 1.5;
+    background: #fff;
+    padding: 40px 50px;
+    max-width: 8.5in;
+    margin: 0 auto;
+  }
+
+  .header {
+    border-bottom: 3px solid #1a1a1a;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+  }
+
+  .brand .chalk {
+    color: #c41e3a;
+  }
+
+  .meta {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  h2 {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 24px;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #ddd;
+    color: #c41e3a;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p, li {
+    font-size: 12px;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  ul {
+    padding-left: 18px;
+    margin-bottom: 10px;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  .race-info {
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+
+  .race-info strong {
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 16px;
+  }
+
+  thead th {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  tbody tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  .score-high {
+    background: #e8f5e9 !important;
+    font-weight: 600;
+  }
+
+  .score-med {
+    background: #fff8e1 !important;
+  }
+
+  .excluded {
+    color: #999;
+    text-decoration: line-through;
+  }
+
+  .bet-card {
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .bet-card h3 {
+    color: #c41e3a;
+    font-size: 13px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .bet-card p {
+    color: #e0e0e0;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  .bet-card .amount {
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .bet-card .rationale {
+    color: #aaa;
+    font-size: 11px;
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  .conviction {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .conviction-strong { background: #c41e3a; color: #fff; }
+  .conviction-mod { background: #f5a623; color: #1a1a1a; }
+  .conviction-low { background: #ddd; color: #555; }
+
+  .summary-box {
+    border: 2px solid #c41e3a;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-top: 20px;
+    margin-bottom: 16px;
+  }
+
+  .summary-box p {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .footer {
+    margin-top: 30px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+    font-size: 10px;
+    color: #999;
+    text-align: center;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #eee;
+    color: #333;
+  }
+
+  .tag-e { background: #ffcdd2; color: #b71c1c; }
+  .tag-ep { background: #ffe0b2; color: #e65100; }
+  .tag-p { background: #c8e6c9; color: #1b5e20; }
+  .tag-s { background: #bbdefb; color: #0d47a1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">Fade the <span class="chalk">Chalk</span></div>
+  <div class="meta">
+    2026 Belmont Stakes<br>
+    Saturday, June 7, 2026<br>
+    Saratoga Race Course
+  </div>
+</div>
+
+<h1>Race Analysis & Wagering Recommendations</h1>
+
+<div class="race-info">
+  <strong>Race:</strong> 157th Belmont Stakes (G1) &nbsp;|&nbsp;
+  <strong>Distance:</strong> 1¼ miles (dirt) &nbsp;|&nbsp;
+  <strong>Field:</strong> 9 horses &nbsp;|&nbsp;
+  <strong>Purse:</strong> $2,000,000<br>
+  <strong>Track:</strong> Saratoga Race Course (final year before return to Belmont Park) &nbsp;|&nbsp;
+  <strong>Conditions:</strong> Fast (rain possible — monitor)
+</div>
+
+<h2>Race Shape & Pace Dynamics</h2>
+
+<p>This race has a critical structural tell: <strong>moderate-to-slow pace with lone confirmed speed.</strong> Powershift (Pletcher/Saez) will be sent to the lead from the gate. Growth Equity has tactical speed and may show some early presence, but his Peter Pan trip suggested he's more E/P — pressing, not leading. No one else wants the front.</p>
+
+<p><strong>Implication:</strong> Deep closers are disadvantaged. Without a pace meltdown to run into, horses who need fast fractions to collapse in front of them (Golden Tempo, Vitruvian Man) will be left with too much ground to make up. Saratoga's track bias this week confirms it — forward-positioned horses have dominated all meet.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Horse</th>
+      <th>Style</th>
+      <th>Jockey</th>
+      <th>Trainer</th>
+      <th>Key Form</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Vitruvian Man</td>
+      <td><span class="tag tag-s">S</span></td>
+      <td>Frescu</td>
+      <td>—</td>
+      <td>3rd Santa Anita Derby (9½ lengths back); 63-day layoff; only 2nd career start</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Powershift</td>
+      <td><span class="tag tag-e">E</span></td>
+      <td>L. Saez</td>
+      <td>Pletcher</td>
+      <td>Won maiden on Derby Day; lone speed; 3 career starts; did not race as 2YO</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Chief Wallabee</td>
+      <td><span class="tag tag-p">P</span></td>
+      <td>Alvarado</td>
+      <td>Mott</td>
+      <td>4th KY Derby; bullet work 5/23 at Saratoga; stabled 5 weeks at track</td>
+    </tr>
+    <tr class="score-high">
+      <td>4</td>
+      <td><strong>Renegade</strong></td>
+      <td><span class="tag tag-p">P</span></td>
+      <td>I. Ortiz Jr.</td>
+      <td>Pletcher</td>
+      <td>2nd KY Derby (troubled trip from PP1); explosive late kick; 2 sharp works at Saratoga</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Ottinho</td>
+      <td><span class="tag tag-p">P</span></td>
+      <td>D. Davis</td>
+      <td>C. Brown</td>
+      <td>2nd Blue Grass, 3rd Withers; 11 lengths off winners both times; 63-day layoff</td>
+    </tr>
+    <tr class="score-med">
+      <td>6</td>
+      <td>Growth Equity</td>
+      <td><span class="tag tag-ep">E/P</span></td>
+      <td>Franco</td>
+      <td>C. Brown</td>
+      <td>Won Peter Pan (G3); improving speed figs; tactical speed fits bias</td>
+    </tr>
+    <tr class="score-high">
+      <td>7</td>
+      <td><strong>Commandment</strong></td>
+      <td><span class="tag tag-p">P</span></td>
+      <td>Velazquez</td>
+      <td>B. Cox</td>
+      <td>Won Florida Derby (G1); terrible Derby ride (Saez); Velazquez upgrade; grinder style</td>
+    </tr>
+    <tr class="score-high">
+      <td>8</td>
+      <td><strong>Emerging Market</strong></td>
+      <td><span class="tag tag-p">P</span></td>
+      <td>F. Prat</td>
+      <td>C. Brown</td>
+      <td>Won Louisiana Derby (G2); lost shoe in KY Derby; bullet 5/30 (2nd of 88); Candy Ride sire</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>Golden Tempo</td>
+      <td><span class="tag tag-s">S</span></td>
+      <td>—</td>
+      <td>DeVaux</td>
+      <td>Won KY Derby (from far back); deep closer hurt by expected pace; 3 sharp works at Keenland</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Favorite Assessment: Renegade</h2>
+
+<p><strong>Verdict: PROTECTED.</strong> No vulnerability trigger fires. Renegade is a stalker in a moderate-pace race with a small field — he'll get a clean trip. Ortiz is the top rider in the race. The Derby 2nd was compromised by PP1 and early bumping; without that trouble, he may have won. Two solid works at Saratoga. He's the rightful favorite.</p>
+
+<p>We can't bet him to win (our rule), but he earns a spot in all exotic wagers. There is no basis to exclude him from the exacta — neither the traffic trigger (small field, not drawn inside this time) nor the pace trigger (he's P, not E or S in a problematic setup) applies.</p>
+
+<h2>Signal Scoring</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Horse</th>
+      <th>Signals Triggered</th>
+      <th>Score</th>
+      <th>Verdict</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="score-high">
+      <td><strong>Emerging Market</strong></td>
+      <td>S4 (Brown barn, likely >6/1) +2 · S5 (Candy Ride sire at 1¼mi) +2 · Recent Life (bullet work) +1</td>
+      <td><strong>5</strong></td>
+      <td>WIN BET CANDIDATE</td>
+    </tr>
+    <tr class="score-high">
+      <td><strong>Commandment</strong></td>
+      <td>S9 (G1 winner, earnings leader among non-faves) +1 · Troubled Trip (bad Derby ride) +2 · Jockey Upgrade (Velazquez) +1</td>
+      <td><strong>4</strong></td>
+      <td>WIN BET CANDIDATE</td>
+    </tr>
+    <tr class="score-med">
+      <td>Chief Wallabee</td>
+      <td>S6 (credible Derby Beyer) +1 · Recent Life (bullet 5/23, Saratoga stabled) +1 · Troubled Trip (bumped in Derby stretch) +1</td>
+      <td><strong>3</strong></td>
+      <td>EXOTICS</td>
+    </tr>
+    <tr class="score-med">
+      <td>Growth Equity</td>
+      <td>S4 (Brown barn) +2 · Recent Life (won Peter Pan, improving figs) +1 · Track Bias Fit (E/P at speed-favoring track) +1</td>
+      <td><strong>3+</strong></td>
+      <td>EXOTICS (bias edge)</td>
+    </tr>
+    <tr>
+      <td>Renegade (fave)</td>
+      <td>Troubled Trip (Derby PP1) +2 · S6 (best Beyer in field after GT) +1</td>
+      <td>3</td>
+      <td>IN EXOTICS (cannot bet to win)</td>
+    </tr>
+    <tr>
+      <td>Golden Tempo</td>
+      <td>S6 (Derby-winning Beyer) +1 · S8 AGAINST (track bias penalizes deep closers) -2</td>
+      <td><strong>1</strong></td>
+      <td>TRI ONLY — bias risk</td>
+    </tr>
+    <tr>
+      <td>Powershift</td>
+      <td>Lone speed at speed-bias track +1 · Quality concern (maiden-breaker only) -1</td>
+      <td><strong>1</strong></td>
+      <td>TRI ONLY</td>
+    </tr>
+    <tr class="excluded">
+      <td>Vitruvian Man</td>
+      <td>Deep closer + 63-day layoff + 2nd career start + shipping from CA</td>
+      <td>0</td>
+      <td>PASS</td>
+    </tr>
+    <tr class="excluded">
+      <td>Ottinho</td>
+      <td>11 lengths off in both graded starts; lost Prat to Emerging Market</td>
+      <td>0</td>
+      <td>PASS</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<div class="header">
+  <div class="brand">Fade the <span class="chalk">Chalk</span></div>
+  <div class="meta">
+    2026 Belmont Stakes<br>
+    Wagering Plan
+  </div>
+</div>
+
+<h2>Key Angles</h2>
+
+<h3>Emerging Market — The Stretch-Out Play</h3>
+<p>Son of Candy Ride (one of the best distance sires in training). Only 3 career starts — raw upside is enormous. Won the Louisiana Derby in a stretch-long battle that showed fight and stamina. The Kentucky Derby was too much too soon: lost a shoe early, only 3rd career start against battle-tested colts. Five weeks of maturation + three solid works (including a bullet on 5/30, 2nd fastest of 88 horses that morning). Flavian Prat's decision to stay aboard over stablemate Ottinho is a massive confidence signal from an elite rider with options. Chad Brown is >15% at Saratoga historically. Expected to stalk from 4th-7th position and replicate his Louisiana Derby closing kick.</p>
+
+<h3>Commandment — The Upgrade Play</h3>
+<p>The only proven Grade 1 winner besides Renegade. Won the Florida Derby and Mucho Macho Stakes on the prep trail. The Kentucky Derby was a disaster — Luis Saez (a speed rider by nature) gave this grinder/stalker a terrible trip. Connections fired Saez and brought in Hall of Famer John Velazquez for the Belmont. This will be Commandment's 7th career start with his 6th different rider — but Johnny V is the best he's had. Velazquez's patience and experience riding stalkers should unlock this colt's grinding ability. Two solid 5-furlong works at Churchill Downs. At 1¼ miles, his determination may matter more than raw speed.</p>
+
+<h3>Track Bias — The Structural Edge</h3>
+<p>Saratoga's dirt this week has strongly favored horses on or near the lead. Deep closers have been unable to get up in time. This eliminates Golden Tempo (Derby winner, deep closer) as a serious win contender and elevates any horse who can secure a forward position through the first turn.</p>
+
+<h2>Wagering Recommendations</h2>
+
+<p style="font-size: 11px; color: #666; margin-bottom: 16px;"><em>Note: S2 (late tote action) and S3 (odds drift) cannot be scored until live odds are available. Adjust if rankings change post-tote.</em></p>
+
+<div class="bet-card">
+  <h3>Win Bet <span class="conviction conviction-strong">Strong</span></h3>
+  <p><strong>Emerging Market</strong> — IF 7/2 or higher at post time</p>
+  <p class="amount">$50</p>
+  <p class="rationale">Candy Ride sire at classic distance + Brown barn + Prat confidence signal + Derby excuse (shoe, inexperience). Style matches moderate pace — stalks and strikes.</p>
+</div>
+
+<div class="bet-card">
+  <h3>Backup Win <span class="conviction conviction-mod">Moderate</span></h3>
+  <p><strong>Commandment</strong> — IF Emerging Market goes off below 7/2, OR if Commandment is 5/1+</p>
+  <p class="amount">$50</p>
+  <p class="rationale">Proven G1 winner + Velazquez jockey upgrade + grinder suits 1¼mi + Derby was bad ride not bad horse. Value if public overweights the 7th-place Derby finish.</p>
+</div>
+
+<div class="bet-card">
+  <h3>Exacta Box <span class="conviction conviction-strong">Strong</span></h3>
+  <p><strong>Renegade / Emerging Market / Commandment</strong></p>
+  <p class="amount">$5 unit (3-horse box = $30)</p>
+  <p class="rationale">Top 3 by signal score. Renegade included (no exclusion trigger). All three are stalkers who should sit 4th-7th early and fire on the turn. Whoever gets the cleanest trip wins — cover all three.</p>
+</div>
+
+<div class="bet-card">
+  <h3>Trifecta Box <span class="conviction conviction-mod">Moderate</span></h3>
+  <p><strong>Renegade / Emerging Market / Commandment / Chief Wallabee</strong></p>
+  <p class="amount">$1 unit (4-horse box = $24)</p>
+  <p class="rationale">Chief Wallabee scores 3 on signals (minimum threshold for exotics). Bullet work, Saratoga stabled, Mott/Alvarado won this race last year. Fourth leg adds value without blowing up cost.</p>
+</div>
+
+<div class="summary-box">
+  <p><strong>Total Outlay:</strong> $104 &nbsp;|&nbsp; <strong>Win Exposure:</strong> $50 &nbsp;|&nbsp; <strong>Exotic Exposure:</strong> $54</p>
+  <p style="margin-top: 8px;"><strong>Key Decision at Post Time:</strong> If the tote shows Emerging Market or Commandment taking sharp late money (3+ point drop from ML), that confirms S2 — increase conviction and consider upsizing the Win bet. If Golden Tempo takes heavy late action, do NOT chase — bias says he can't get there from the back today.</p>
+</div>
+
+<h2>Adjustments & Contingencies</h2>
+
+<ul>
+  <li><strong>Wet track:</strong> If rain hits Saratoga, Emerging Market elevates further (Candy Ride sire = wet-track pedigree). Growth Equity and Vitruvian Man have wet experience; Golden Tempo does not. Same thesis, stronger conviction on Emerging Market.</li>
+  <li><strong>Scratches:</strong> If Powershift scratches, the pace collapses to near-zero. This HELPS Renegade and hurts closers even more. No change to bets. If Growth Equity scratches, consider adding Golden Tempo to the trifecta as a desperation closer.</li>
+  <li><strong>Payout concern:</strong> With 9 horses and Renegade likely at 8/5 or shorter, exotics will be compressed. Last year's Belmont exacta paid $6.60/$1. If the top 3 go off at combined odds suggesting a <$20 exacta, consider redirecting that $30 into a Win & Place on Emerging Market instead.</li>
+  <li><strong>Live odds pivot:</strong> If Emerging Market is bet down below 3/1 (public agrees with us), he no longer offers value. Pivot the Win to Commandment or Growth Equity.</li>
+</ul>
+
+<h2>Horses to Beat — The Order</h2>
+
+<table>
+  <thead>
+    <tr><th>Tier</th><th>Horse</th><th>Role in Our Bets</th></tr>
+  </thead>
+  <tbody>
+    <tr class="score-high"><td>A</td><td>Emerging Market</td><td>Primary Win bet</td></tr>
+    <tr class="score-high"><td>A</td><td>Commandment</td><td>Backup Win / Exacta key</td></tr>
+    <tr class="score-high"><td>A</td><td>Renegade (fave)</td><td>Exotics only — best horse, can't bet to win</td></tr>
+    <tr class="score-med"><td>B</td><td>Chief Wallabee</td><td>4th leg in trifecta</td></tr>
+    <tr class="score-med"><td>B</td><td>Growth Equity</td><td>Watch for bias + late money; possible sub for Wallabee</td></tr>
+    <tr><td>C</td><td>Golden Tempo</td><td>Tri only if you insist — bias says no</td></tr>
+    <tr><td>C</td><td>Powershift</td><td>Lone speed hang — tri filler at best</td></tr>
+    <tr><td>D</td><td>Vitruvian Man</td><td>No play</td></tr>
+    <tr><td>D</td><td>Ottinho</td><td>No play</td></tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <strong>FADE THE CHALK</strong> — Value-driven race analysis. Never bet the favorite to win.<br>
+  Prepared June 6, 2026 &nbsp;|&nbsp; Pre-live-odds edition &nbsp;|&nbsp; Final bets subject to tote confirmation.
+</div>
+
+</body>
+</html>
