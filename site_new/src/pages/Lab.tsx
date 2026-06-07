@@ -102,7 +102,7 @@ export function Lab() {
         <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
           <p className="font-bold mb-2">How it works:</p>
           <p className="text-gray-700 mb-2">Upload a DRF race book PDF for the track and card you want analyzed. Our AI will process it through available strategies and deliver your picks report to your email.</p>
-          <p className="text-gray-700">Each analysis costs tokens from your monthly allotment. More strategies = more comprehensive analysis.</p>
+          <p className="text-gray-700">Each analysis costs ~1,000 tokens (estimated) from your monthly allotment. A $10/month subscription gives you 10,000 tokens — enough for about 10 full card analyses.</p>
         </div>
 
         {status === 'success' ? (

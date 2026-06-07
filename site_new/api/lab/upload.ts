@@ -33,7 +33,8 @@ export default async function handler(req: any, res: any) {
 
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Check tokens (1000 per analysis)
+    // 1000 tokens per full card analysis (10 races × 10 horses)
+    // $10/mo = 10,000 tokens = ~10 full card analyses
     const cost = 1000;
     if (user.tokens < cost) {
       return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: user.tokens });
