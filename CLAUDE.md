@@ -1,6 +1,6 @@
 # Money Machine
 
-Horse racing handicapping and betting agent. Ingests race data, develops picks, tracks results, and refines strategy over time.
+Horse racing handicapping and betting model. Ingests race data, develops picks, tracks results, and refines strategy over time. Powers the consumer brand **Fade the Chalk**.
 
 ## Role
 
@@ -355,6 +355,9 @@ Stored in `money_machine/sessions/` — one file per race day with full P/L, pic
 ## Next Steps
 - **Build signal database (SQLite)** — track every bet, outcome, and signal fired. Tables: races, bets, signals_fired, comparisons (model vs Mike). Enables strategy-as-horse analysis.
 - **Strategy form charts** — treat each signal/BOLO/trigger like a horse with its own PPs. Track W/P/S rate, ROI when fired, conditions where it performs (sprint/route, dirt/turf, field size). Weight up strategies in peak form, retire ones that stop cashing. Signal Evolution rule ("cash >25% → weight UP, <10% → weight DOWN") becomes queryable, not guesswork.
+- **Fade the Chalk (site brand)** — pay-per-use handicapping product. User selects races, picks strategies from a marketplace (each with visible form charts/hit rates), pays to process. Revenue = data API passthrough + token cost + vig. Resend for email login (magic links).
+- **Strategy marketplace** — strategies displayed like horses with their own PPs. Users see win rates, ROI, conditions before buying. Hot strategies can be priced higher. The form chart IS the sales page.
+- **Payments** — usage-based (Stripe). User pays per race analyzed, cost covers: DRF data API round trip + Claude API tokens + margin.
 - Auto-parse DRF PDFs into structured race data
 - Generate picks with confidence scores based on signal overlap
 - Track jockey/trainer patterns across race days
