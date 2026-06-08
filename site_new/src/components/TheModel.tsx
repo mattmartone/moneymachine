@@ -3,7 +3,7 @@ export function TheModel() {
   return (
     <section id="the-model" className="py-4">
       <h2 className="font-serif text-2xl font-bold text-black mb-4 bg-black text-white inline-block px-2 py-1">
-        THE MODEL: TREATED LIKE ATHLETES
+        THE MODEL: STRATEGIES TREATED LIKE THOROUGHBREDS
       </h2>
 
       <div className="mb-6 font-serif text-lg">
