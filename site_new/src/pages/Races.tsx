@@ -41,6 +41,13 @@ interface Entry {
   scratched: boolean;
 }
 
+const STYLE_LABELS: Record<string, string> = {
+  'E': 'Early Speed',
+  'E/P': 'Presser',
+  'P': 'Stalker',
+  'S': 'Closer',
+};
+
 export function Races() {
   const navigate = useNavigate();
   const token = localStorage.getItem('ftc_token');
@@ -186,7 +193,7 @@ export function Races() {
                       {entry.horse_name}
                     </span>
                     {entry.running_style && (
-                      <span className="font-mono text-[10px] px-1 bg-gray-200 border border-gray-400">{entry.running_style}</span>
+                      <span className="font-mono text-[10px] px-1 bg-gray-200 border border-gray-400">{STYLE_LABELS[entry.running_style] || entry.running_style}</span>
                     )}
                     <span className="font-mono text-xs w-12 text-right">{entry.live_odds || entry.morning_line_odds || '—'}</span>
                     <span className="font-mono text-xs text-gray-500 w-16 text-right">{entry.jockey || '—'}</span>
@@ -206,7 +213,7 @@ export function Races() {
                         <div><span className="text-gray-500">Owner:</span> {entry.owner || '—'}</div>
                         <div><span className="text-gray-500">ML Odds:</span> {entry.morning_line_odds || '—'}</div>
                         <div><span className="text-gray-500">Live Odds:</span> {entry.live_odds || 'not set'}</div>
-                        <div><span className="text-gray-500">Style:</span> {entry.running_style || '—'}</div>
+                        <div><span className="text-gray-500">Style:</span> {entry.running_style ? (STYLE_LABELS[entry.running_style] || entry.running_style) : '—'}</div>
                         <div><span className="text-gray-500">Best Beyer:</span> {entry.best_beyer || '—'}</div>
                         <div><span className="text-gray-500">Last Beyer:</span> {entry.last_beyer || '—'}</div>
                         <div><span className="text-gray-500">Days Since:</span> {entry.days_since_last || '—'}</div>
