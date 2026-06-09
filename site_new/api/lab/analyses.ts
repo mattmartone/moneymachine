@@ -44,7 +44,8 @@ export default async function handler(req: any, res: any) {
       // Check user has tokens
       const { rows: userRows } = await query(`SELECT tokens FROM users WHERE id = $1`, [decoded.userId]);
       const tokensAvailable = userRows[0]?.tokens || 0;
-      const cost = strategy_ids.length * 500; // 500 tokens per strategy applied
+      const raceCount = req.body.race_ids?.length || 1;
+      const cost = raceCount * 200000; // 200K per race, all strategies included
 
       if (tokensAvailable < cost) {
         return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: tokensAvailable });

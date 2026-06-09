@@ -36,7 +36,7 @@ export default async function handler(req: any, res: any) {
     const { filename, strategies, fileData } = req.body;
     const selectedStrategies = Array.isArray(strategies) ? strategies : ['all'];
 
-    const cost = selectedStrategies.length * 15000;
+    const cost = 200000; // flat per-race, all strategies included
     if (user.tokens < cost) {
       return res.status(402).json({ error: 'Insufficient tokens', required: cost, available: user.tokens });
     }

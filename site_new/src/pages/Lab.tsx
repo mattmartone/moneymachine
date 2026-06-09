@@ -50,7 +50,7 @@ interface UserStrategy {
   created_at: string;
 }
 
-const TOKEN_COST_PER_STRATEGY = 15000; // used by Race Cards tab
+const TOKEN_COST_PER_RACE = 200000;
 
 export function Lab() {
   const navigate = useNavigate();
@@ -340,8 +340,6 @@ export function Lab() {
   );
 }
 
-const TOKEN_COST_PER_RACE_STRATEGY = 15000;
-
 function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, token, analyses, onComplete }: {
   raceCards: RaceCard[];
   allStrategies: MarketplaceStrategy[];
@@ -374,7 +372,7 @@ function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, to
     !search || s.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const cost = selectedRaceIds.length * selectedStrategies.length * TOKEN_COST_PER_RACE_STRATEGY;
+  const cost = selectedRaceIds.length * TOKEN_COST_PER_RACE;
   const canAfford = cost <= userTokens;
 
   const handleSubmit = async () => {

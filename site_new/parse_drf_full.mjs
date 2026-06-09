@@ -142,7 +142,8 @@ async function run() {
 
     const date = formatDate(dateStr);
     const raceKey = `${trackCode}-${date}-${raceNum}`;
-    const trackName = trackCode === 'SA' ? 'Santa Anita' : trackCode;
+    const TRACK_NAMES = { 'SA':'Santa Anita', 'LRL':'Laurel Park', 'SAR':'Saratoga', 'CD':'Churchill Downs', 'DMR':'Del Mar', 'GP':'Gulfstream Park', 'AQU':'Aqueduct', 'BEL':'Belmont', 'BAQ':'Belmont at the Big A', 'KEE':'Keeneland', 'PIM':'Pimlico', 'MTH':'Monmouth Park', 'WO':'Woodbine', 'OP':'Oaklawn Park', 'TAM':'Tampa Bay', 'FG':'Fair Grounds', 'PRX':'Parx', 'CT':'Charles Town', 'PEN':'Penn National', 'TUP':'Turf Paradise', 'GG':'Golden Gate', 'LA':'Los Alamitos', 'SLR':'Santa Anita' };
+    const trackName = TRACK_NAMES[trackCode] || trackCode;
 
     if (!races.has(raceKey)) {
       races.set(raceKey, {
@@ -178,17 +179,23 @@ async function run() {
 
   console.log(`Parsed ${races.size} races, ${allEntries.length} entries`);
 
-  // Clear existing data for this card
+  // Check for existing data
   const firstEntry = allEntries[0];
   if (firstEntry) {
     const trackName = races.get(firstEntry.raceKey).track;
     const dateVal = races.get(firstEntry.raceKey).date;
-    const existing = await pool.query(`SELECT id FROM races WHERE track = $1 AND date = $2`, [trackName, dateVal]);
+    const existing = await pool.query(`SELECT id, race_number FROM races WHERE track = $1 AND date = $2`, [trackName, dateVal]);
     if (existing.rows.length > 0) {
+      const force = process.argv.includes('--force');
+      if (!force) {
+        console.log(`\n⚠️  ${trackName} ${dateVal} already loaded (${existing.rows.length} races). Use --force to reload.`);
+        await pool.end();
+        return;
+      }
       const ids = existing.rows.map(r => r.id);
       await pool.query(`DELETE FROM entries WHERE race_id = ANY($1)`, [ids]);
       await pool.query(`DELETE FROM races WHERE id = ANY($1)`, [ids]);
-      console.log(`Cleared ${ids.length} existing races`);
+      console.log(`Cleared ${ids.length} existing races (--force)`);
     }
   }
 
