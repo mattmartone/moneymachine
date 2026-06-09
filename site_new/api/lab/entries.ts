@@ -40,7 +40,7 @@ export default async function handler(req: any, res: any) {
   }
 
   if (req.method === 'PATCH') {
-    const { entry_id, live_odds, scratched } = req.body;
+    const { entry_id, live_odds, morning_line_odds, scratched } = req.body;
     if (!entry_id) return res.status(400).json({ error: 'entry_id required' });
 
     const sets: string[] = [];
@@ -50,6 +50,10 @@ export default async function handler(req: any, res: any) {
     if (live_odds !== undefined) {
       sets.push(`live_odds = $${idx++}`);
       params.push(live_odds);
+    }
+    if (morning_line_odds !== undefined) {
+      sets.push(`morning_line_odds = $${idx++}`);
+      params.push(morning_line_odds);
     }
     if (scratched !== undefined) {
       sets.push(`scratched = $${idx++}`);

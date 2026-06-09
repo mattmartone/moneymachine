@@ -183,7 +183,8 @@ export function Races() {
               <span className="font-mono text-[10px] font-bold text-gray-500 w-6 text-center shrink-0">PP</span>
               <span className="font-mono text-[10px] font-bold text-gray-500 flex-1">HORSE</span>
               <span className="font-mono text-[10px] font-bold text-gray-500 w-20 text-center shrink-0">STYLE</span>
-              <span className="font-mono text-[10px] font-bold text-gray-500 w-16 text-center shrink-0">ODDS</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-14 text-center shrink-0">ML</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-14 text-center shrink-0">LIVE</span>
               <span className="font-mono text-[10px] font-bold text-gray-500 w-28 text-right shrink-0">JOCKEY / TRAINER</span>
               <span className="font-mono text-[10px] font-bold text-gray-500 w-8 text-right shrink-0">BSR</span>
               <span className="font-mono text-[10px] font-bold text-gray-500 shrink-0 w-5"></span>
@@ -208,17 +209,31 @@ export function Races() {
                     </span>
                     <input
                       type="text"
-                      defaultValue={entry.live_odds || entry.morning_line_odds || ''}
-                      placeholder="odds"
+                      defaultValue={entry.morning_line_odds || ''}
+                      placeholder="ML"
                       onClick={e => e.stopPropagation()}
                       onBlur={e => {
                         const val = e.target.value.trim();
-                        if (val !== (entry.live_odds || entry.morning_line_odds || '')) {
+                        if (val !== (entry.morning_line_odds || '')) {
+                          updateEntry(entry.id, { morning_line_odds: val || undefined });
+                        }
+                      }}
+                      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      className="font-mono text-xs w-14 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none shrink-0"
+                    />
+                    <input
+                      type="text"
+                      defaultValue={entry.live_odds || ''}
+                      placeholder="live"
+                      onClick={e => e.stopPropagation()}
+                      onBlur={e => {
+                        const val = e.target.value.trim();
+                        if (val !== (entry.live_odds || '')) {
                           updateEntry(entry.id, { live_odds: val || undefined });
                         }
                       }}
                       onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                      className="font-mono text-xs w-16 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none shrink-0"
+                      className="font-mono text-xs w-14 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none shrink-0"
                     />
                     <div className="font-mono text-[10px] text-gray-500 w-28 text-right shrink-0 leading-tight">
                       <div>{entry.jockey || '—'}</div>
