@@ -65,7 +65,7 @@ export function AppNav() {
         <Link to="/board" className="web-link">BULLETIN BOARD</Link>
         <Link to="/contact" className="web-link">CONTACT</Link>
         {isAdmin && <Link to="/users" className="web-link text-web-red">MEMBERS</Link>}
-        {isAdmin && <Link to="/admin/submissions" className="web-link text-web-red">REVIEW</Link>}
+        {isAdmin && <Link to="/races" className="web-link text-web-red">RACES</Link>}
       </nav>
     </header>
   );
