@@ -22,7 +22,7 @@ export default async function handler(req: any, res: any) {
   try {
     const { rows } = await query(
       `SELECT r.id, r.track, r.date, r.race_number, r.conditions, r.class,
-              r.distance, r.surface, r.field_size, r.qualified,
+              r.distance, r.surface, r.field_size, r.qualified, r.post_time,
               COUNT(e.id) AS entries_count
        FROM races r
        LEFT JOIN entries e ON e.race_id = r.id
