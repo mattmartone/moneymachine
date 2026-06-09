@@ -50,7 +50,7 @@ interface UserStrategy {
   created_at: string;
 }
 
-const TOKEN_COST_PER_RACE = 200000;
+const TOKEN_COST_PER_RACE = 700000;
 
 export function Lab() {
   const navigate = useNavigate();

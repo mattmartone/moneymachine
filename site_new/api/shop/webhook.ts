@@ -75,7 +75,7 @@ export default async function handler(req: any, res: any) {
         `).catch(() => {});
 
         await query(
-          `UPDATE users SET stripe_subscription_id = $1, subscription_status = 'active', tokens = tokens + 1000000 WHERE id = $2`,
+          `UPDATE users SET stripe_subscription_id = $1, subscription_status = 'active', tokens = tokens + 5000000 WHERE id = $2`,
           [subscriptionId, userId]
         );
 
@@ -86,7 +86,7 @@ export default async function handler(req: any, res: any) {
           userId,
           'subscription_started',
           'Monthly membership activated',
-          `Welcome to the crew. 1,000,000 tokens credited. Balance: ${newBalance.toLocaleString()}.`
+          `Welcome to the crew. 5,000,000 tokens credited. Balance: ${newBalance.toLocaleString()}.`
         );
       }
     }

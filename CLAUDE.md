@@ -38,11 +38,12 @@ Analysis is NEVER run on the initial parse. It's a separate prompt invocation.
 ## Strategy (v1 — established 5/24/2026)
 
 ### Bet Structure
-- **3 bets per race:** Win, Exacta Box, Trifecta Box
+- **4 bets per race:** Win, Exacta Box, Trifecta Box, Superfecta Box
 - **Win bet:** $50, never the favorite. Find value at 7/2 or higher.
-- **Exacta Box:** 2-3 horses, $2-$5 unit (varies by conviction)
-- **Trifecta Box:** 4 horses, $1/combo ($24 total). Tris are a bonus bet, not a profit center — keep exposure light.
-- **Total race outlay:** ~$134 standard ($184 when win bet doubled)
+- **Exacta Box:** 4 horses, $5/combo ($60 total).
+- **Trifecta Box:** 4 horses, $1/combo ($24 total).
+- **Superfecta Box:** 4 horses, $0.10/combo ($2.40 total). Same horses as tri. Catches $100-$800+ payouts for minimal outlay. Added 6/7/2026 after multiple races showed 3-of-4 finishers in our box.
+- **Total race outlay:** ~$136.40 standard ($186.40 when win bet doubled)
 
 ### Race Analysis Rules
 
@@ -208,6 +209,7 @@ Every horse gets scored against these signals. Sum all triggered signals, compar
 | S7 | Blinkers change (on or off) | +1 | Trainer making an equipment move = intent. Something's different today. |
 | S9 | Earnings leader in class | +1 (+2 in graded stakes) | Most $ earned among starters at this class level. Has proven they belong. Bump to +2 in graded stakes where class floor is higher and earnings separation is more meaningful. |
 | S10 | First-time starter + expensive pedigree | +1 | Sire wins >15% with debuters, or horse was $100K+ purchase. Connections expect a run. |
+| S11 | Inner turf rail speed | +2 | Post 1–2, E style, inner turf route (1 mile+), no other committed E horse drawn inside. Inside speed on inner turf controls tempo and wires. 3-for-3 on 6/7/2026 (R1, R5, R7 all won by inside speed on inner turf). |
 
 ### How to Score a Race (Execution Sequence)
 
@@ -372,12 +374,16 @@ Each signal/strategy is tracked like a horse — with a record, conditions, and 
 
 | Strategy | Fires | W | P | S | Win% | ITM% | ROI | Best Conditions | Trend |
 |----------|-------|---|---|---|------|------|-----|-----------------|-------|
+| Keep Fave in Exotics | 8 | — | — | — | — | 75% | +high | All conditions | ↑↑ |
+| S3 (Odds Drift on Quality) | 3 | 2 | 0 | 1 | 67% | 100% | +high | Dirt sprints, price > chalk | ↑↑ |
 | Beat Vulnerable Fave | 3 | 2 | 0 | 0 | 67% | 67% | TBD | Routes, big fields | ↑ |
 | Troubled Trip | 2 | 1 | 0 | 0 | 50% | 50% | TBD | Turf, better post today | ↑ |
 | S9 (Earnings Leader) | 3 | 1 | 0 | 0 | 33% | 33% | TBD | Graded stakes | → |
 | S4 (Hot Barn) | 2 | 1 | 1 | 0 | 50% | 100% | TBD | >6/1 | ↑ |
+| S6 (Best Beyer) | 5 | 1 | 2 | 0 | 20% | 60% | TBD | Dirt, when paired with S3 | → |
+| Doubled Stake (Vuln+Long) | 3 | 1 | 0 | 0 | 33% | 33% | +net positive | 10+ field, confirmed vuln | → |
+| S11 (Inner Turf Rail Speed) | 3 | 3 | 0 | 0 | 100% | 100% | TBD | Inner turf routes, post 1-2 | ↑↑ NEW |
 | S2 (Late Tote Action) | 3 | 1 | 0 | 0 | 33% | 33% | TBD | — | → |
-| S6 (Best Beyer) | 3 | 0 | 1 | 0 | 0% | 33% | TBD | — | → |
 | Trigger A (Traffic) | 3 | 0 | 0 | 0 | 0% | 0% | -100% | RETIRED | ↓ |
 
 ### Reading the Form Chart
@@ -411,6 +417,13 @@ Each signal/strategy is tracked like a horse — with a record, conditions, and 
 - **Full site** — pay-per-use handicapping product. User selects races, picks strategies from a marketplace (each with visible form charts/hit rates), pays to process. Revenue = data API passthrough + token cost + vig. Resend for email login (magic links).
 - **Strategy marketplace** — strategies displayed like horses with their own PPs. Users see win rates, ROI, conditions before buying. Hot strategies priced higher. The form chart IS the sales page.
 - **Payments** — usage-based (Stripe). User pays per race analyzed, cost covers: DRF data API round trip + Claude API tokens + margin.
+
+### Priority 5 — Morning Line Odds Source
+- Brisnet .DRF files don't include ML (it's a track handicapper opinion, not data)
+- S2 and S3 are dead without it — S3 is our best signal (75% W, +262% ROI)
+- 3 process steps also use ML to identify the favorite pre-race
+- Options: (a) parse ML from the DRF PDF when available, (b) scrape from track program/app, (c) manual entry on Races page
+- Current workaround: enter ML manually via inline odds field on /races before live odds arrive
 
 ### Low Priority Hold
 - Track bias detection (early-race results → late-race adjustments)

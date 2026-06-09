@@ -3,9 +3,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppNav } from '../components/AppNav';
 
 const PACKS = [
-  { id: 'pack_1m', name: '1,000,000', tokens: 1000000, price: '$10', description: '~3 full card analyses' },
-  { id: 'pack_2.5m', name: '2,500,000', tokens: 2500000, price: '$20', description: '~8 full card analyses' },
-  { id: 'pack_5m', name: '5,000,000', tokens: 5000000, price: '$35', description: '~16 full card analyses' },
+  { id: 'pack_1.5m', name: '1,500,000', tokens: 1500000, price: '$10', description: '2 races' },
+  { id: 'pack_3.5m', name: '3,500,000', tokens: 3500000, price: '$25', description: '5 races' },
+  { id: 'pack_5m', name: '5,000,000', tokens: 5000000, price: '$49', description: 'Full card — all races, one track' },
 ];
 
 export function Shop() {
@@ -81,7 +81,7 @@ export function Shop() {
         <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
           <p className="font-bold mb-1">Your balance: <span className="font-mono">{userTokens.toLocaleString()} tokens</span></p>
           {isSubscribed ? (
-            <p className="text-gray-700">You're a made member. 1,000,000 tokens refresh every month. Need more? Grab a pack below.</p>
+            <p className="text-gray-700">You're a made member. 1,000,000 tokens refresh every month after your first. Need more? Grab a pack below.</p>
           ) : (
             <p className="text-gray-700">Subscribe to get your monthly token allotment, or buy packs as you go.</p>
           )}
@@ -89,7 +89,7 @@ export function Shop() {
 
         {subscribed && (
           <div className="bg-[#e6ffe6] border-4 border-[#008000] p-4 mb-6 text-center font-bold text-[#008000]">
-            You're in. Welcome to the crew. 1,000,000 tokens just hit your account.
+            You're in. Welcome to the crew. 5,000,000 tokens just hit your account.
           </div>
         )}
 
@@ -112,7 +112,7 @@ export function Shop() {
               <div>
                 <div className="font-sans font-bold text-xs text-[#000080] mb-1">RECOMMENDED</div>
                 <div className="font-serif font-bold text-2xl">Monthly Membership</div>
-                <div className="font-serif text-sm text-gray-700 mt-1">1,000,000 tokens every month. Enough for ~3 full card analyses.</div>
+                <div className="font-serif text-sm text-gray-700 mt-1">First month: 5,000,000 tokens (a full card). Every month after: 1,000,000 tokens.</div>
               </div>
               <div className="text-right">
                 <div className="font-mono text-3xl font-bold">$10</div>
@@ -121,7 +121,8 @@ export function Shop() {
             </div>
             <div className="border-t border-gray-300 pt-4 mb-4">
               <ul className="font-serif text-sm space-y-1 text-gray-700">
-                <li>&#8226; 1,000,000 tokens credited on signup and every renewal</li>
+                <li>&#8226; 5,000,000 tokens on signup — enough for a full card</li>
+                <li>&#8226; 1,000,000 tokens every month after</li>
                 <li>&#8226; Access to all marketplace strategies</li>
                 <li>&#8226; Create unlimited custom strategies</li>
                 <li>&#8226; Cancel anytime — tokens never expire</li>
