@@ -195,10 +195,31 @@ export function Races() {
                     {entry.running_style && (
                       <span className="font-mono text-[10px] px-1 bg-gray-200 border border-gray-400">{STYLE_LABELS[entry.running_style] || entry.running_style}</span>
                     )}
-                    <span className="font-mono text-xs w-12 text-right">{entry.live_odds || entry.morning_line_odds || '—'}</span>
+                    <input
+                      type="text"
+                      defaultValue={entry.live_odds || entry.morning_line_odds || ''}
+                      placeholder="odds"
+                      onClick={e => e.stopPropagation()}
+                      onBlur={e => {
+                        const val = e.target.value.trim();
+                        if (val !== (entry.live_odds || entry.morning_line_odds || '')) {
+                          updateEntry(entry.id, { live_odds: val || undefined });
+                        }
+                      }}
+                      onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      className="font-mono text-xs w-14 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none"
+                    />
                     <span className="font-mono text-xs text-gray-500 w-16 text-right">{entry.jockey || '—'}</span>
                     {entry.last_beyer && <span className="font-mono text-xs text-gray-500 w-8 text-right">{entry.last_beyer}</span>}
-                    <span className="font-mono text-[10px] text-gray-400">{isExpanded ? '▼' : '▶'}</span>
+                    <button
+                      type="button"
+                      onClick={e => { e.stopPropagation(); updateEntry(entry.id, { scratched: !isScratch }); }}
+                      className={`font-mono text-[10px] px-1.5 py-0.5 border ${isScratch ? 'border-[#008000] text-[#008000] bg-[#e6ffe6]' : 'border-gray-300 text-gray-400 hover:border-web-red hover:text-web-red'}`}
+                      title={isScratch ? 'Reinstate' : 'Scratch'}
+                    >
+                      {isScratch ? '✓' : '✕'}
+                    </button>
+                    <span className="font-mono text-[10px] text-gray-400 cursor-pointer">{isExpanded ? '▼' : '▶'}</span>
                   </div>
 
                   {/* Expanded detail */}
