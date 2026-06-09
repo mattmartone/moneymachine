@@ -561,7 +561,6 @@ function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, to
 }) {
   const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
-  const [selectedTrack, setSelectedTrack] = useState('');
   const [selectedRaceIds, setSelectedRaceIds] = useState<number[]>([]);
   const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
   const [stratTab, setStratTab] = useState<'marketplace' | 'private'>('marketplace');
@@ -569,24 +568,12 @@ function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, to
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const availableDates = [...new Set(raceCards.map(c => {
+  const cardsForDate = raceCards.filter(c => {
     const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
-    return d;
-  }))].sort().reverse();
+    return d === selectedDate;
+  });
 
-  const tracksForDate = raceCards
-    .filter(c => {
-      const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
-      return d === selectedDate;
-    })
-    .map(c => c.track);
-
-  const racesForSelection = raceCards
-    .filter(c => {
-      const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
-      return d === selectedDate && (selectedTrack === '' || c.track === selectedTrack);
-    })
-    .flatMap(c => c.races);
+  const allRaceIdsForDate = cardsForDate.flatMap(c => c.races.map(r => r.id));
 
   const filteredMarketplace = allStrategies.filter(s =>
     !search || s.name.toLowerCase().includes(search.toLowerCase())
@@ -625,10 +612,6 @@ function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, to
 
   return (
     <div>
-      <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
-        <p className="text-gray-700">Select a date, track, and races — then pick your strategies. We'll run the analysis and deliver your report.</p>
-      </div>
-
       {status === 'success' ? (
         <div className="bg-[#e6ffe6] border-4 border-[#008000] p-6 mb-6 text-center">
           <div className="font-bold text-[#008000] text-xl mb-2">ORDER RECEIVED!</div>
@@ -642,163 +625,168 @@ function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, to
         </div>
       ) : (
         <div className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8">
-          {/* Step 1: Date */}
+
+          {/* Date picker */}
           <div className="mb-5">
-            <label className="block font-sans font-bold text-sm mb-2">1. DATE</label>
+            <label className="block font-sans font-bold text-sm mb-2">DATE</label>
             <div className="flex gap-2 items-center">
               <button
                 type="button"
-                onClick={() => setSelectedDate(today)}
-                className={`px-3 py-1 font-sans font-bold text-xs border-2 border-black ${selectedDate === today ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
+                onClick={() => { setSelectedDate(today); setSelectedRaceIds([]); }}
+                className={`px-4 py-2 font-sans font-bold text-sm border-2 border-black ${selectedDate === today ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
               >
                 TODAY
               </button>
-              <select
+              <input
+                type="date"
                 value={selectedDate}
-                onChange={e => { setSelectedDate(e.target.value); setSelectedTrack(''); setSelectedRaceIds([]); }}
-                className="flex-1 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm bg-white"
-              >
-                {!availableDates.includes(today) && <option value={today}>{today} (no races)</option>}
-                {availableDates.map(d => (
-                  <option key={d} value={d}>{d}{d === today ? ' (Today)' : ''}</option>
-                ))}
-              </select>
+                onChange={e => { setSelectedDate(e.target.value); setSelectedRaceIds([]); }}
+                className="px-3 py-2 border-2 border-gray-400 shadow-inset font-mono text-sm bg-white"
+              />
             </div>
           </div>
 
-          {/* Step 2: Track */}
+          {/* Tracks + races inline */}
           <div className="mb-5">
-            <label className="block font-sans font-bold text-sm mb-2">2. TRACK</label>
-            {tracksForDate.length === 0 ? (
-              <div className="font-mono text-sm text-gray-500 p-2 border border-gray-300">No races loaded for this date.</div>
-            ) : (
-              <div className="flex gap-2 flex-wrap">
-                {tracksForDate.map(track => (
-                  <button
-                    key={track}
-                    type="button"
-                    onClick={() => { setSelectedTrack(track); setSelectedRaceIds([]); }}
-                    className={`px-4 py-2 font-sans font-bold text-sm border-2 border-black ${selectedTrack === track ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
-                  >
-                    {track}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Step 3: Races */}
-          {selectedTrack && (
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-2">
-                <label className="font-sans font-bold text-sm">3. RACES</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="font-sans font-bold text-sm">RACES</label>
+              {allRaceIdsForDate.length > 0 && (
                 <div className="flex gap-3 font-sans text-xs font-bold">
-                  <button type="button" onClick={() => setSelectedRaceIds(racesForSelection.map(r => r.id))} className="text-[#000080] underline">All</button>
+                  <button type="button" onClick={() => setSelectedRaceIds(allRaceIdsForDate)} className="text-[#000080] underline">Select all</button>
                   <button type="button" onClick={() => setSelectedRaceIds([])} className="text-[#000080] underline">Clear</button>
                 </div>
+              )}
+            </div>
+
+            {cardsForDate.length === 0 ? (
+              <div className="font-mono text-sm text-gray-500 p-3 border border-gray-300 bg-gray-50">
+                No races loaded for {selectedDate === today ? 'today' : selectedDate}.
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {racesForSelection.map(race => {
-                  const sel = selectedRaceIds.includes(race.id);
+            ) : (
+              <div className="space-y-3">
+                {cardsForDate.map(card => {
+                  const trackRaceIds = card.races.map(r => r.id);
+                  const allTrackSelected = trackRaceIds.every(id => selectedRaceIds.includes(id));
                   return (
-                    <button
-                      key={race.id}
-                      type="button"
-                      onClick={() => setSelectedRaceIds(prev =>
-                        prev.includes(race.id) ? prev.filter(id => id !== race.id) : [...prev, race.id]
-                      )}
-                      className={`px-3 py-2 font-mono text-sm border-2 ${sel ? 'border-[#000080] bg-[#e6e6ff] font-bold' : 'border-gray-400 bg-white hover:bg-[#fffbe0]'}`}
-                    >
-                      <div className="font-bold">R{race.race_number}</div>
-                      <div className="text-[10px] text-gray-600">{race.class || '—'}</div>
-                    </button>
+                    <div key={card.track} className="border-2 border-gray-300 p-3">
+                      <div className="flex items-center gap-3 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (allTrackSelected) {
+                              setSelectedRaceIds(prev => prev.filter(id => !trackRaceIds.includes(id)));
+                            } else {
+                              setSelectedRaceIds(prev => [...new Set([...prev, ...trackRaceIds])]);
+                            }
+                          }}
+                          className={`px-3 py-1 font-sans font-bold text-sm border-2 border-black ${allTrackSelected ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
+                        >
+                          {card.track}
+                        </button>
+                        <div className="flex gap-1 flex-wrap">
+                          {card.races.map(race => {
+                            const sel = selectedRaceIds.includes(race.id);
+                            return (
+                              <button
+                                key={race.id}
+                                type="button"
+                                onClick={() => setSelectedRaceIds(prev =>
+                                  prev.includes(race.id) ? prev.filter(id => id !== race.id) : [...prev, race.id]
+                                )}
+                                className={`w-8 h-8 font-mono text-sm font-bold border-2 ${sel ? 'border-[#000080] bg-[#e6e6ff] text-[#000080]' : 'border-gray-300 bg-white text-gray-600 hover:bg-[#fffbe0] hover:border-gray-400'}`}
+                              >
+                                {race.race_number}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-              <div className="font-mono text-xs text-gray-500 mt-1">{selectedRaceIds.length} selected</div>
+            )}
+            {selectedRaceIds.length > 0 && (
+              <div className="font-mono text-xs text-gray-500 mt-2">{selectedRaceIds.length} race{selectedRaceIds.length > 1 ? 's' : ''} selected</div>
+            )}
+          </div>
+
+          {/* Strategies — always visible */}
+          <div className="mb-5">
+            <label className="block font-sans font-bold text-sm mb-2">STRATEGIES</label>
+
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search strategies..."
+              className="w-full mb-2 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm"
+            />
+
+            <div className="flex border-b border-gray-400 mb-2">
+              <button
+                type="button"
+                onClick={() => setStratTab('marketplace')}
+                className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ${stratTab === 'marketplace' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+              >
+                MARKETPLACE ({filteredMarketplace.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStratTab('private')}
+                className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ml-1 ${stratTab === 'private' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+              >
+                PRIVATE ({filteredPrivate.length})
+              </button>
+              <div className="flex-1" />
+              <button type="button" onClick={() => {
+                setSelectedStrategies([...allStrategies.map(s => s.name), ...userStrategies.map(s => s.title)]);
+              }} className="font-sans text-xs font-bold text-[#000080] underline px-2">All</button>
+              <button type="button" onClick={() => setSelectedStrategies([])} className="font-sans text-xs font-bold text-[#000080] underline px-2">Clear</button>
             </div>
-          )}
 
-          {/* Step 4: Strategies */}
-          {selectedRaceIds.length > 0 && (
-            <div className="mb-5">
-              <label className="block font-sans font-bold text-sm mb-2">4. STRATEGIES</label>
-
-              {/* Search */}
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search strategies..."
-                className="w-full mb-2 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm"
-              />
-
-              {/* Strategy tabs */}
-              <div className="flex border-b border-gray-400 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setStratTab('marketplace')}
-                  className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ${stratTab === 'marketplace' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+            <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-40 overflow-y-auto divide-y divide-gray-300">
+              {stratTab === 'marketplace' && filteredMarketplace.map(s => (
+                <label
+                  key={s.name}
+                  className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
                 >
-                  MARKETPLACE ({filteredMarketplace.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStratTab('private')}
-                  className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ml-1 ${stratTab === 'private' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+                  <input
+                    type="checkbox"
+                    checked={selectedStrategies.includes(s.name)}
+                    onChange={() => setSelectedStrategies(prev =>
+                      prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
+                    )}
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <span className="font-bold text-[#000080]">{s.name}</span>
+                  {s.win_rate !== null && <span className="text-xs text-green-700">{s.win_rate}% W</span>}
+                </label>
+              ))}
+              {stratTab === 'private' && (filteredPrivate.length === 0 ? (
+                <div className="px-3 py-4 text-center font-serif text-sm text-gray-500">No private strategies{search ? ' matching search' : ''}.</div>
+              ) : filteredPrivate.map(s => (
+                <label
+                  key={`priv-${s.id}`}
+                  className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.title) ? 'bg-[#fffbe0]' : ''}`}
                 >
-                  PRIVATE ({filteredPrivate.length})
-                </button>
-                <div className="flex-1" />
-                <button type="button" onClick={() => {
-                  setSelectedStrategies([...allStrategies.map(s => s.name), ...userStrategies.map(s => s.title)]);
-                }} className="font-sans text-xs font-bold text-[#000080] underline px-2">All</button>
-                <button type="button" onClick={() => setSelectedStrategies([])} className="font-sans text-xs font-bold text-[#000080] underline px-2">Clear</button>
-              </div>
-
-              <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-40 overflow-y-auto divide-y divide-gray-300">
-                {stratTab === 'marketplace' && filteredMarketplace.map(s => (
-                  <label
-                    key={s.name}
-                    className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedStrategies.includes(s.name)}
-                      onChange={() => setSelectedStrategies(prev =>
-                        prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
-                      )}
-                      className="w-4 h-4 shrink-0"
-                    />
-                    <span className="font-bold text-[#000080]">{s.name}</span>
-                    {s.win_rate !== null && <span className="text-xs text-green-700">{s.win_rate}% W</span>}
-                  </label>
-                ))}
-                {stratTab === 'private' && (filteredPrivate.length === 0 ? (
-                  <div className="px-3 py-4 text-center font-serif text-sm text-gray-500">No private strategies{search ? ' matching search' : ''}.</div>
-                ) : filteredPrivate.map(s => (
-                  <label
-                    key={`priv-${s.id}`}
-                    className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.title) ? 'bg-[#fffbe0]' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedStrategies.includes(s.title)}
-                      onChange={() => setSelectedStrategies(prev =>
-                        prev.includes(s.title) ? prev.filter(n => n !== s.title) : [...prev, s.title]
-                      )}
-                      className="w-4 h-4 shrink-0"
-                    />
-                    <span className="font-bold text-[#000080]">{s.title}</span>
-                    <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">PRIVATE</span>
-                  </label>
-                )))}
-              </div>
-              <div className="font-mono text-xs text-gray-500 mt-1">{selectedStrategies.length} strategies selected</div>
+                  <input
+                    type="checkbox"
+                    checked={selectedStrategies.includes(s.title)}
+                    onChange={() => setSelectedStrategies(prev =>
+                      prev.includes(s.title) ? prev.filter(n => n !== s.title) : [...prev, s.title]
+                    )}
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <span className="font-bold text-[#000080]">{s.title}</span>
+                  <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">PRIVATE</span>
+                </label>
+              )))}
             </div>
-          )}
+            <div className="font-mono text-xs text-gray-500 mt-1">{selectedStrategies.length} strategies selected</div>
+          </div>
 
-          {/* Checkout */}
+          {/* Checkout — visible when both races and strategies selected */}
           {selectedRaceIds.length > 0 && selectedStrategies.length > 0 && (
             <div className="border-t-2 border-black pt-4">
               <div className="bg-[#ffffcc] border-2 border-black p-4 shadow-inset mb-4">
