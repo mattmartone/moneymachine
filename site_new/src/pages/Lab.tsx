@@ -54,7 +54,7 @@ const TOKEN_COST_PER_STRATEGY = 15000; // used by Race Cards tab
 
 export function Lab() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'races' | 'library' | 'analyze'>('races');
+  const [tab, setTab] = useState<'analyze' | 'library'>('analyze');
 
   // Library state
   const [userStrategies, setUserStrategies] = useState<UserStrategy[]>([]);
@@ -67,10 +67,6 @@ export function Lab() {
 
   // Race cards state
   const [raceCards, setRaceCards] = useState<RaceCard[]>([]);
-  const [selectedRaces, setSelectedRaces] = useState<number[]>([]);
-  const [raceStrategies, setRaceStrategies] = useState<string[]>([]);
-  const [orderStatus, setOrderStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [orderError, setOrderError] = useState('');
 
   // Analyze state
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -183,10 +179,10 @@ export function Lab() {
         {/* Tabs */}
         <div className="flex border-b-2 border-black mb-4">
           <button
-            onClick={() => setTab('races')}
-            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ${tab === 'races' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
+            onClick={() => setTab('analyze')}
+            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ${tab === 'analyze' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
           >
-            RACE CARDS
+            RUN ANALYSIS
           </button>
           <button
             onClick={() => setTab('library')}
@@ -194,212 +190,8 @@ export function Lab() {
           >
             MY STRATEGIES
           </button>
-          <button
-            onClick={() => setTab('analyze')}
-            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ml-1 ${tab === 'analyze' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
-          >
-            RUN ANALYSIS
-          </button>
         </div>
 
-        {/* RACE CARDS TAB */}
-        {tab === 'races' && (
-          <div>
-            <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
-              <p className="text-gray-700">Available race cards. Select the races you want analyzed, pick your strategies, and submit your order.</p>
-            </div>
-
-            {raceCards.length === 0 ? (
-              <div className="border border-gray-300 p-8 text-center font-serif text-sm text-gray-500">
-                No race cards loaded yet. Check back before the next race day.
-              </div>
-            ) : (
-              <>
-                {/* Race selection */}
-                <div className="mb-6">
-                  <h4 className="font-sans font-bold text-sm mb-3">1. SELECT RACES</h4>
-                  {raceCards.map(card => (
-                    <div key={`${card.track}-${card.date}`} className="mb-4">
-                      <div className="font-mono text-sm font-bold bg-black text-white inline-block px-2 py-1 mb-2">
-                        {card.track} — {typeof card.date === 'string' ? card.date.split('T')[0] : card.date}
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {card.races.map(race => {
-                          const selected = selectedRaces.includes(race.id);
-                          return (
-                            <label
-                              key={race.id}
-                              className={`flex items-center gap-2 p-3 border-2 cursor-pointer font-mono text-sm ${selected ? 'border-[#000080] bg-[#e6e6ff]' : 'border-gray-400 bg-white hover:bg-[#fffbe0]'}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selected}
-                                onChange={() => setSelectedRaces(prev =>
-                                  prev.includes(race.id) ? prev.filter(id => id !== race.id) : [...prev, race.id]
-                                )}
-                                className="w-4 h-4 shrink-0"
-                              />
-                              <div>
-                                <div className="font-bold">R{race.race_number}</div>
-                                <div className="text-[10px] text-gray-600">
-                                  {race.class || race.conditions || '—'} {race.surface ? `• ${race.surface}` : ''} {race.field_size ? `• ${race.field_size} horses` : ''}
-                                </div>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <div className="flex gap-3 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const ids = card.races.map(r => r.id);
-                            setSelectedRaces(prev => [...new Set([...prev, ...ids])]);
-                          }}
-                          className="font-sans text-xs font-bold text-[#000080] underline"
-                        >
-                          Select all
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const ids = card.races.map(r => r.id);
-                            setSelectedRaces(prev => prev.filter(id => !ids.includes(id)));
-                          }}
-                          className="font-sans text-xs font-bold text-[#000080] underline"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Strategy selection */}
-                {selectedRaces.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-sans font-bold text-sm">2. SELECT STRATEGIES</h4>
-                      <div className="flex gap-3 font-sans text-xs font-bold">
-                        <button type="button" onClick={() => setRaceStrategies([...allStrategies.map(s => s.name), ...userStrategies.map(s => s.title)])} className="text-[#000080] underline">All</button>
-                        <button type="button" onClick={() => setRaceStrategies([])} className="text-[#000080] underline">Clear</button>
-                      </div>
-                    </div>
-                    <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-48 overflow-y-auto divide-y divide-gray-300">
-                      {allStrategies.map(s => (
-                        <label
-                          key={s.name}
-                          className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${raceStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={raceStrategies.includes(s.name)}
-                            onChange={() => setRaceStrategies(prev =>
-                              prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
-                            )}
-                            className="w-4 h-4 shrink-0"
-                          />
-                          <span className="font-bold text-[#000080]">{s.name}</span>
-                          {s.win_rate !== null && (
-                            <span className="font-mono text-xs text-green-700">{s.win_rate}% W</span>
-                          )}
-                        </label>
-                      ))}
-                      {userStrategies.length > 0 && (
-                        <>
-                          <div className="px-3 py-1 bg-gray-200 font-sans text-[10px] font-bold text-gray-600">PRIVATE</div>
-                          {userStrategies.map(s => (
-                            <label
-                              key={`priv-${s.id}`}
-                              className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${raceStrategies.includes(s.title) ? 'bg-[#fffbe0]' : ''}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={raceStrategies.includes(s.title)}
-                                onChange={() => setRaceStrategies(prev =>
-                                  prev.includes(s.title) ? prev.filter(n => n !== s.title) : [...prev, s.title]
-                                )}
-                                className="w-4 h-4 shrink-0"
-                              />
-                              <span className="font-bold text-[#000080]">{s.title}</span>
-                              <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">PRIVATE</span>
-                            </label>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                    <div className="font-mono text-xs text-gray-500 mt-1">{raceStrategies.length} strategies selected</div>
-                  </div>
-                )}
-
-                {/* Checkout */}
-                {selectedRaces.length > 0 && raceStrategies.length > 0 && (
-                  <div className="border-t-2 border-black pt-4 mb-6">
-                    <div className="bg-[#ffffcc] border-2 border-black p-4 shadow-inset mb-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-sans font-bold text-sm">Order summary:</span>
-                        <span className="font-mono text-sm">{selectedRaces.length} race{selectedRaces.length > 1 ? 's' : ''} × {raceStrategies.length} strateg{raceStrategies.length > 1 ? 'ies' : 'y'}</span>
-                      </div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-sans text-sm">Estimated cost:</span>
-                        <span className="font-mono text-lg font-bold">{(selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY).toLocaleString()} tokens</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-sans text-sm text-gray-600">Your balance:</span>
-                        <span className="font-mono text-sm">{userTokens.toLocaleString()} tokens</span>
-                      </div>
-                    </div>
-
-                    {orderStatus === 'success' ? (
-                      <div className="bg-[#e6ffe6] border-4 border-[#008000] p-4 text-center font-bold text-[#008000]">
-                        Order received. Your analysis is being processed.
-                      </div>
-                    ) : (
-                      <>
-                        {orderStatus === 'error' && (
-                          <div className="text-web-red font-bold text-sm mb-4 bg-[#ffe6e6] border border-web-red p-2">
-                            * {orderError}
-                          </div>
-                        )}
-                        <button
-                          onClick={async () => {
-                            const cost = selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY;
-                            if (cost > userTokens) { setOrderError('Insufficient tokens.'); setOrderStatus('error'); return; }
-                            setOrderStatus('submitting');
-                            try {
-                              const res = await fetch('/api/lab/analyses', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                body: JSON.stringify({ race_ids: selectedRaces, strategies: raceStrategies })
-                              });
-                              if (res.ok) {
-                                setOrderStatus('success');
-                                setSelectedRaces([]);
-                                setRaceStrategies([]);
-                                loadTokenBalance();
-                              } else {
-                                const data = await res.json();
-                                setOrderError(data.error || 'Something went wrong');
-                                setOrderStatus('error');
-                              }
-                            } catch {
-                              setOrderError('Submission failed. Try again.');
-                              setOrderStatus('error');
-                            }
-                          }}
-                          disabled={orderStatus === 'submitting'}
-                          className="w-full px-6 py-3 bg-web-gray font-sans font-bold text-lg text-black border-2 border-black shadow-outset active:shadow-inset cursor-pointer disabled:opacity-50"
-                        >
-                          {orderStatus === 'submitting' ? 'PROCESSING...' : `RUN ANALYSIS — ${(selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY).toLocaleString()} TOKENS`}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
 
         {/* MY STRATEGIES TAB */}
         {tab === 'library' && (
