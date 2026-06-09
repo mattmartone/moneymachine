@@ -178,6 +178,17 @@ export function Races() {
         {/* Entries */}
         {!loading && entries.length > 0 && (
           <div className="space-y-1">
+            {/* Header row */}
+            <div className="flex items-center gap-4 px-3 py-1 border-b-2 border-gray-400">
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-6 text-center shrink-0">PP</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 flex-1">HORSE</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-20 text-center shrink-0">STYLE</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-16 text-center shrink-0">ODDS</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-28 text-right shrink-0">JOCKEY / TRAINER</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 w-8 text-right shrink-0">BSR</span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 shrink-0 w-5"></span>
+              <span className="font-mono text-[10px] font-bold text-gray-500 shrink-0 w-3"></span>
+            </div>
             {entries.map(entry => {
               const isExpanded = expandedEntry === entry.id;
               const isScratch = entry.scratched;
@@ -185,16 +196,16 @@ export function Races() {
                 <div key={entry.id} className={`border-2 ${isScratch ? 'border-gray-300 bg-gray-100 opacity-60' : 'border-gray-400 bg-white'}`}>
                   {/* Collapsed row */}
                   <div
-                    className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-[#fffbe0]"
+                    className="flex items-center gap-4 px-3 py-2 cursor-pointer hover:bg-[#fffbe0]"
                     onClick={() => setExpandedEntry(isExpanded ? null : entry.id)}
                   >
-                    <span className="font-mono text-sm font-bold w-6 text-center">{entry.post_position || '—'}</span>
+                    <span className="font-mono text-sm font-bold w-6 text-center shrink-0">{entry.post_position || '—'}</span>
                     <span className={`font-serif font-bold flex-1 ${isScratch ? 'line-through text-gray-500' : 'text-[#000080]'}`}>
                       {entry.horse_name}
                     </span>
-                    {entry.running_style && (
-                      <span className="font-mono text-[10px] px-1 bg-gray-200 border border-gray-400">{STYLE_LABELS[entry.running_style] || entry.running_style}</span>
-                    )}
+                    <span className="font-mono text-[10px] px-1.5 py-0.5 bg-gray-200 border border-gray-400 w-20 text-center shrink-0">
+                      {entry.running_style ? (STYLE_LABELS[entry.running_style] || entry.running_style) : '—'}
+                    </span>
                     <input
                       type="text"
                       defaultValue={entry.live_odds || entry.morning_line_odds || ''}
@@ -207,19 +218,22 @@ export function Races() {
                         }
                       }}
                       onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                      className="font-mono text-xs w-14 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none"
+                      className="font-mono text-xs w-16 text-center px-1 py-0.5 border border-gray-300 bg-white focus:border-[#000080] outline-none shrink-0"
                     />
-                    <span className="font-mono text-xs text-gray-500 w-16 text-right">{entry.jockey || '—'}</span>
-                    {entry.last_beyer && <span className="font-mono text-xs text-gray-500 w-8 text-right">{entry.last_beyer}</span>}
+                    <div className="font-mono text-[10px] text-gray-500 w-28 text-right shrink-0 leading-tight">
+                      <div>{entry.jockey || '—'}</div>
+                      <div className="text-gray-400">{entry.trainer || '—'}</div>
+                    </div>
+                    <span className="font-mono text-xs text-gray-500 w-8 text-right shrink-0">{entry.last_beyer || '—'}</span>
                     <button
                       type="button"
                       onClick={e => { e.stopPropagation(); updateEntry(entry.id, { scratched: !isScratch }); }}
-                      className={`font-mono text-[10px] px-1.5 py-0.5 border ${isScratch ? 'border-[#008000] text-[#008000] bg-[#e6ffe6]' : 'border-gray-300 text-gray-400 hover:border-web-red hover:text-web-red'}`}
+                      className={`font-mono text-[10px] px-1.5 py-0.5 border shrink-0 ${isScratch ? 'border-[#008000] text-[#008000] bg-[#e6ffe6]' : 'border-gray-300 text-gray-400 hover:border-web-red hover:text-web-red'}`}
                       title={isScratch ? 'Reinstate' : 'Scratch'}
                     >
                       {isScratch ? '✓' : '✕'}
                     </button>
-                    <span className="font-mono text-[10px] text-gray-400 cursor-pointer">{isExpanded ? '▼' : '▶'}</span>
+                    <span className="font-mono text-[10px] text-gray-400 cursor-pointer shrink-0">{isExpanded ? '▼' : '▶'}</span>
                   </div>
 
                   {/* Expanded detail */}
