@@ -21,6 +21,7 @@ import { Leaderboard } from './pages/Leaderboard';
 import { Lab } from './pages/Lab';
 import { MemberDetail } from './pages/MemberDetail';
 import { Shop } from './pages/Shop';
+import { Db } from './pages/Db';
 
 function Landing() {
   return (
@@ -64,6 +65,7 @@ export function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/users/:id" element={<MemberDetail />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/db" element={<Db />} />
       </Routes>
     </BrowserRouter>
   );

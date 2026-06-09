@@ -11,6 +11,25 @@ interface Analysis {
   track: string;
 }
 
+interface RaceCard {
+  track: string;
+  date: string;
+  races: Race[];
+}
+
+interface Race {
+  id: number;
+  track: string;
+  date: string;
+  race_number: number;
+  conditions: string;
+  class: string;
+  distance: string;
+  surface: string;
+  field_size: number;
+  entries_count: number;
+}
+
 interface MarketplaceStrategy {
   name: string;
   type: string;
@@ -31,11 +50,11 @@ interface UserStrategy {
   created_at: string;
 }
 
-const TOKEN_COST_PER_STRATEGY = 15000;
+const TOKEN_COST_PER_STRATEGY = 15000; // used by Race Cards tab
 
 export function Lab() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'library' | 'analyze'>('library');
+  const [tab, setTab] = useState<'races' | 'library' | 'analyze'>('races');
 
   // Library state
   const [userStrategies, setUserStrategies] = useState<UserStrategy[]>([]);
@@ -46,16 +65,18 @@ export function Lab() {
   const [newLogic, setNewLogic] = useState('');
   const [newConditions, setNewConditions] = useState('');
 
+  // Race cards state
+  const [raceCards, setRaceCards] = useState<RaceCard[]>([]);
+  const [selectedRaces, setSelectedRaces] = useState<number[]>([]);
+  const [raceStrategies, setRaceStrategies] = useState<string[]>([]);
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [orderError, setOrderError] = useState('');
+
   // Analyze state
-  const [file, setFile] = useState<File | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [allStrategies, setAllStrategies] = useState<MarketplaceStrategy[]>([]);
-  const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
-  const [errorMsg, setErrorMsg] = useState('');
   const [userTokens, setUserTokens] = useState(0);
 
-  const storedUser = JSON.parse(localStorage.getItem('ftc_user') || '{}');
   const token = localStorage.getItem('ftc_token');
 
   useEffect(() => {
@@ -64,11 +85,19 @@ export function Lab() {
   }, [navigate, token]);
 
   const loadAll = () => {
+    loadRaceCards();
     loadUserStrategies();
     loadFavorites();
     loadAnalyses();
     loadAllStrategies();
     loadTokenBalance();
+  };
+
+  const loadRaceCards = () => {
+    fetch('/api/lab/races', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => { if (data) setRaceCards(data.cards || []); })
+      .catch(() => {});
   };
 
   const loadUserStrategies = () => {
@@ -111,7 +140,6 @@ export function Lab() {
       .catch(() => {});
   };
 
-  // Library actions
   const createStrategy = async () => {
     if (!newTitle || !newLogic) return;
     await fetch('/api/lab/strategies', {
@@ -142,76 +170,6 @@ export function Lab() {
     loadFavorites();
   };
 
-  // Analyze actions
-  const combinedStrategies = [
-    ...allStrategies.map(s => ({ name: s.name, source: 'marketplace' as const })),
-    ...userStrategies.map(s => ({ name: s.title, source: 'custom' as const })),
-  ];
-
-  const estimatedCost = selectedStrategies.length * TOKEN_COST_PER_STRATEGY;
-  const remainingAfter = userTokens - estimatedCost;
-  const canAfford = remainingAfter >= 0;
-
-  const toggleStrategy = (name: string) => {
-    setSelectedStrategies(prev =>
-      prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]
-    );
-  };
-
-  const selectAll = () => setSelectedStrategies(combinedStrategies.map(s => s.name));
-  const selectNone = () => setSelectedStrategies([]);
-  const selectLibrary = () => {
-    const libraryNames = [
-      ...userStrategies.map(s => s.title),
-      ...favorites.map(s => s.name),
-    ];
-    setSelectedStrategies(libraryNames.filter(n => combinedStrategies.some(cs => cs.name === n)));
-  };
-
-  const readFileAsBase64 = (f: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(f);
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file || selectedStrategies.length === 0) return;
-    if (!canAfford) { setErrorMsg('Insufficient tokens.'); setStatus('error'); return; }
-
-    setStatus('uploading');
-    setErrorMsg('');
-
-    try {
-      const fileData = await readFileAsBase64(file);
-      const res = await fetch('/api/lab/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ filename: file.name, strategies: selectedStrategies, fileData })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setStatus('success');
-        setFile(null);
-        setSelectedStrategies([]);
-        loadAnalyses();
-        loadTokenBalance();
-      } else {
-        setErrorMsg(data.error || 'Something went wrong');
-        setStatus('error');
-      }
-    } catch {
-      setErrorMsg('Upload failed. Try again.');
-      setStatus('error');
-    }
-  };
 
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
@@ -225,8 +183,14 @@ export function Lab() {
         {/* Tabs */}
         <div className="flex border-b-2 border-black mb-4">
           <button
+            onClick={() => setTab('races')}
+            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ${tab === 'races' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
+          >
+            RACE CARDS
+          </button>
+          <button
             onClick={() => setTab('library')}
-            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ${tab === 'library' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
+            className={`px-4 py-2 font-sans font-bold text-sm border-2 border-b-0 border-black -mb-[2px] ml-1 ${tab === 'library' ? 'bg-white' : 'bg-gray-200 text-gray-600'}`}
           >
             MY STRATEGIES
           </button>
@@ -238,6 +202,205 @@ export function Lab() {
           </button>
         </div>
 
+        {/* RACE CARDS TAB */}
+        {tab === 'races' && (
+          <div>
+            <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
+              <p className="text-gray-700">Available race cards. Select the races you want analyzed, pick your strategies, and submit your order.</p>
+            </div>
+
+            {raceCards.length === 0 ? (
+              <div className="border border-gray-300 p-8 text-center font-serif text-sm text-gray-500">
+                No race cards loaded yet. Check back before the next race day.
+              </div>
+            ) : (
+              <>
+                {/* Race selection */}
+                <div className="mb-6">
+                  <h4 className="font-sans font-bold text-sm mb-3">1. SELECT RACES</h4>
+                  {raceCards.map(card => (
+                    <div key={`${card.track}-${card.date}`} className="mb-4">
+                      <div className="font-mono text-sm font-bold bg-black text-white inline-block px-2 py-1 mb-2">
+                        {card.track} — {typeof card.date === 'string' ? card.date.split('T')[0] : card.date}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {card.races.map(race => {
+                          const selected = selectedRaces.includes(race.id);
+                          return (
+                            <label
+                              key={race.id}
+                              className={`flex items-center gap-2 p-3 border-2 cursor-pointer font-mono text-sm ${selected ? 'border-[#000080] bg-[#e6e6ff]' : 'border-gray-400 bg-white hover:bg-[#fffbe0]'}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selected}
+                                onChange={() => setSelectedRaces(prev =>
+                                  prev.includes(race.id) ? prev.filter(id => id !== race.id) : [...prev, race.id]
+                                )}
+                                className="w-4 h-4 shrink-0"
+                              />
+                              <div>
+                                <div className="font-bold">R{race.race_number}</div>
+                                <div className="text-[10px] text-gray-600">
+                                  {race.class || race.conditions || '—'} {race.surface ? `• ${race.surface}` : ''} {race.field_size ? `• ${race.field_size} horses` : ''}
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-3 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ids = card.races.map(r => r.id);
+                            setSelectedRaces(prev => [...new Set([...prev, ...ids])]);
+                          }}
+                          className="font-sans text-xs font-bold text-[#000080] underline"
+                        >
+                          Select all
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const ids = card.races.map(r => r.id);
+                            setSelectedRaces(prev => prev.filter(id => !ids.includes(id)));
+                          }}
+                          className="font-sans text-xs font-bold text-[#000080] underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Strategy selection */}
+                {selectedRaces.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-sans font-bold text-sm">2. SELECT STRATEGIES</h4>
+                      <div className="flex gap-3 font-sans text-xs font-bold">
+                        <button type="button" onClick={() => setRaceStrategies([...allStrategies.map(s => s.name), ...userStrategies.map(s => s.title)])} className="text-[#000080] underline">All</button>
+                        <button type="button" onClick={() => setRaceStrategies([])} className="text-[#000080] underline">Clear</button>
+                      </div>
+                    </div>
+                    <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-48 overflow-y-auto divide-y divide-gray-300">
+                      {allStrategies.map(s => (
+                        <label
+                          key={s.name}
+                          className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${raceStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={raceStrategies.includes(s.name)}
+                            onChange={() => setRaceStrategies(prev =>
+                              prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
+                            )}
+                            className="w-4 h-4 shrink-0"
+                          />
+                          <span className="font-bold text-[#000080]">{s.name}</span>
+                          {s.win_rate !== null && (
+                            <span className="font-mono text-xs text-green-700">{s.win_rate}% W</span>
+                          )}
+                        </label>
+                      ))}
+                      {userStrategies.length > 0 && (
+                        <>
+                          <div className="px-3 py-1 bg-gray-200 font-sans text-[10px] font-bold text-gray-600">PRIVATE</div>
+                          {userStrategies.map(s => (
+                            <label
+                              key={`priv-${s.id}`}
+                              className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${raceStrategies.includes(s.title) ? 'bg-[#fffbe0]' : ''}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={raceStrategies.includes(s.title)}
+                                onChange={() => setRaceStrategies(prev =>
+                                  prev.includes(s.title) ? prev.filter(n => n !== s.title) : [...prev, s.title]
+                                )}
+                                className="w-4 h-4 shrink-0"
+                              />
+                              <span className="font-bold text-[#000080]">{s.title}</span>
+                              <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">PRIVATE</span>
+                            </label>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                    <div className="font-mono text-xs text-gray-500 mt-1">{raceStrategies.length} strategies selected</div>
+                  </div>
+                )}
+
+                {/* Checkout */}
+                {selectedRaces.length > 0 && raceStrategies.length > 0 && (
+                  <div className="border-t-2 border-black pt-4 mb-6">
+                    <div className="bg-[#ffffcc] border-2 border-black p-4 shadow-inset mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-sans font-bold text-sm">Order summary:</span>
+                        <span className="font-mono text-sm">{selectedRaces.length} race{selectedRaces.length > 1 ? 's' : ''} × {raceStrategies.length} strateg{raceStrategies.length > 1 ? 'ies' : 'y'}</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-sans text-sm">Estimated cost:</span>
+                        <span className="font-mono text-lg font-bold">{(selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY).toLocaleString()} tokens</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-sans text-sm text-gray-600">Your balance:</span>
+                        <span className="font-mono text-sm">{userTokens.toLocaleString()} tokens</span>
+                      </div>
+                    </div>
+
+                    {orderStatus === 'success' ? (
+                      <div className="bg-[#e6ffe6] border-4 border-[#008000] p-4 text-center font-bold text-[#008000]">
+                        Order received. Your analysis is being processed.
+                      </div>
+                    ) : (
+                      <>
+                        {orderStatus === 'error' && (
+                          <div className="text-web-red font-bold text-sm mb-4 bg-[#ffe6e6] border border-web-red p-2">
+                            * {orderError}
+                          </div>
+                        )}
+                        <button
+                          onClick={async () => {
+                            const cost = selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY;
+                            if (cost > userTokens) { setOrderError('Insufficient tokens.'); setOrderStatus('error'); return; }
+                            setOrderStatus('submitting');
+                            try {
+                              const res = await fetch('/api/lab/analyses', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({ race_ids: selectedRaces, strategies: raceStrategies })
+                              });
+                              if (res.ok) {
+                                setOrderStatus('success');
+                                setSelectedRaces([]);
+                                setRaceStrategies([]);
+                                loadTokenBalance();
+                              } else {
+                                const data = await res.json();
+                                setOrderError(data.error || 'Something went wrong');
+                                setOrderStatus('error');
+                              }
+                            } catch {
+                              setOrderError('Submission failed. Try again.');
+                              setOrderStatus('error');
+                            }
+                          }}
+                          disabled={orderStatus === 'submitting'}
+                          className="w-full px-6 py-3 bg-web-gray font-sans font-bold text-lg text-black border-2 border-black shadow-outset active:shadow-inset cursor-pointer disabled:opacity-50"
+                        >
+                          {orderStatus === 'submitting' ? 'PROCESSING...' : `RUN ANALYSIS — ${(selectedRaces.length * raceStrategies.length * TOKEN_COST_PER_STRATEGY).toLocaleString()} TOKENS`}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         {/* MY STRATEGIES TAB */}
         {tab === 'library' && (
           <div>
@@ -248,7 +411,7 @@ export function Lab() {
             {/* Custom strategies */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-sans font-bold text-sm">CUSTOM STRATEGIES</h4>
+                <h4 className="font-sans font-bold text-sm">PRIVATE STRATEGIES</h4>
                 <button
                   onClick={() => setShowCreateForm(!showCreateForm)}
                   className="px-3 py-1 bg-web-gray font-sans font-bold text-xs border-2 border-black shadow-outset active:shadow-inset"
@@ -308,7 +471,7 @@ export function Lab() {
 
               {userStrategies.length === 0 && !showCreateForm ? (
                 <div className="border border-gray-300 p-4 text-center font-serif text-sm text-gray-500">
-                  No custom strategies yet. Create one to personalize your analysis.
+                  No private strategies yet. Create one to personalize your analysis.
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -370,134 +533,330 @@ export function Lab() {
 
         {/* RUN ANALYSIS TAB */}
         {tab === 'analyze' && (
-          <div>
-            <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
-              <p className="text-gray-700">Upload your DRF race book and select strategies. We'll run your personalized analysis and deliver the report to your email.</p>
-            </div>
-
-            {status === 'success' ? (
-              <div className="bg-[#e6ffe6] border-4 border-[#008000] p-6 mb-6 text-center">
-                <div className="font-bold text-[#008000] text-xl mb-2">ORDER RECEIVED!</div>
-                <p className="font-serif text-lg mb-2">Your race book has been submitted for analysis.</p>
-                <p className="font-serif">Your report will be sent to <strong>{storedUser.email}</strong> once processing is complete.</p>
-                <button
-                  onClick={() => setStatus('idle')}
-                  className="mt-4 px-4 py-1 bg-web-gray font-sans font-bold border-2 border-black shadow-outset active:shadow-inset"
-                >
-                  SUBMIT ANOTHER
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8">
-                {/* Step 1: Upload PDF */}
-                <div className="mb-6">
-                  <label className="block font-sans font-bold text-sm mb-1">1. UPLOAD RACE BOOK (PDF)</label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={e => setFile(e.target.files?.[0] || null)}
-                    className="w-full font-mono text-sm"
-                    required
-                  />
-                  {file && <div className="font-mono text-xs text-gray-600 mt-1">{file.name} ({(file.size / 1024).toFixed(0)} KB)</div>}
-                  <p className="font-serif text-xs text-gray-500 mt-1">Track, date, and race info will be extracted from the PDF.</p>
-                </div>
-
-                {/* Step 2: Select Strategies */}
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="font-sans font-bold text-sm">2. SELECT STRATEGIES</label>
-                    <div className="flex gap-3 font-sans text-xs font-bold">
-                      <button type="button" onClick={selectLibrary} className="web-link">My Library</button>
-                      <button type="button" onClick={selectAll} className="web-link">All</button>
-                      <button type="button" onClick={selectNone} className="web-link">Clear</button>
-                    </div>
-                  </div>
-                  <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-48 overflow-y-auto divide-y divide-gray-300">
-                    {combinedStrategies.map(s => (
-                      <label
-                        key={s.name}
-                        className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedStrategies.includes(s.name)}
-                          onChange={() => toggleStrategy(s.name)}
-                          className="w-4 h-4 shrink-0"
-                        />
-                        <span className="font-bold text-[#000080]">{s.name}</span>
-                        {s.source === 'custom' && (
-                          <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">CUSTOM</span>
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="font-mono text-xs text-gray-500 mt-1">{selectedStrategies.length} of {combinedStrategies.length} selected</div>
-                </div>
-
-                {/* Step 3: Cost Summary / Checkout */}
-                <div className="border-t-2 border-black pt-4 mb-4">
-                  <div className="bg-[#ffffcc] border-2 border-black p-4 shadow-inset">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-sans font-bold text-sm">Estimated cost:</span>
-                      <span className="font-mono text-xl font-bold">{estimatedCost.toLocaleString()} tokens</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-sans text-sm text-gray-600">Your balance:</span>
-                      <span className="font-mono text-sm">{userTokens.toLocaleString()} tokens</span>
-                    </div>
-                    <div className="flex justify-between items-center border-t border-gray-400 pt-2">
-                      <span className="font-sans text-sm font-bold">After this analysis:</span>
-                      <span className={`font-mono text-sm font-bold ${canAfford ? 'text-web-green' : 'text-web-red'}`}>
-                        {canAfford ? remainingAfter.toLocaleString() : 'INSUFFICIENT'} tokens
-                      </span>
-                    </div>
-                    {!canAfford && (
-                      <a href="/shop" className="block mt-2 font-sans text-xs font-bold text-[#000080] underline text-center">
-                        Buy more tokens →
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {status === 'error' && (
-                  <div className="text-web-red font-bold text-sm mb-4 bg-[#ffe6e6] border border-web-red p-2">
-                    * {errorMsg}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={status === 'uploading' || !file || !canAfford || selectedStrategies.length === 0}
-                  className="w-full px-6 py-3 bg-web-gray font-sans font-bold text-lg text-black border-2 border-black shadow-outset active:shadow-inset cursor-pointer disabled:opacity-50"
-                >
-                  {status === 'uploading' ? 'PROCESSING...' : `CHECKOUT — ${estimatedCost.toLocaleString()} TOKENS`}
-                </button>
-              </form>
-            )}
-
-            {analyses.length > 0 && (
-              <>
-                <h4 className="font-sans font-bold text-sm mb-3 border-b border-black pb-1">ORDER HISTORY</h4>
-                <div className="space-y-2">
-                  {analyses.map(a => (
-                    <div key={a.id} className="bg-white border border-gray-400 p-3 flex justify-between items-center">
-                      <div>
-                        <span className="font-serif font-bold">{a.track || a.filename}</span>
-                        <span className="font-mono text-xs text-gray-500 ml-3">{a.created_at?.split('T')[0]}</span>
-                        <span className="font-mono text-xs text-gray-500 ml-3">{a.tokens_spent} tokens</span>
-                      </div>
-                      <span className={`font-mono text-xs font-bold px-2 py-0.5 ${a.status === 'complete' ? 'bg-[#e6ffe6] text-[#008000]' : a.status === 'failed' ? 'bg-[#ffe6e6] text-web-red' : 'bg-[#ffffcc] text-black'}`}>
-                        {a.status.toUpperCase()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <AnalyzePanel
+            raceCards={raceCards}
+            allStrategies={allStrategies}
+            userStrategies={userStrategies}
+            userTokens={userTokens}
+            token={token!}
+            analyses={analyses}
+            onComplete={() => { loadTokenBalance(); loadAnalyses(); }}
+          />
         )}
       </div>
+    </div>
+  );
+}
+
+const TOKEN_COST_PER_RACE_STRATEGY = 15000;
+
+function AnalyzePanel({ raceCards, allStrategies, userStrategies, userTokens, token, analyses, onComplete }: {
+  raceCards: RaceCard[];
+  allStrategies: MarketplaceStrategy[];
+  userStrategies: UserStrategy[];
+  userTokens: number;
+  token: string;
+  analyses: Analysis[];
+  onComplete: () => void;
+}) {
+  const today = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedTrack, setSelectedTrack] = useState('');
+  const [selectedRaceIds, setSelectedRaceIds] = useState<number[]>([]);
+  const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
+  const [stratTab, setStratTab] = useState<'marketplace' | 'private'>('marketplace');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const availableDates = [...new Set(raceCards.map(c => {
+    const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
+    return d;
+  }))].sort().reverse();
+
+  const tracksForDate = raceCards
+    .filter(c => {
+      const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
+      return d === selectedDate;
+    })
+    .map(c => c.track);
+
+  const racesForSelection = raceCards
+    .filter(c => {
+      const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
+      return d === selectedDate && (selectedTrack === '' || c.track === selectedTrack);
+    })
+    .flatMap(c => c.races);
+
+  const filteredMarketplace = allStrategies.filter(s =>
+    !search || s.name.toLowerCase().includes(search.toLowerCase())
+  );
+  const filteredPrivate = userStrategies.filter(s =>
+    !search || s.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const cost = selectedRaceIds.length * selectedStrategies.length * TOKEN_COST_PER_RACE_STRATEGY;
+  const canAfford = cost <= userTokens;
+
+  const handleSubmit = async () => {
+    if (!canAfford) { setErrorMsg('Insufficient tokens.'); setStatus('error'); return; }
+    setStatus('submitting');
+    try {
+      const res = await fetch('/api/lab/analyses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ race_ids: selectedRaceIds, strategies: selectedStrategies })
+      });
+      if (res.ok) {
+        setStatus('success');
+        setSelectedRaceIds([]);
+        setSelectedStrategies([]);
+        onComplete();
+      } else {
+        const data = await res.json();
+        setErrorMsg(data.error || 'Something went wrong');
+        setStatus('error');
+      }
+    } catch {
+      setErrorMsg('Submission failed. Try again.');
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div>
+      <div className="bg-[#ffffcc] border-2 border-black p-4 mb-6 shadow-outset font-serif text-sm">
+        <p className="text-gray-700">Select a date, track, and races — then pick your strategies. We'll run the analysis and deliver your report.</p>
+      </div>
+
+      {status === 'success' ? (
+        <div className="bg-[#e6ffe6] border-4 border-[#008000] p-6 mb-6 text-center">
+          <div className="font-bold text-[#008000] text-xl mb-2">ORDER RECEIVED!</div>
+          <p className="font-serif text-lg mb-2">Your analysis is being processed.</p>
+          <button
+            onClick={() => setStatus('idle')}
+            className="mt-4 px-4 py-1 bg-web-gray font-sans font-bold border-2 border-black shadow-outset active:shadow-inset"
+          >
+            RUN ANOTHER
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8">
+          {/* Step 1: Date */}
+          <div className="mb-5">
+            <label className="block font-sans font-bold text-sm mb-2">1. DATE</label>
+            <div className="flex gap-2 items-center">
+              <button
+                type="button"
+                onClick={() => setSelectedDate(today)}
+                className={`px-3 py-1 font-sans font-bold text-xs border-2 border-black ${selectedDate === today ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
+              >
+                TODAY
+              </button>
+              <select
+                value={selectedDate}
+                onChange={e => { setSelectedDate(e.target.value); setSelectedTrack(''); setSelectedRaceIds([]); }}
+                className="flex-1 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm bg-white"
+              >
+                {!availableDates.includes(today) && <option value={today}>{today} (no races)</option>}
+                {availableDates.map(d => (
+                  <option key={d} value={d}>{d}{d === today ? ' (Today)' : ''}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Step 2: Track */}
+          <div className="mb-5">
+            <label className="block font-sans font-bold text-sm mb-2">2. TRACK</label>
+            {tracksForDate.length === 0 ? (
+              <div className="font-mono text-sm text-gray-500 p-2 border border-gray-300">No races loaded for this date.</div>
+            ) : (
+              <div className="flex gap-2 flex-wrap">
+                {tracksForDate.map(track => (
+                  <button
+                    key={track}
+                    type="button"
+                    onClick={() => { setSelectedTrack(track); setSelectedRaceIds([]); }}
+                    className={`px-4 py-2 font-sans font-bold text-sm border-2 border-black ${selectedTrack === track ? 'bg-[#000080] text-white' : 'bg-web-gray shadow-outset active:shadow-inset'}`}
+                  >
+                    {track}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Step 3: Races */}
+          {selectedTrack && (
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="font-sans font-bold text-sm">3. RACES</label>
+                <div className="flex gap-3 font-sans text-xs font-bold">
+                  <button type="button" onClick={() => setSelectedRaceIds(racesForSelection.map(r => r.id))} className="text-[#000080] underline">All</button>
+                  <button type="button" onClick={() => setSelectedRaceIds([])} className="text-[#000080] underline">Clear</button>
+                </div>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {racesForSelection.map(race => {
+                  const sel = selectedRaceIds.includes(race.id);
+                  return (
+                    <button
+                      key={race.id}
+                      type="button"
+                      onClick={() => setSelectedRaceIds(prev =>
+                        prev.includes(race.id) ? prev.filter(id => id !== race.id) : [...prev, race.id]
+                      )}
+                      className={`px-3 py-2 font-mono text-sm border-2 ${sel ? 'border-[#000080] bg-[#e6e6ff] font-bold' : 'border-gray-400 bg-white hover:bg-[#fffbe0]'}`}
+                    >
+                      <div className="font-bold">R{race.race_number}</div>
+                      <div className="text-[10px] text-gray-600">{race.class || '—'}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="font-mono text-xs text-gray-500 mt-1">{selectedRaceIds.length} selected</div>
+            </div>
+          )}
+
+          {/* Step 4: Strategies */}
+          {selectedRaceIds.length > 0 && (
+            <div className="mb-5">
+              <label className="block font-sans font-bold text-sm mb-2">4. STRATEGIES</label>
+
+              {/* Search */}
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search strategies..."
+                className="w-full mb-2 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm"
+              />
+
+              {/* Strategy tabs */}
+              <div className="flex border-b border-gray-400 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setStratTab('marketplace')}
+                  className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ${stratTab === 'marketplace' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+                >
+                  MARKETPLACE ({filteredMarketplace.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStratTab('private')}
+                  className={`px-3 py-1 font-sans font-bold text-xs border border-b-0 -mb-[1px] ml-1 ${stratTab === 'private' ? 'bg-white border-gray-400' : 'bg-gray-200 text-gray-500 border-transparent'}`}
+                >
+                  PRIVATE ({filteredPrivate.length})
+                </button>
+                <div className="flex-1" />
+                <button type="button" onClick={() => {
+                  setSelectedStrategies([...allStrategies.map(s => s.name), ...userStrategies.map(s => s.title)]);
+                }} className="font-sans text-xs font-bold text-[#000080] underline px-2">All</button>
+                <button type="button" onClick={() => setSelectedStrategies([])} className="font-sans text-xs font-bold text-[#000080] underline px-2">Clear</button>
+              </div>
+
+              <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-40 overflow-y-auto divide-y divide-gray-300">
+                {stratTab === 'marketplace' && filteredMarketplace.map(s => (
+                  <label
+                    key={s.name}
+                    className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStrategies.includes(s.name)}
+                      onChange={() => setSelectedStrategies(prev =>
+                        prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
+                      )}
+                      className="w-4 h-4 shrink-0"
+                    />
+                    <span className="font-bold text-[#000080]">{s.name}</span>
+                    {s.win_rate !== null && <span className="text-xs text-green-700">{s.win_rate}% W</span>}
+                  </label>
+                ))}
+                {stratTab === 'private' && (filteredPrivate.length === 0 ? (
+                  <div className="px-3 py-4 text-center font-serif text-sm text-gray-500">No private strategies{search ? ' matching search' : ''}.</div>
+                ) : filteredPrivate.map(s => (
+                  <label
+                    key={`priv-${s.id}`}
+                    className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.title) ? 'bg-[#fffbe0]' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStrategies.includes(s.title)}
+                      onChange={() => setSelectedStrategies(prev =>
+                        prev.includes(s.title) ? prev.filter(n => n !== s.title) : [...prev, s.title]
+                      )}
+                      className="w-4 h-4 shrink-0"
+                    />
+                    <span className="font-bold text-[#000080]">{s.title}</span>
+                    <span className="font-sans text-[10px] px-1 bg-[#e6e6ff] border border-[#000080] text-[#000080]">PRIVATE</span>
+                  </label>
+                )))}
+              </div>
+              <div className="font-mono text-xs text-gray-500 mt-1">{selectedStrategies.length} strategies selected</div>
+            </div>
+          )}
+
+          {/* Checkout */}
+          {selectedRaceIds.length > 0 && selectedStrategies.length > 0 && (
+            <div className="border-t-2 border-black pt-4">
+              <div className="bg-[#ffffcc] border-2 border-black p-4 shadow-inset mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-sans font-bold text-sm">Order:</span>
+                  <span className="font-mono text-sm">{selectedRaceIds.length} race{selectedRaceIds.length > 1 ? 's' : ''} × {selectedStrategies.length} strateg{selectedStrategies.length > 1 ? 'ies' : 'y'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-sans text-sm">Cost:</span>
+                  <span className="font-mono text-lg font-bold">{cost.toLocaleString()} tokens</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-sans text-sm text-gray-600">Balance:</span>
+                  <span className={`font-mono text-sm font-bold ${canAfford ? 'text-green-700' : 'text-web-red'}`}>
+                    {canAfford ? `${(userTokens - cost).toLocaleString()} remaining` : 'INSUFFICIENT'}
+                  </span>
+                </div>
+                {!canAfford && (
+                  <a href="/shop" className="block mt-2 font-sans text-xs font-bold text-[#000080] underline text-center">Buy more tokens →</a>
+                )}
+              </div>
+
+              {status === 'error' && (
+                <div className="text-web-red font-bold text-sm mb-4 bg-[#ffe6e6] border border-web-red p-2">* {errorMsg}</div>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={status === 'submitting' || !canAfford}
+                className="w-full px-6 py-3 bg-web-gray font-sans font-bold text-lg text-black border-2 border-black shadow-outset active:shadow-inset cursor-pointer disabled:opacity-50"
+              >
+                {status === 'submitting' ? 'PROCESSING...' : `RUN ANALYSIS — ${cost.toLocaleString()} TOKENS`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Order history */}
+      {analyses.length > 0 && (
+        <>
+          <h4 className="font-sans font-bold text-sm mb-3 border-b border-black pb-1">ORDER HISTORY</h4>
+          <div className="space-y-2">
+            {analyses.map(a => (
+              <div key={a.id} className="bg-white border border-gray-400 p-3 flex justify-between items-center">
+                <div>
+                  <span className="font-serif font-bold">{a.track || a.filename}</span>
+                  <span className="font-mono text-xs text-gray-500 ml-3">{a.created_at?.split('T')[0]}</span>
+                  <span className="font-mono text-xs text-gray-500 ml-3">{a.tokens_spent} tokens</span>
+                </div>
+                <span className={`font-mono text-xs font-bold px-2 py-0.5 ${a.status === 'complete' ? 'bg-[#e6ffe6] text-[#008000]' : a.status === 'failed' ? 'bg-[#ffe6e6] text-web-red' : 'bg-[#ffffcc] text-black'}`}>
+                  {a.status.toUpperCase()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
