@@ -65,6 +65,27 @@ export function Reports() {
           </p>
         </div>
 
+        {/* Featured Video */}
+        <div className="mb-6 bg-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-[#333] text-white font-bold p-2 px-3 flex items-center gap-2 font-mono text-sm">
+            <span className="text-web-red animate-blink">&#9654;</span>
+            <span>LATEST DROP</span>
+          </div>
+          <div className="p-3">
+            <video
+              controls
+              preload="metadata"
+              className="w-full"
+            >
+              <source src="/ftc-thursdays-massive-card.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <p className="text-center text-gray-300 font-mono text-xs mt-2">
+              Thursday's Massive Card — Full Breakdown
+            </p>
+          </div>
+        </div>
+
         {/* Reports list */}
         <h3 className="font-serif text-xl font-bold mb-4 border-b-2 border-black pb-1">
           PUBLISHED REPORTS
