@@ -81,6 +81,28 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Featured Video */}
+      <div className="mb-8 bg-black border-2 border-[#000080] shadow-outset">
+        <div className="bg-[#000080] text-white font-bold p-1 px-2 flex items-center gap-2">
+          <span className="animate-pulse text-web-red">&#9654;</span>
+          <span>LATEST DROP</span>
+        </div>
+        <div className="p-4">
+          <video
+            controls
+            preload="metadata"
+            className="w-full max-w-3xl mx-auto rounded"
+            poster=""
+          >
+            <source src="/ftc-thursdays-massive-card.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <p className="text-center text-gray-300 font-mono text-sm mt-3">
+            Thursday's Massive Card — Full Breakdown
+          </p>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="flex border-b-2 border-black mb-0">
         <button
