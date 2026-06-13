@@ -28,7 +28,6 @@ export function Today() {
   const [races, setRaces] = useState<TodayRace[]>([]);
   const [commissionRaces, setCommissionRaces] = useState<Map<number, CommissionRace>>(new Map());
   const [trackFilter, setTrackFilter] = useState<string>('all');
-  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
@@ -84,9 +83,6 @@ export function Today() {
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
   const tracks = Array.from(new Set(races.map(r => r.track))).sort();
-  const filteredTracks = search
-    ? tracks.filter(t => t.toLowerCase().includes(search.toLowerCase()))
-    : tracks;
 
   const filteredRaces = trackFilter === 'all'
     ? races
@@ -150,26 +146,19 @@ export function Today() {
           </Link>
         )}
 
-        {/* Search + Track filter */}
+        {/* Track filter */}
         <div className="mb-4">
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search tracks..."
-            className="w-full mb-2 px-3 py-2 border-2 border-gray-400 shadow-inset font-mono text-sm"
-          />
           <div className="flex flex-wrap gap-1">
             <button
-              onClick={() => { setTrackFilter('all'); setSearch(''); }}
+              onClick={() => setTrackFilter('all')}
               className={`px-3 py-1 font-mono text-xs border ${trackFilter === 'all' ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-400 hover:bg-gray-100'}`}
             >
               ALL TRACKS
             </button>
-            {filteredTracks.map(t => (
+            {tracks.map(t => (
               <button
                 key={t}
-                onClick={() => { setTrackFilter(t); setSearch(''); }}
+                onClick={() => setTrackFilter(t)}
                 className={`px-3 py-1 font-mono text-xs border ${trackFilter === t ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-400 hover:bg-gray-100'}`}
               >
                 {t}

@@ -144,7 +144,10 @@ export function RaceDetail() {
               </div>
               <span className="font-mono text-sm">{raceInfo.distance} • {raceInfo.surface}</span>
             </div>
-            <div className="font-mono text-xs text-gray-300 mt-1">{raceInfo.conditions} • {raceInfo.field_size} horses</div>
+            <div className="flex justify-between items-center mt-1">
+              <div className="font-mono text-xs text-gray-300">{raceInfo.conditions} • {raceInfo.field_size} horses</div>
+              <div className="font-mono text-[10px] text-gray-400">Data loaded: {new Date().toLocaleDateString()} AM</div>
+            </div>
           </div>
         )}
 
@@ -194,6 +197,7 @@ export function RaceDetail() {
                         <th className="py-2" title="Post Position — the gate the horse starts from">PP</th>
                         <th className="py-2 text-left">HORSE</th>
                         <th className="py-2" title="Morning Line Odds — the track handicapper's predicted odds before betting opens">ML</th>
+                        <th className="py-2" title="Current live odds from the tote board — updates closer to post time">LIVE</th>
                         <th className="py-2" title="Running Style — how this horse typically races (speed, presser, stalker, closer)">STYLE</th>
                         <th className="py-2" title="Best Beyer — career-high speed figure. Higher = faster horse.">BEST</th>
                         <th className="py-2" title="Last Beyer — speed figure from most recent race">LAST</th>
@@ -215,14 +219,19 @@ export function RaceDetail() {
                           <tr key={e.id} className="hover:bg-[#ffffcc]">
                             <td className="font-bold text-center">{e.post_position}</td>
                             <td className="font-bold text-left">{e.horse_name}</td>
-                            <td className="text-center">{e.live_odds || e.morning_line_odds || '—'}</td>
-                            <td className="text-center">
+                            <td className="text-center">{e.morning_line_odds || '—'}</td>
+                            <td className="text-center">{e.live_odds || '—'}</td>
+                            <td className="text-center relative group/style">
                               <span
-                                title={e.running_style ? styleTooltip[e.running_style] || '' : ''}
                                 className={`px-1 cursor-help ${e.running_style === 'E' ? 'text-web-red font-bold' : e.running_style === 'E/P' ? 'text-orange-600' : e.running_style === 'S' ? 'text-blue-600' : ''}`}
                               >
                                 {e.running_style || '—'}
                               </span>
+                              {e.running_style && styleTooltip[e.running_style] && (
+                                <div className="hidden group-hover/style:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black text-white text-[10px] rounded whitespace-nowrap">
+                                  {styleTooltip[e.running_style]}
+                                </div>
+                              )}
                             </td>
                             <td className="text-center font-bold">{e.best_beyer || '—'}</td>
                             <td className="text-center">{e.last_beyer || '—'}</td>
@@ -272,7 +281,7 @@ export function RaceDetail() {
                 </div>
               </div>
 
-              <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-56 overflow-y-auto divide-y divide-gray-300 mb-4">
+              <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-[28rem] overflow-y-auto divide-y divide-gray-300 mb-4">
                 {filteredStrategies.map(s => (
                   <label
                     key={s.name}
@@ -288,8 +297,11 @@ export function RaceDetail() {
                     />
                     <div className="flex-1">
                       <span className="font-bold text-[#000080]">{s.name}</span>
-                      {s.win_rate !== null && <span className="text-xs text-green-700 ml-2">{s.win_rate}% W</span>}
                       <div className="text-[10px] text-gray-500 mt-0.5">{s.description}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {s.win_rate !== null && <div className="text-xs text-green-700 font-bold">{s.win_rate}% W</div>}
+                      <div className="text-[10px] text-gray-400">$— earned</div>
                     </div>
                   </label>
                 ))}
