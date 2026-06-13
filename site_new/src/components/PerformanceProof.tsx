@@ -4,10 +4,10 @@ export function PerformanceProof() {
     <section id="proof" className="py-4">
       <div className="text-center mb-6">
         <h2 className="font-serif text-3xl font-bold text-web-red mb-2">
-          *** THIS WEEK'S RESULTS ***
+          *** PAST PERFORMANCE ***
         </h2>
         <h3 className="font-serif text-2xl font-bold text-black">
-          Saratoga — June 6 &amp; 7, 2026
+          Lifetime Record — 4 Race Days
         </h3>
       </div>
 
@@ -15,7 +15,8 @@ export function PerformanceProof() {
         <table className="web-table font-mono text-center w-full min-w-[600px]">
           <thead>
             <tr>
-              <th className="text-sm py-3">DAY</th>
+              <th className="text-sm py-3">DATE</th>
+              <th className="text-sm py-3">TRACK</th>
               <th className="text-sm py-3">RACES</th>
               <th className="text-sm py-3">WAGERED</th>
               <th className="text-sm py-3">COLLECTED</th>
@@ -25,7 +26,17 @@ export function PerformanceProof() {
           </thead>
           <tbody>
             <tr>
-              <td className="py-3 font-bold">June 6 (Belmont Day)</td>
+              <td className="py-3 font-bold">May 24</td>
+              <td className="py-3">Churchill Downs</td>
+              <td className="py-3">6</td>
+              <td className="py-3">$554</td>
+              <td className="py-3">$611</td>
+              <td className="py-3 text-web-green font-bold">+$57</td>
+              <td className="py-3 text-web-green font-bold">+10%</td>
+            </tr>
+            <tr>
+              <td className="py-3 font-bold">June 6</td>
+              <td className="py-3">Saratoga</td>
               <td className="py-3">12</td>
               <td className="py-3">$1,564</td>
               <td className="py-3">$2,434</td>
@@ -34,19 +45,29 @@ export function PerformanceProof() {
             </tr>
             <tr>
               <td className="py-3 font-bold">June 7</td>
+              <td className="py-3">Saratoga</td>
               <td className="py-3">6</td>
               <td className="py-3">$904</td>
               <td className="py-3">$1,340</td>
               <td className="py-3 text-web-green font-bold">+$436</td>
               <td className="py-3 text-web-green font-bold">+48%</td>
             </tr>
+            <tr>
+              <td className="py-3 font-bold">June 11</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">5</td>
+              <td className="py-3">$788</td>
+              <td className="py-3">$221</td>
+              <td className="py-3 text-web-red font-bold">-$567</td>
+              <td className="py-3 text-web-red font-bold">-72%</td>
+            </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
-              <td className="py-4 font-bold text-lg">WEEK TOTAL</td>
-              <td className="py-4 text-lg font-bold">18</td>
-              <td className="py-4 text-lg font-bold">$2,468</td>
-              <td className="py-4 text-lg font-bold">$3,774</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$1,306</td>
-              <td className="py-4 text-lg text-web-green font-bold">+53%</td>
+              <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
+              <td className="py-4 text-lg font-bold">29</td>
+              <td className="py-4 text-lg font-bold">$3,810</td>
+              <td className="py-4 text-lg font-bold">$4,606</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$796</td>
+              <td className="py-4 text-lg text-web-green font-bold">+21%</td>
             </tr>
           </tbody>
         </table>
@@ -54,11 +75,11 @@ export function PerformanceProof() {
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
         <div className="font-bold text-web-green">Called the Belmont Stakes winner: Golden Tempo (5/1) — not the favorite.</div>
-        <div className="font-bold text-web-green">Race 11 clean sweep: Win + Exacta + Trifecta on King Farro (4/1).</div>
+        <div className="font-bold">June 11 loss led to 8 new strategies added to the model. We get better every day.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
-        * 3 race days tracked. All profitable. Past performance is not indicative of future results.
+        * Past performance is not indicative of future results.
       </p>
     </section>);
 
