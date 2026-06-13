@@ -92,8 +92,8 @@ export function RaceDetail() {
       <div className="web-container max-w-4xl mx-auto">
         <AppNav />
 
-        <button onClick={() => navigate('/app/today')} className="font-sans text-xs font-bold text-[#000080] underline mb-4">
-          ← Back to today's picks
+        <button onClick={() => navigate('/today')} className="font-sans text-xs font-bold text-[#000080] underline mb-4">
+          ← Back to today's races
         </button>
 
         {raceInfo && (

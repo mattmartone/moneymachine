@@ -150,14 +150,15 @@ export function Today() {
                   className={`flex items-center gap-3 px-3 py-3 border-2 transition-colors no-underline text-black
                     ${commission ? 'border-[#000080] bg-[#f0f0ff]' : isNext ? 'border-gray-600 bg-white' : isPast ? 'border-gray-300 bg-gray-100 opacity-60' : 'border-gray-400 bg-white hover:bg-[#fffbe0]'}`}
                 >
-                  <div className="font-mono text-sm font-bold w-14 shrink-0 text-center">
-                    {formatTime(race.post_time)}
+                  <div className="font-mono text-2xl font-bold w-12 shrink-0 text-center text-[#000080]">
+                    {race.race_number}
                   </div>
-                  <div className="w-px h-8 bg-gray-300 shrink-0"></div>
+                  <div className="w-px h-10 bg-gray-300 shrink-0"></div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-serif font-bold text-[#000080]">{race.track}</span>
-                      <span className="font-mono text-xs bg-gray-200 px-1.5 py-0.5 border border-gray-400">R{race.race_number}</span>
+                      {(trackFilter === 'all' || trackFilter === 'commission') && (
+                        <span className="font-serif font-bold text-[#000080]">{race.track}</span>
+                      )}
                       {isNext && <span className="font-mono text-[10px] bg-black text-white px-1.5 py-0.5">NEXT</span>}
                       {commission && (
                         <span className="font-mono text-[10px] bg-[#000080] text-white px-1.5 py-0.5">

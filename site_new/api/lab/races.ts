@@ -28,6 +28,7 @@ export default async function handler(req: any, res: any) {
        LEFT JOIN entries e ON e.race_id = r.id
        WHERE r.qualified = true
        GROUP BY r.id
+       HAVING COUNT(e.id) > 0
        ORDER BY r.date DESC, r.race_number ASC`
     );
 
