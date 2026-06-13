@@ -24,6 +24,7 @@ import { Shop } from './pages/Shop';
 import { Db } from './pages/Db';
 import { Races } from './pages/Races';
 import { Today } from './pages/Today';
+import { RaceDetail } from './pages/RaceDetail';
 
 function Landing() {
   return (
@@ -68,6 +69,7 @@ export function App() {
         <Route path="/users/:id" element={<MemberDetail />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/today" element={<Today />} />
+        <Route path="/today/:raceId" element={<RaceDetail />} />
         <Route path="/races" element={<Races />} />
         <Route path="/db" element={<Db />} />
       </Routes>
