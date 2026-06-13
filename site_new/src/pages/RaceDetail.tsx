@@ -121,20 +121,20 @@ export function RaceDetail() {
             FIELD
           </button>
           <button
-            onClick={() => setActiveTab('commission')}
-            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
-              activeTab === 'commission' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            COMMISSION'S BETS
-          </button>
-          <button
             onClick={() => setActiveTab('lab')}
             className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
               activeTab === 'lab' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            RUN YOUR OWN
+            BUILD
+          </button>
+          <button
+            onClick={() => setActiveTab('commission')}
+            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
+              activeTab === 'commission' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            🤌 COMMISSION
           </button>
         </div>
 
@@ -261,15 +261,15 @@ export function RaceDetail() {
             </div>
           )}
 
-          {/* LAB TAB — run your own analysis */}
+          {/* BUILD TAB — run your own analysis */}
           {activeTab === 'lab' && (
             <div className="p-6 text-center">
-              <div className="font-serif text-lg mb-2">Run Your Own Analysis</div>
+              <div className="font-serif text-lg mb-2">Build Your Own Bets</div>
               <p className="font-mono text-sm text-gray-600 mb-4">
-                Select strategies from the marketplace and run them against this field.
+                Select strategies from the marketplace. Run them against this field. Build your box.
               </p>
               <div className="bg-gray-100 border-2 border-gray-300 p-6 text-center font-mono text-sm text-gray-500">
-                Coming soon — pick your strategies, see the scores, build your own box.
+                Coming soon — pick your strategies, see the scores, construct your exotic box.
               </div>
             </div>
           )}
