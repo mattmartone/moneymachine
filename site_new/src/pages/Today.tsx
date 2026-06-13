@@ -79,9 +79,13 @@ export function Today() {
   const now = new Date();
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-  const tracks = ['all', ...Array.from(new Set(races.map(r => r.track)))];
+  const tracks = ['all', 'commission', ...Array.from(new Set(races.map(r => r.track)))];
 
-  const filteredRaces = trackFilter === 'all' ? races : races.filter(r => r.track === trackFilter);
+  const filteredRaces = trackFilter === 'all'
+    ? races
+    : trackFilter === 'commission'
+    ? races.filter(r => commissionRaces.has(r.id))
+    : races.filter(r => r.track === trackFilter);
 
   const formatTime = (t: string | null) => {
     if (!t) return '—';
@@ -109,17 +113,21 @@ export function Today() {
             <button
               key={t}
               onClick={() => setTrackFilter(t)}
-              className={`px-3 py-1 font-mono text-xs border ${trackFilter === t ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-400 hover:bg-gray-100'}`}
+              className={`px-3 py-1 font-mono text-xs border ${trackFilter === t ? 'bg-black text-white border-black' : t === 'commission' ? 'bg-[#000080] text-white border-[#000080] hover:bg-[#0000aa]' : 'bg-white text-black border-gray-400 hover:bg-gray-100'}`}
             >
-              {t === 'all' ? 'ALL TRACKS' : t}
+              {t === 'all' ? 'ALL TRACKS' : t === 'commission' ? '🤌 COMMISSION' : t}
             </button>
           ))}
         </div>
 
         {commissionRaces.size > 0 && (
-          <div className="bg-[#ffffcc] border-2 border-black p-3 mb-4 font-mono text-sm">
-            <strong>The Commission has {commissionRaces.size} plays today.</strong> Look for the 🤌 badge below.
-          </div>
+          <button
+            onClick={() => setTrackFilter('commission')}
+            className="w-full bg-[#ffffcc] border-2 border-black p-3 mb-4 font-mono text-sm text-left hover:bg-[#fff5aa] cursor-pointer flex justify-between items-center"
+          >
+            <span><strong>🤌 The Commission has {commissionRaces.size} plays today.</strong> Tap to view picks →</span>
+            <span className="font-bold text-[#000080]">${Array.from(commissionRaces.values()).reduce((s, c) => s + c.total_stake, 0).toFixed(0)} committed</span>
+          </button>
         )}
 
         {loading ? (
