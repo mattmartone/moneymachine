@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT`).catch(() => {});
 
     const { rows } = await query(
-      `SELECT tokens, membership_status, subscription_status, lifetime_tokens_used, reports_downloaded, lifetime_billed, role
+      `SELECT email, tokens, membership_status, subscription_status, lifetime_tokens_used, reports_downloaded, lifetime_billed, role
        FROM users WHERE id = $1`,
       [decoded.userId]
     );
