@@ -86,6 +86,8 @@ export function Today() {
 
   const filteredRaces = trackFilter === 'all'
     ? races
+    : trackFilter === 'commission'
+    ? races.filter(r => commissionRaces.has(r.id))
     : races.filter(r => r.track === trackFilter);
 
   const formatTime = (t: string | null) => {
@@ -132,18 +134,17 @@ export function Today() {
           </div>
         </div>
 
-        {/* Commission banner — clickable link to commission picks view */}
+        {/* Commission banner — filters to just our plays */}
         {commissionRaces.size > 0 && (
-          <Link
-            to="/today?view=commission"
-            onClick={(e) => { e.preventDefault(); setTrackFilter('all'); /* scroll to commission races */ }}
-            className="block w-full bg-[#ffffcc] border-2 border-black p-3 mb-4 font-mono text-sm text-left hover:bg-[#fff5aa] cursor-pointer no-underline text-black"
+          <button
+            onClick={() => setTrackFilter(trackFilter === 'commission' ? 'all' : 'commission')}
+            className="w-full bg-[#ffffcc] border-2 border-black p-3 mb-4 font-mono text-sm text-left hover:bg-[#fff5aa] cursor-pointer"
           >
             <div className="flex justify-between items-center">
-              <span><strong>🤌 The Commission has {commissionRaces.size} plays today.</strong> Tap to view picks →</span>
+              <span><strong>🤌 The Commission has {commissionRaces.size} plays today.</strong> {trackFilter === 'commission' ? 'Showing picks only. Tap for all →' : 'Tap to view picks →'}</span>
               <span className="font-bold text-[#000080]">${Array.from(commissionRaces.values()).reduce((s, c) => s + c.total_stake, 0).toFixed(0)} committed</span>
             </div>
-          </Link>
+          </button>
         )}
 
         {/* Track filter */}
