@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppNav } from '../components/AppNav';
 
 interface Entry {
@@ -27,21 +27,30 @@ interface Bet {
   conviction: string;
 }
 
-type Tab = 'field' | 'commission' | 'lab';
+interface Strategy {
+  name: string;
+  type: string;
+  description: string;
+  win_rate: number | null;
+}
+
+type Tab = 'field' | 'build' | 'commission';
 
 const TOKEN_COST = 200000;
 
 export function RaceDetail() {
   const navigate = useNavigate();
   const { raceId } = useParams();
-  const [searchParams] = useSearchParams();
   const token = localStorage.getItem('ftc_token');
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [bets, setBets] = useState<Bet[]>([]);
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [raceInfo, setRaceInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<Tab>('field');
   const [commissionUnlocked, setCommissionUnlocked] = useState(false);
+  const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
+  const [buildSearch, setBuildSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,7 +83,32 @@ export function RaceDetail() {
           }
         }
       });
+
+    fetch('/api/strategies', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.strategies) setStrategies(data.strategies.filter((s: any) => s.active));
+      });
   }, [token, navigate, raceId]);
+
+  // If no race info from bets, try to get from entries
+  useEffect(() => {
+    if (!raceInfo && entries.length > 0) {
+      fetch(`/api/lab/races`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.cards) {
+            for (const card of data.cards) {
+              const race = card.races.find((r: any) => String(r.id) === raceId);
+              if (race) {
+                setRaceInfo({ ...race, track: card.track });
+                break;
+              }
+            }
+          }
+        });
+    }
+  }, [entries, raceInfo, raceId, token]);
 
   const formatTime = (t: string | null) => {
     if (!t) return 'TBD';
@@ -86,6 +120,10 @@ export function RaceDetail() {
 
   const winBet = bets.find(b => b.bet_type === 'win');
   const exotics = bets.filter(b => b.bet_type !== 'win');
+
+  const filteredStrategies = strategies.filter(s =>
+    !buildSearch || s.name.toLowerCase().includes(buildSearch.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen font-serif p-2 md:p-4">
@@ -121,9 +159,9 @@ export function RaceDetail() {
             FIELD
           </button>
           <button
-            onClick={() => setActiveTab('lab')}
+            onClick={() => setActiveTab('build')}
             className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
-              activeTab === 'lab' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
+              activeTab === 'build' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
             }`}
           >
             BUILD YOUR BETS
@@ -141,11 +179,13 @@ export function RaceDetail() {
         {/* Tab content */}
         <div className="border-2 border-t-0 border-black bg-white p-4">
 
-          {/* FIELD TAB — always free */}
+          {/* FIELD TAB */}
           {activeTab === 'field' && (
             <div>
               {loading ? (
                 <div className="font-mono animate-blink">Loading field...</div>
+              ) : entries.length === 0 ? (
+                <div className="p-6 text-center font-mono text-sm text-gray-500">No field data available for this race.</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="web-table font-mono text-xs w-full min-w-[700px]">
@@ -206,12 +246,86 @@ export function RaceDetail() {
             </div>
           )}
 
-          {/* COMMISSION TAB — token gated */}
+          {/* BUILD YOUR BETS TAB */}
+          {activeTab === 'build' && (
+            <div>
+              <div className="mb-4">
+                <div className="font-serif text-lg font-bold mb-1">Build Your Bets</div>
+                <p className="font-mono text-xs text-gray-600">
+                  Select strategies to run against this field. Each strategy looks for a different edge in the data.
+                </p>
+              </div>
+
+              <input
+                type="text"
+                value={buildSearch}
+                onChange={e => setBuildSearch(e.target.value)}
+                placeholder="Search strategies..."
+                className="w-full mb-2 px-2 py-1 border-2 border-gray-400 shadow-inset font-mono text-sm"
+              />
+
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs text-gray-500">{selectedStrategies.length} selected</span>
+                <div className="flex gap-3 font-sans text-xs font-bold">
+                  <button type="button" onClick={() => setSelectedStrategies(strategies.map(s => s.name))} className="text-[#000080] underline">All</button>
+                  <button type="button" onClick={() => setSelectedStrategies([])} className="text-[#000080] underline">Clear</button>
+                </div>
+              </div>
+
+              <div className="border-2 border-gray-400 shadow-inset bg-gray-100 max-h-56 overflow-y-auto divide-y divide-gray-300 mb-4">
+                {filteredStrategies.map(s => (
+                  <label
+                    key={s.name}
+                    className={`flex items-center gap-3 px-3 py-2 font-mono text-sm cursor-pointer hover:bg-[#ffffcc] ${selectedStrategies.includes(s.name) ? 'bg-[#fffbe0]' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedStrategies.includes(s.name)}
+                      onChange={() => setSelectedStrategies(prev =>
+                        prev.includes(s.name) ? prev.filter(n => n !== s.name) : [...prev, s.name]
+                      )}
+                      className="w-4 h-4 shrink-0"
+                    />
+                    <div className="flex-1">
+                      <span className="font-bold text-[#000080]">{s.name}</span>
+                      {s.win_rate !== null && <span className="text-xs text-green-700 ml-2">{s.win_rate}% W</span>}
+                      <div className="text-[10px] text-gray-500 mt-0.5">{s.description}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {selectedStrategies.length > 0 && (
+                <div className="bg-[#ffffcc] border-2 border-black p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-sans font-bold text-sm">Run {selectedStrategies.length} strategies on this field</span>
+                    <span className="font-mono text-lg font-bold">{TOKEN_COST.toLocaleString()} tokens</span>
+                  </div>
+                  <button
+                    className="w-full px-6 py-3 bg-web-gray font-sans font-bold text-lg text-black border-2 border-black shadow-outset active:shadow-inset cursor-pointer"
+                  >
+                    RUN ANALYSIS
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* COMMISSION TAB */}
           {activeTab === 'commission' && (
             <div>
               {bets.length === 0 ? (
-                <div className="p-6 text-center font-serif italic text-gray-500">
-                  No Commission picks for this race.
+                <div className="p-6 text-center">
+                  <div className="font-serif text-lg mb-2">No Commission picks for this race.</div>
+                  <p className="font-mono text-sm text-gray-600 mb-4">
+                    The Commission didn't find an edge here — but that doesn't mean there isn't one.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('build')}
+                    className="px-6 py-3 bg-[#000080] text-white font-sans font-bold border-2 border-black shadow-outset active:shadow-inset cursor-pointer"
+                  >
+                    BUILD YOUR OWN BETS →
+                  </button>
                 </div>
               ) : !commissionUnlocked ? (
                 <div className="p-6 text-center">
@@ -264,38 +378,8 @@ export function RaceDetail() {
               )}
             </div>
           )}
-
-          {/* BUILD TAB — run your own analysis */}
-          {activeTab === 'lab' && (
-            <div className="p-6 text-center">
-              <div className="font-serif text-lg mb-2">Build Your Own Bets</div>
-              <p className="font-mono text-sm text-gray-600 mb-4">
-                Select strategies from the marketplace. Run them against this field. Build your box.
-              </p>
-              <div className="bg-gray-100 border-2 border-gray-300 p-6 text-center font-mono text-sm text-gray-500">
-                Coming soon — pick your strategies, see the scores, construct your exotic box.
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
-}
-
-function parseOdds(ml: string | null): number {
-  if (!ml) return 999;
-  try {
-    if (ml.includes('/')) {
-      const [n, d] = ml.split('/').map(Number);
-      return n / d;
-    }
-    if (ml.includes('-')) {
-      const [n, d] = ml.split('-').map(Number);
-      return n / d;
-    }
-    return parseFloat(ml);
-  } catch {
-    return 999;
-  }
 }
