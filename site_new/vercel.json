@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/cron/odds-monitor",
+      "schedule": "*/10 * * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
