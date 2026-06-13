@@ -232,7 +232,20 @@ export function RaceDetail() {
                             <td className="font-bold text-center">{e.post_position}</td>
                             <td className="font-bold text-left">{e.horse_name}</td>
                             <td className="text-center">{e.morning_line_odds || '—'}</td>
-                            <td className="text-center">{e.live_odds || '—'}</td>
+                            <td className="text-center">
+                              {isAdmin ? (
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={oddsEdits[e.id] ?? e.live_odds ?? ''}
+                                  onChange={ev => setOddsEdits({ ...oddsEdits, [e.id]: ev.target.value })}
+                                  className="w-14 px-1 py-0.5 border border-gray-400 font-mono text-xs text-center"
+                                  placeholder="—"
+                                />
+                              ) : (
+                                <span>{e.live_odds || '—'}</span>
+                              )}
+                            </td>
                             <td className="text-center relative group/style">
                               <span
                                 className={`px-1 cursor-help ${e.running_style === 'E' ? 'text-web-red font-bold' : e.running_style === 'E/P' ? 'text-orange-600' : e.running_style === 'S' ? 'text-blue-600' : ''}`}
@@ -265,40 +278,9 @@ export function RaceDetail() {
                 <span className="ml-2 italic">Hover style letters for details</span>
               </div>
 
-              {/* Admin: edit live odds + post time */}
+              {/* Admin: save button for inline edits */}
               {isAdmin && (
-                <div className="mt-4 border-t-2 border-gray-300 pt-4">
-                  <div className="font-mono text-xs font-bold text-gray-500 mb-2">ADMIN — UPDATE LIVE DATA</div>
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="font-mono text-xs w-20">Post time:</span>
-                    <input
-                      type="text"
-                      value={postTimeEdit}
-                      onChange={e => setPostTimeEdit(e.target.value)}
-                      placeholder="e.g. 4:35 PM ET"
-                      className="px-2 py-1 border border-gray-400 font-mono text-sm w-40"
-                    />
-                  </div>
-
-                  <div className="space-y-1 mb-3">
-                    {entries.map(e => (
-                      <div key={e.id} className="flex items-center gap-2">
-                        <span className="font-mono text-xs w-8 text-right">{e.post_position}</span>
-                        <span className="font-mono text-xs w-32 truncate">{e.horse_name}</span>
-                        <span className="font-mono text-xs text-gray-500 w-12">ML:{e.morning_line_odds || '—'}</span>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={oddsEdits[e.id] ?? e.live_odds ?? ''}
-                          onChange={ev => setOddsEdits({ ...oddsEdits, [e.id]: ev.target.value })}
-                          placeholder="live"
-                          className="px-1 py-0.5 border border-gray-400 font-mono text-xs w-16"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
+                <div className="mt-4 border-t-2 border-gray-300 pt-3 flex items-center gap-3">
                   <button
                     onClick={async () => {
                       setSaving(true);
@@ -312,21 +294,15 @@ export function RaceDetail() {
                           });
                         }
                       }
-                      if (postTimeEdit && raceInfo) {
-                        await fetch('/api/lab/races/update-time', {
-                          method: 'POST',
-                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ race_id: raceId, post_time: postTimeEdit })
-                        });
-                      }
                       setSaving(false);
                       window.location.reload();
                     }}
                     disabled={saving}
                     className="px-4 py-2 bg-black text-white font-mono text-xs border-2 border-black"
                   >
-                    {saving ? 'SAVING...' : 'SAVE UPDATES'}
+                    {saving ? 'SAVING...' : 'SAVE LIVE ODDS'}
                   </button>
+                  <span className="font-mono text-[10px] text-gray-400">Admin only — updates for all members</span>
                 </div>
               )}
             </div>
