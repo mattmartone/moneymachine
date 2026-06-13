@@ -25,6 +25,7 @@ import { Db } from './pages/Db';
 import { Races } from './pages/Races';
 import { Today } from './pages/Today';
 import { RaceDetail } from './pages/RaceDetail';
+import { LiveOdds } from './pages/LiveOdds';
 
 function Landing() {
   return (
@@ -70,6 +71,7 @@ export function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/today" element={<Today />} />
         <Route path="/today/:raceId" element={<RaceDetail />} />
+        <Route path="/live-odds" element={<LiveOdds />} />
         <Route path="/races" element={<Races />} />
         <Route path="/db" element={<Db />} />
       </Routes>
