@@ -16,7 +16,7 @@ interface Entry {
   days_since_last: number | null;
   horse_name: string;
   sire: string | null;
-  scratched: boolean | null;
+  scratched: boolean;
 }
 
 interface Bet {
@@ -73,7 +73,10 @@ export function RaceDetail() {
     fetch(`/api/lab/entries?race_id=${raceId}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => {
-        if (data?.entries) setEntries(data.entries.filter((e: Entry) => !e.scratched));
+        if (data?.entries) {
+          setEntries(data.entries);
+          setScratchList(data.entries.filter((e: Entry) => e.scratched).map((e: Entry) => e.id));
+        }
         setLoading(false);
       });
 
@@ -229,8 +232,11 @@ export function RaceDetail() {
                           'S': 'Closer — drops to the back early, comes from way behind late',
                         };
 
+                        const isScratched = scratchList.includes(e.id);
+                        if (isScratched && !isAdmin) return null;
+
                         return (
-                          <tr key={e.id} className="hover:bg-[#ffffcc]">
+                          <tr key={e.id} className={`hover:bg-[#ffffcc] ${isScratched ? 'opacity-40 line-through' : ''}`}>
                             <td className="font-bold text-center">{e.post_position}</td>
                             <td className="font-bold text-left">{e.horse_name}</td>
                             <td className="text-center">{e.morning_line_odds || '—'}</td>
@@ -299,15 +305,17 @@ export function RaceDetail() {
                       for (const entry of entries) {
                         const odds = oddsEdits[entry.id];
                         const isScratch = scratchList.includes(entry.id);
+                        const wasScratch = entry.scratched;
                         const oddsChanged = odds !== undefined && odds !== (entry.live_odds || '');
-                        if (oddsChanged || isScratch) {
+                        const scratchChanged = isScratch !== !!wasScratch;
+                        if (oddsChanged || scratchChanged) {
                           await fetch('/api/lab/entries', {
                             method: 'PATCH',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               entry_id: entry.id,
                               ...(oddsChanged ? { live_odds: odds || null } : {}),
-                              ...(isScratch ? { scratched: true } : {})
+                              ...(scratchChanged ? { scratched: isScratch } : {})
                             })
                           });
                         }
