@@ -54,6 +54,7 @@ export function RaceDetail() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [oddsEdits, setOddsEdits] = useState<Record<number, string>>({});
+  const [scratchList, setScratchList] = useState<number[]>([]);
   const [postTimeEdit, setPostTimeEdit] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -216,6 +217,7 @@ export function RaceDetail() {
                         <th className="py-2" title="Days since last race — lower means sharper fitness, higher means possible layoff">DAYS</th>
                         <th className="py-2 text-left">JOCKEY</th>
                         <th className="py-2 text-left">TRAINER</th>
+                        {isAdmin && <th className="py-2"></th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -246,6 +248,16 @@ export function RaceDetail() {
                                 <span>{e.live_odds || '—'}</span>
                               )}
                             </td>
+                            {isAdmin && (
+                              <td className="text-center">
+                                <button
+                                  onClick={() => setScratchList(prev => prev.includes(e.id) ? prev.filter(id => id !== e.id) : [...prev, e.id])}
+                                  className={`font-mono text-[10px] px-1 border ${scratchList.includes(e.id) ? 'bg-red-100 border-red-400 text-red-700 font-bold' : 'border-gray-300 text-gray-400 hover:text-red-600'}`}
+                                >
+                                  {scratchList.includes(e.id) ? 'SCR' : 'x'}
+                                </button>
+                              </td>
+                            )}
                             <td className="text-center relative group/style">
                               <span
                                 className={`px-1 cursor-help ${e.running_style === 'E' ? 'text-web-red font-bold' : e.running_style === 'E/P' ? 'text-orange-600' : e.running_style === 'S' ? 'text-blue-600' : ''}`}
@@ -286,11 +298,17 @@ export function RaceDetail() {
                       setSaving(true);
                       for (const entry of entries) {
                         const odds = oddsEdits[entry.id];
-                        if (odds !== undefined && odds !== (entry.live_odds || '')) {
+                        const isScratch = scratchList.includes(entry.id);
+                        const oddsChanged = odds !== undefined && odds !== (entry.live_odds || '');
+                        if (oddsChanged || isScratch) {
                           await fetch('/api/lab/entries', {
                             method: 'PATCH',
                             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ entry_id: entry.id, live_odds: odds || null })
+                            body: JSON.stringify({
+                              entry_id: entry.id,
+                              ...(oddsChanged ? { live_odds: odds || null } : {}),
+                              ...(isScratch ? { scratched: true } : {})
+                            })
                           });
                         }
                       }
