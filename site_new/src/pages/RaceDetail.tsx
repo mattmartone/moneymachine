@@ -52,10 +52,22 @@ export function RaceDetail() {
   const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
   const [buildSearch, setBuildSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [oddsEdits, setOddsEdits] = useState<Record<number, string>>({});
+  const [postTimeEdit, setPostTimeEdit] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
     if (!raceId) return;
+
+    // Check if admin (Matt)
+    fetch('/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.email === 'mwmartone@gmail.com') setIsAdmin(true);
+      })
+      .catch(() => {});
 
     fetch(`/api/lab/entries?race_id=${raceId}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
@@ -252,6 +264,71 @@ export function RaceDetail() {
                 <span className="text-blue-600 ml-1">S</span> = closer •
                 <span className="ml-2 italic">Hover style letters for details</span>
               </div>
+
+              {/* Admin: edit live odds + post time */}
+              {isAdmin && (
+                <div className="mt-4 border-t-2 border-gray-300 pt-4">
+                  <div className="font-mono text-xs font-bold text-gray-500 mb-2">ADMIN — UPDATE LIVE DATA</div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="font-mono text-xs w-20">Post time:</span>
+                    <input
+                      type="text"
+                      value={postTimeEdit}
+                      onChange={e => setPostTimeEdit(e.target.value)}
+                      placeholder="e.g. 4:35 PM ET"
+                      className="px-2 py-1 border border-gray-400 font-mono text-sm w-40"
+                    />
+                  </div>
+
+                  <div className="space-y-1 mb-3">
+                    {entries.map(e => (
+                      <div key={e.id} className="flex items-center gap-2">
+                        <span className="font-mono text-xs w-8 text-right">{e.post_position}</span>
+                        <span className="font-mono text-xs w-32 truncate">{e.horse_name}</span>
+                        <span className="font-mono text-xs text-gray-500 w-12">ML:{e.morning_line_odds || '—'}</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={oddsEdits[e.id] ?? e.live_odds ?? ''}
+                          onChange={ev => setOddsEdits({ ...oddsEdits, [e.id]: ev.target.value })}
+                          placeholder="live"
+                          className="px-1 py-0.5 border border-gray-400 font-mono text-xs w-16"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      setSaving(true);
+                      for (const entry of entries) {
+                        const odds = oddsEdits[entry.id];
+                        if (odds !== undefined && odds !== (entry.live_odds || '')) {
+                          await fetch('/api/lab/entries', {
+                            method: 'PATCH',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ entry_id: entry.id, live_odds: odds || null })
+                          });
+                        }
+                      }
+                      if (postTimeEdit && raceInfo) {
+                        await fetch('/api/lab/races/update-time', {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ race_id: raceId, post_time: postTimeEdit })
+                        });
+                      }
+                      setSaving(false);
+                      window.location.reload();
+                    }}
+                    disabled={saving}
+                    className="px-4 py-2 bg-black text-white font-mono text-xs border-2 border-black"
+                  >
+                    {saving ? 'SAVING...' : 'SAVE UPDATES'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

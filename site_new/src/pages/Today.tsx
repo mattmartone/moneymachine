@@ -252,7 +252,7 @@ function RaceRow({ race, commission, trackFilter, status }: {
       <div className="w-px h-10 bg-gray-300 shrink-0"></div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          {trackFilter === 'all' && (
+          {(trackFilter === 'all' || trackFilter === 'commission') && (
             <span className="font-serif font-bold text-[#000080]">{race.track}</span>
           )}
           <span className="font-mono text-xs text-gray-500">{formatTime(race.post_time)}</span>
@@ -265,7 +265,7 @@ function RaceRow({ race, commission, trackFilter, status }: {
           )}
         </div>
         <div className="font-mono text-xs text-gray-600 mt-0.5 truncate">
-          {race.conditions} • {race.distance} • {race.surface} • {race.field_size}h
+          {race.conditions} • {race.distance} • {race.surface} • {race.field_size} horses
         </div>
       </div>
       {commission && (
