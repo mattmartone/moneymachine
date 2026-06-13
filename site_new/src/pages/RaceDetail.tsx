@@ -126,7 +126,7 @@ export function RaceDetail() {
               activeTab === 'lab' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            BUILD
+            BUILD YOUR BETS
           </button>
           <button
             onClick={() => setActiveTab('commission')}
@@ -134,7 +134,7 @@ export function RaceDetail() {
               activeTab === 'commission' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            🤌 COMMISSION
+            🤌 GET OUR BETS
           </button>
         </div>
 
@@ -151,32 +151,36 @@ export function RaceDetail() {
                   <table className="web-table font-mono text-xs w-full min-w-[700px]">
                     <thead>
                       <tr>
-                        <th className="py-2">PP</th>
+                        <th className="py-2" title="Post Position — the gate the horse starts from">PP</th>
                         <th className="py-2 text-left">HORSE</th>
-                        <th className="py-2">ML</th>
-                        <th className="py-2">STYLE</th>
-                        <th className="py-2">BEST</th>
-                        <th className="py-2">LAST</th>
-                        <th className="py-2">DAYS</th>
+                        <th className="py-2" title="Morning Line Odds — the track handicapper's predicted odds before betting opens">ML</th>
+                        <th className="py-2" title="Running Style — how this horse typically races (speed, presser, stalker, closer)">STYLE</th>
+                        <th className="py-2" title="Best Beyer — career-high speed figure. Higher = faster horse.">BEST</th>
+                        <th className="py-2" title="Last Beyer — speed figure from most recent race">LAST</th>
+                        <th className="py-2" title="Days since last race — lower means sharper fitness, higher means possible layoff">DAYS</th>
                         <th className="py-2 text-left">JOCKEY</th>
                         <th className="py-2 text-left">TRAINER</th>
                       </tr>
                     </thead>
                     <tbody>
                       {entries.map(e => {
-                        const isFave = entries.length > 0 && e.post_position === entries.reduce((fav, curr) => {
-                          const fml = parseOdds(fav.morning_line_odds);
-                          const cml = parseOdds(curr.morning_line_odds);
-                          return cml < fml ? curr : fav;
-                        }, entries[0]).post_position;
+                        const styleTooltip: Record<string, string> = {
+                          'E': 'Speed — goes straight to the front and tries to wire the field',
+                          'E/P': 'Presser — sits just off the speed, saves energy, kicks past tired leaders',
+                          'P': 'Stalker — mid-pack early, makes one big run on the turn',
+                          'S': 'Closer — drops to the back early, comes from way behind late',
+                        };
 
                         return (
-                          <tr key={e.id} className={`hover:bg-[#ffffcc] ${isFave ? 'bg-[#ffe6e6]' : ''}`}>
+                          <tr key={e.id} className="hover:bg-[#ffffcc]">
                             <td className="font-bold text-center">{e.post_position}</td>
                             <td className="font-bold text-left">{e.horse_name}</td>
                             <td className="text-center">{e.live_odds || e.morning_line_odds || '—'}</td>
                             <td className="text-center">
-                              <span className={`px-1 ${e.running_style === 'E' ? 'text-web-red font-bold' : e.running_style === 'E/P' ? 'text-orange-600' : e.running_style === 'S' ? 'text-blue-600' : ''}`}>
+                              <span
+                                title={e.running_style ? styleTooltip[e.running_style] || '' : ''}
+                                className={`px-1 cursor-help ${e.running_style === 'E' ? 'text-web-red font-bold' : e.running_style === 'E/P' ? 'text-orange-600' : e.running_style === 'S' ? 'text-blue-600' : ''}`}
+                              >
                                 {e.running_style || '—'}
                               </span>
                             </td>
@@ -193,11 +197,11 @@ export function RaceDetail() {
                 </div>
               )}
               <div className="mt-3 font-mono text-[10px] text-gray-500">
-                <span className="bg-[#ffe6e6] px-1">Highlighted</span> = ML favorite •
-                <span className="text-web-red font-bold ml-2">E</span> = speed •
+                <span className="text-web-red font-bold">E</span> = speed •
                 <span className="text-orange-600 ml-1">E/P</span> = presser •
                 P = stalker •
-                <span className="text-blue-600 ml-1">S</span> = closer
+                <span className="text-blue-600 ml-1">S</span> = closer •
+                <span className="ml-2 italic">Hover style letters for details</span>
               </div>
             </div>
           )}
