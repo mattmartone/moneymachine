@@ -81,7 +81,7 @@ export function Reports() {
               Your browser does not support the video tag.
             </video>
             <p className="text-center text-gray-300 font-mono text-xs mt-2">
-              The Roman Operation — Thursday Post-Mortem
+              The Turnpike Bounty — Saturday's Card
             </p>
           </div>
         </div>
