@@ -191,7 +191,7 @@ export function Today() {
         )}
 
         {/* Performance Summary — collapsible */}
-        {performance && trackFilter === 'commission' && (
+        {performance && commissionRaces.size > 0 && (
           <div className="mb-4 border-2 border-[#000080]">
             <button
               onClick={() => setPerfOpen(!perfOpen)}
