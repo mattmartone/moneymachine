@@ -21,17 +21,18 @@ interface WatchedRace {
   favorite: string;
   win_pick: string;
   box: string[];
+  post_time_et?: string;
 }
 
 const WATCHED_RACES: WatchedRace[] = [
-  // Commission Picks
-  { track_api: 'LRL', track_name: 'Laurel', race_number: 3, product: 'Commission Pick 1', favorite: 'BIG TANKNESS', win_pick: 'BUSHIDO', box: ['BUSHIDO', 'TALENTED MAN', 'BIG TANKNESS', 'CACTUS'] },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 7, product: 'Commission Pick 2', favorite: "MOMENT'S NOTICE", win_pick: 'MOMENTUM FILES', box: ['MOMENTUM FILES', 'SALMING', "TOGA D'ORO", "MOMENT'S NOTICE"] },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 5, product: 'Commission Pick 3', favorite: 'HARD CIRCLE', win_pick: 'HONG KONG PHOOEY', box: ['HARD CIRCLE', 'HONG KONG PHOOEY', 'TAKE A STANCE', 'RAGING SEA CAPTAIN'] },
-  { track_api: 'LRL', track_name: 'Laurel', race_number: 7, product: 'Commission Pick 4', favorite: 'ONLY FOR NOW', win_pick: 'NICHE', box: ['NICHE', 'JUST PHILTORED', 'GERRARDS CROSS', 'THE TOWN TEMPTER'] },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 9, product: 'Commission Pick 5', favorite: 'OCEAN ATLANTIQUE', win_pick: 'FROSTED OVER', box: ['FROSTED OVER', 'DETERMINEDLY', 'PRESIDER', 'BRIGADIER GENERAL'] },
-  { track_api: 'GP', track_name: 'Gulfstream', race_number: 8, product: 'Commission Pick 6', favorite: 'GREAT VENEZUELA', win_pick: 'VINDICATE CHA CHA', box: ['VINDICATE CHA CHA', 'TIFFANY GOLD', "TREE C'S KAI", 'JOKES UP'] },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 3, product: 'Commission Pick 7', favorite: 'EGYPTIAN', win_pick: 'DROP ME A DIME', box: ['DROP ME A DIME', 'EGYPTIAN', 'SOLO JIM', 'FIRST PITCH'] },
+  // Commission Picks (with estimated post times ET)
+  { track_api: 'LRL', track_name: 'Laurel', race_number: 3, product: 'Commission Pick 1', favorite: 'BIG TANKNESS', win_pick: 'BUSHIDO', box: ['BUSHIDO', 'TALENTED MAN', 'BIG TANKNESS', 'CACTUS'], post_time_et: '13:25' },
+  { track_api: 'BAQ', track_name: 'Belmont', race_number: 7, product: 'Commission Pick 2', favorite: "MOMENT'S NOTICE", win_pick: 'MOMENTUM FILES', box: ['MOMENTUM FILES', 'SALMING', "TOGA D'ORO", "MOMENT'S NOTICE"], post_time_et: '15:56' },
+  { track_api: 'BAQ', track_name: 'Belmont', race_number: 5, product: 'Commission Pick 3', favorite: 'HARD CIRCLE', win_pick: 'HONG KONG PHOOEY', box: ['HARD CIRCLE', 'HONG KONG PHOOEY', 'TAKE A STANCE', 'RAGING SEA CAPTAIN'], post_time_et: '14:52' },
+  { track_api: 'LRL', track_name: 'Laurel', race_number: 7, product: 'Commission Pick 4', favorite: 'ONLY FOR NOW', win_pick: 'NICHE', box: ['NICHE', 'JUST PHILTORED', 'GERRARDS CROSS', 'THE TOWN TEMPTER'], post_time_et: '15:25' },
+  { track_api: 'BAQ', track_name: 'Belmont', race_number: 9, product: 'Commission Pick 5', favorite: 'OCEAN ATLANTIQUE', win_pick: 'FROSTED OVER', box: ['FROSTED OVER', 'DETERMINEDLY', 'PRESIDER', 'BRIGADIER GENERAL'], post_time_et: '16:56' },
+  { track_api: 'GP', track_name: 'Gulfstream', race_number: 8, product: 'Commission Pick 6', favorite: 'GREAT VENEZUELA', win_pick: 'VINDICATE CHA CHA', box: ['VINDICATE CHA CHA', 'TIFFANY GOLD', "TREE C'S KAI", 'JOKES UP'], post_time_et: '15:47' },
+  { track_api: 'BAQ', track_name: 'Belmont', race_number: 3, product: 'Commission Pick 7', favorite: 'EGYPTIAN', win_pick: 'DROP ME A DIME', box: ['DROP ME A DIME', 'EGYPTIAN', 'SOLO JIM', 'FIRST PITCH'], post_time_et: '13:56' },
   // Monmouth Park Race Day
   { track_api: 'MTH', track_name: 'Monmouth', race_number: 5, product: 'MTH Race Day', favorite: 'GROUCH', win_pick: 'LORD BERRIER', box: ['GROUCH', 'NATURAL HARBOR', 'LORD BERRIER', "CHARLIE'S EXPRESS"] },
   { track_api: 'MTH', track_name: 'Monmouth', race_number: 6, product: 'MTH Race Day', favorite: 'SINGALONG KAYLA', win_pick: 'CELESTIAL EXPRESS', box: ['CELESTIAL EXPRESS', 'SINGALONG KAYLA', 'PRINCESS GLADYS', "POSTINO'S PROPHECY"] },
@@ -147,6 +148,48 @@ export default async function handler(req: any, res: any) {
           <p style="margin:4px 0; font-size: 12px; color: #666;">Box: ${race.box.join(', ')}</p>
         </div>`
       );
+    }
+  }
+
+  // Pre-race alerts — 45 min before Commission races (only)
+  const etNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const currentMinutes = etNow.getHours() * 60 + etNow.getMinutes();
+
+  const commissionRaces = WATCHED_RACES.filter(r => r.product.startsWith('Commission'));
+  for (const race of commissionRaces) {
+    if (!race.post_time_et) continue;
+    const [h, m] = race.post_time_et.split(':').map(Number);
+    const postMinutes = h * 60 + m;
+    const minutesUntilPost = postMinutes - currentMinutes;
+
+    if (minutesUntilPost >= 35 && minutesUntilPost <= 45) {
+      const existing = await query(
+        `SELECT 1 FROM scratch_alerts WHERE track = $1 AND race_number = $2 AND horse_name = 'PRE_RACE_ALERT' AND date = CURRENT_DATE`,
+        [race.track_name, race.race_number]
+      );
+      if (existing.rows.length === 0) {
+        await query(
+          `INSERT INTO scratch_alerts (track, race_number, horse_name, date, is_favorite, is_win_pick, is_in_box)
+           VALUES ($1, $2, 'PRE_RACE_ALERT', CURRENT_DATE, false, false, false)`,
+          [race.track_name, race.race_number]
+        );
+
+        const postFormatted = `${h > 12 ? h - 12 : h}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'} ET`;
+        await sendEmailToAll(
+          `⏰ ${race.track_name} R${race.race_number} posts in ~45 min — ${race.product}`,
+          `<div style="font-family: monospace; padding: 16px; max-width: 600px;">
+            <h2 style="color: #000080; margin-bottom: 4px;">⏰ PRE-RACE ALERT</h2>
+            <p style="font-size: 18px; font-weight: bold;">${race.track_name} R${race.race_number} — ${race.product}</p>
+            <p>Estimated post: <strong>${postFormatted}</strong></p>
+            <div style="background: #ffffcc; border: 2px solid #000; padding: 12px; margin: 12px 0;">
+              <p style="margin: 0;"><strong>Win pick:</strong> ${race.win_pick}</p>
+              <p style="margin: 4px 0;"><strong>Fave:</strong> ${race.favorite}</p>
+              <p style="margin: 4px 0;"><strong>Box:</strong> ${race.box.join(', ')}</p>
+            </div>
+            <p style="color: #666; font-size: 12px;">Check live odds now. Log in to review and adjust if needed.</p>
+          </div>`
+        );
+      }
     }
   }
 

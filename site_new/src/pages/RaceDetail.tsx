@@ -34,7 +34,7 @@ interface Strategy {
   win_rate: number | null;
 }
 
-type Tab = 'field' | 'build' | 'commission';
+type Tab = 'field' | 'build';
 
 const TOKEN_COST = 200000;
 
@@ -185,14 +185,6 @@ export function RaceDetail() {
           >
             BUILD YOUR BETS
           </button>
-          <button
-            onClick={() => setActiveTab('commission')}
-            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
-              activeTab === 'commission' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            🤌 GET OUR BETS
-          </button>
         </div>
 
         {/* Tab content */}
@@ -295,6 +287,56 @@ export function RaceDetail() {
                 <span className="text-blue-600 ml-1">S</span> = closer •
                 <span className="ml-2 italic">Hover style letters for details</span>
               </div>
+
+              {/* Commission Bets — shown below field when we have action */}
+              {bets.length > 0 && (
+                <div className="mt-6 border-t-4 border-[#000080] pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">🤌</span>
+                    <span className="font-serif font-bold text-[#000080] text-lg">THE COMMISSION'S BETS</span>
+                    <span className="font-mono text-xs text-gray-500 ml-auto">${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)} total</span>
+                  </div>
+                  {!commissionUnlocked ? (
+                    <div className="bg-[#f0f0ff] border-2 border-[#000080] p-4 text-center">
+                      <p className="font-mono text-sm text-gray-600 mb-3">
+                        {bets.length} bet{bets.length > 1 ? 's' : ''} recommended • ${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)} total stake
+                      </p>
+                      <button
+                        onClick={() => setCommissionUnlocked(true)}
+                        className="px-6 py-2 bg-[#000080] text-white font-sans font-bold text-sm border-2 border-black shadow-outset active:shadow-inset"
+                      >
+                        UNLOCK — {TOKEN_COST.toLocaleString()} tokens
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="bg-[#f0f0ff] border-2 border-[#000080] p-4">
+                      {winBet && (
+                        <div className="mb-3 bg-[#ffffcc] border-2 border-black p-3">
+                          <div className="font-sans font-bold text-web-red text-sm">WIN BET{winBet.doubled ? ' — DOUBLED STAKE' : ''}</div>
+                          <div className="font-mono text-xs text-gray-600 mt-1">Stake: ${winBet.stake.toFixed(2)}</div>
+                        </div>
+                      )}
+                      {!winBet && (
+                        <div className="mb-3 font-mono text-sm text-gray-600 italic bg-gray-50 p-3 border border-gray-300">
+                          Exotics only — fave is protected, no win bet against.
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        {exotics.map(bet => (
+                          <div key={bet.id} className="flex justify-between items-center border-b border-gray-200 pb-2">
+                            <span className="font-mono font-bold text-sm capitalize">{bet.bet_type}</span>
+                            <span className="font-mono font-bold">${bet.stake.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t-2 border-black flex justify-between">
+                        <span className="font-sans font-bold text-sm">TOTAL STAKE</span>
+                        <span className="font-mono text-lg font-bold">${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Admin: save button for inline edits */}
               {isAdmin && (
@@ -402,73 +444,6 @@ export function RaceDetail() {
             </div>
           )}
 
-          {/* COMMISSION TAB */}
-          {activeTab === 'commission' && (
-            <div>
-              {bets.length === 0 ? (
-                <div className="p-6 text-center">
-                  <div className="font-serif text-lg mb-2">No Commission picks for this race.</div>
-                  <p className="font-mono text-sm text-gray-600 mb-4">
-                    The Commission didn't find an edge here — but that doesn't mean there isn't one.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab('build')}
-                    className="px-6 py-3 bg-[#000080] text-white font-sans font-bold border-2 border-black shadow-outset active:shadow-inset cursor-pointer"
-                  >
-                    BUILD YOUR OWN BETS →
-                  </button>
-                </div>
-              ) : !commissionUnlocked ? (
-                <div className="p-6 text-center">
-                  <div className="font-serif text-lg mb-2">The Commission has spoken on this race.</div>
-                  <p className="font-mono text-sm text-gray-600 mb-4">
-                    {bets.length} bet{bets.length > 1 ? 's' : ''} recommended • ${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)} total stake
-                  </p>
-                  <div className="bg-[#ffffcc] border-2 border-black p-4 inline-block mb-4">
-                    <div className="font-mono text-sm text-gray-600">Unlock cost</div>
-                    <div className="font-mono text-2xl font-bold">{TOKEN_COST.toLocaleString()} tokens</div>
-                  </div>
-                  <br />
-                  <button
-                    onClick={() => setCommissionUnlocked(true)}
-                    className="px-8 py-3 bg-web-gray font-sans font-bold text-black border-2 border-black shadow-outset active:shadow-inset"
-                  >
-                    UNLOCK PICKS
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  {winBet && (
-                    <div className="mb-4 bg-[#ffffcc] border-2 border-black p-4">
-                      <div className="font-sans font-bold text-web-red mb-1">WIN BET{winBet.doubled ? ' — DOUBLED STAKE' : ''}</div>
-                      <div className="font-mono text-sm">{winBet.conviction}</div>
-                      <div className="font-mono text-xs text-gray-600 mt-1">Stake: ${winBet.stake.toFixed(2)}</div>
-                    </div>
-                  )}
-                  {!winBet && (
-                    <div className="mb-4 font-mono text-sm text-gray-600 italic bg-gray-50 p-3 border border-gray-300">
-                      Exotics only — fave is protected, no win bet against.
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    {exotics.map(bet => (
-                      <div key={bet.id} className="flex justify-between items-start border-b border-gray-200 pb-2">
-                        <div>
-                          <span className="font-mono font-bold text-sm capitalize">{bet.bet_type}</span>
-                          <div className="font-mono text-xs text-gray-600 mt-0.5">{bet.conviction}</div>
-                        </div>
-                        <span className="font-mono font-bold">${bet.stake.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-4 pt-3 border-t-2 border-black flex justify-between">
-                    <span className="font-sans font-bold">TOTAL STAKE</span>
-                    <span className="font-mono text-lg font-bold">${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
