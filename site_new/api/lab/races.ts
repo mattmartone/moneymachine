@@ -23,11 +23,13 @@ export default async function handler(req: any, res: any) {
     const { rows } = await query(
       `SELECT r.id, r.track, r.date, r.race_number, r.conditions, r.class,
               r.distance, r.surface, r.field_size, r.qualified, r.post_time,
-              COUNT(e.id) AS entries_count
+              COUNT(e.id) AS entries_count,
+              CASE WHEN res.id IS NOT NULL THEN true ELSE false END AS has_results
        FROM races r
        LEFT JOIN entries e ON e.race_id = r.id
+       LEFT JOIN results res ON res.race_id = r.id
        WHERE r.qualified = true
-       GROUP BY r.id
+       GROUP BY r.id, res.id
        HAVING COUNT(e.id) > 0
        ORDER BY r.date DESC, r.race_number ASC`
     );
