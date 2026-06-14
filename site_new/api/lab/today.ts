@@ -23,7 +23,7 @@ export default async function handler(req: any, res: any) {
     const today = new Date().toISOString().split('T')[0];
 
     const { rows } = await query(
-      `SELECT b.id, b.race_id, b.bet_type, b.stake, b.doubled, b.conviction,
+      `SELECT b.id, b.race_id, b.bet_type, b.stake, b.doubled, b.conviction, b.entries_used,
               r.track, r.race_number, r.conditions, r.distance, r.surface, r.field_size, r.post_time
        FROM bets b
        JOIN races r ON r.id = b.race_id
