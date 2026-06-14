@@ -25,6 +25,7 @@ interface Bet {
   stake: number;
   doubled: boolean;
   conviction: string;
+  entries_used: string[] | null;
 }
 
 interface Strategy {
@@ -34,7 +35,21 @@ interface Strategy {
   win_rate: number | null;
 }
 
-type Tab = 'field' | 'build';
+interface RaceResult {
+  win_horse: string | null;
+  win_pp: number | null;
+  place_horse: string | null;
+  place_pp: number | null;
+  show_horse: string | null;
+  show_pp: number | null;
+  win_payout: number | null;
+  exacta_payout: number | null;
+  trifecta_payout: number | null;
+  superfecta_payout: number | null;
+  settled_at: string | null;
+}
+
+type Tab = 'field' | 'build' | 'results';
 
 const TOKEN_COST = 200000;
 
@@ -57,6 +72,9 @@ export function RaceDetail() {
   const [scratchList, setScratchList] = useState<number[]>([]);
   const [postTimeEdit, setPostTimeEdit] = useState('');
   const [saving, setSaving] = useState(false);
+  const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
+  const [resultForm, setResultForm] = useState({ win_pp: '', place_pp: '', show_pp: '', win_payout: '', exacta_payout: '', trifecta_payout: '', superfecta_payout: '' });
+  const [resultSaving, setResultSaving] = useState(false);
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
@@ -105,6 +123,13 @@ export function RaceDetail() {
       .then(data => {
         if (data?.strategies) setStrategies(data.strategies.filter((s: any) => s.active));
       });
+
+    fetch(`/api/lab/results?race_id=${raceId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.results) setRaceResult(data.results);
+      })
+      .catch(() => {});
   }, [token, navigate, raceId]);
 
   // If no race info from bets, try to get from entries
@@ -184,6 +209,14 @@ export function RaceDetail() {
             }`}
           >
             BUILD YOUR BETS
+          </button>
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
+              activeTab === 'results' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            RESULTS {raceResult ? '✓' : ''}
           </button>
         </div>
 
@@ -439,6 +472,190 @@ export function RaceDetail() {
                   >
                     RUN ANALYSIS
                   </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* RESULTS TAB */}
+          {activeTab === 'results' && (
+            <div>
+              {raceResult ? (
+                <div>
+                  <div className="font-serif text-lg font-bold mb-4">Race Results</div>
+
+                  {/* Finish Order */}
+                  <div className="border-2 border-black mb-4">
+                    <div className="bg-black text-white px-3 py-2 font-mono text-xs font-bold">OFFICIAL ORDER OF FINISH</div>
+                    <div className="divide-y divide-gray-200">
+                      <div className="flex items-center px-4 py-3">
+                        <span className="font-mono text-2xl font-bold text-[#d4af37] w-10">1st</span>
+                        <span className="font-serif font-bold text-lg">#{raceResult.win_pp} {raceResult.win_horse}</span>
+                      </div>
+                      <div className="flex items-center px-4 py-3">
+                        <span className="font-mono text-xl font-bold text-gray-500 w-10">2nd</span>
+                        <span className="font-serif font-bold">{raceResult.place_pp ? `#${raceResult.place_pp} ${raceResult.place_horse}` : '—'}</span>
+                      </div>
+                      <div className="flex items-center px-4 py-3">
+                        <span className="font-mono text-lg font-bold text-[#cd7f32] w-10">3rd</span>
+                        <span className="font-serif font-bold">{raceResult.show_pp ? `#${raceResult.show_pp} ${raceResult.show_horse}` : '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payouts */}
+                  <div className="border-2 border-black">
+                    <div className="bg-[#000080] text-white px-3 py-2 font-mono text-xs font-bold">PAYOUTS</div>
+                    <div className="divide-y divide-gray-200">
+                      {raceResult.win_payout && (
+                        <div className="flex justify-between items-center px-4 py-3">
+                          <div>
+                            <span className="font-mono font-bold text-sm">WIN</span>
+                            <span className="font-mono text-xs text-gray-500 ml-2">$2 base</span>
+                          </div>
+                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.win_payout.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {raceResult.exacta_payout && (
+                        <div className="flex justify-between items-center px-4 py-3">
+                          <div>
+                            <span className="font-mono font-bold text-sm">EXACTA</span>
+                            <span className="font-mono text-xs text-gray-500 ml-2">{raceResult.win_pp}-{raceResult.place_pp} • $1 base</span>
+                          </div>
+                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.exacta_payout.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {raceResult.trifecta_payout && (
+                        <div className="flex justify-between items-center px-4 py-3">
+                          <div>
+                            <span className="font-mono font-bold text-sm">TRIFECTA</span>
+                            <span className="font-mono text-xs text-gray-500 ml-2">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp} • $1 base</span>
+                          </div>
+                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.trifecta_payout.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {raceResult.superfecta_payout && (
+                        <div className="flex justify-between items-center px-4 py-3">
+                          <div>
+                            <span className="font-mono font-bold text-sm">SUPERFECTA</span>
+                            <span className="font-mono text-xs text-gray-500 ml-2">$0.10 base</span>
+                          </div>
+                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.superfecta_payout.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {raceResult.settled_at && (
+                    <div className="mt-3 font-mono text-[10px] text-gray-400">
+                      Settled: {new Date(raceResult.settled_at).toLocaleString()}
+                    </div>
+                  )}
+
+                  {/* Admin: edit results */}
+                  {isAdmin && (
+                    <div className="mt-4 border-t-2 border-gray-300 pt-3">
+                      <div className="font-mono text-xs text-gray-500 mb-2">Admin — update results</div>
+                      <button
+                        onClick={() => {
+                          setResultForm({
+                            win_pp: raceResult.win_pp?.toString() || '',
+                            place_pp: raceResult.place_pp?.toString() || '',
+                            show_pp: raceResult.show_pp?.toString() || '',
+                            win_payout: raceResult.win_payout?.toString() || '',
+                            exacta_payout: raceResult.exacta_payout?.toString() || '',
+                            trifecta_payout: raceResult.trifecta_payout?.toString() || '',
+                            superfecta_payout: raceResult.superfecta_payout?.toString() || '',
+                          });
+                          setRaceResult(null);
+                        }}
+                        className="px-3 py-1 bg-gray-100 border border-gray-400 font-mono text-xs"
+                      >
+                        EDIT RESULTS
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  {isAdmin ? (
+                    <div>
+                      <div className="font-serif text-lg font-bold mb-2">Enter Results</div>
+                      <p className="font-mono text-xs text-gray-600 mb-4">Post positions for the top 3 finishers and payouts.</p>
+
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">WIN (PP#)</label>
+                          <input type="number" value={resultForm.win_pp} onChange={e => setResultForm({...resultForm, win_pp: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="#" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">PLACE (PP#)</label>
+                          <input type="number" value={resultForm.place_pp} onChange={e => setResultForm({...resultForm, place_pp: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="#" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">SHOW (PP#)</label>
+                          <input type="number" value={resultForm.show_pp} onChange={e => setResultForm({...resultForm, show_pp: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="#" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">WIN PAYOUT ($2)</label>
+                          <input type="number" step="0.01" value={resultForm.win_payout} onChange={e => setResultForm({...resultForm, win_payout: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="$0.00" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">EXACTA ($1)</label>
+                          <input type="number" step="0.01" value={resultForm.exacta_payout} onChange={e => setResultForm({...resultForm, exacta_payout: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="$0.00" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">TRIFECTA ($1)</label>
+                          <input type="number" step="0.01" value={resultForm.trifecta_payout} onChange={e => setResultForm({...resultForm, trifecta_payout: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="$0.00" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">SUPERFECTA ($0.10)</label>
+                          <input type="number" step="0.01" value={resultForm.superfecta_payout} onChange={e => setResultForm({...resultForm, superfecta_payout: e.target.value})}
+                            className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="$0.00" />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={async () => {
+                          setResultSaving(true);
+                          await fetch('/api/lab/results', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              race_id: Number(raceId),
+                              win_pp: resultForm.win_pp ? Number(resultForm.win_pp) : null,
+                              place_pp: resultForm.place_pp ? Number(resultForm.place_pp) : null,
+                              show_pp: resultForm.show_pp ? Number(resultForm.show_pp) : null,
+                              win_payout: resultForm.win_payout ? Number(resultForm.win_payout) : null,
+                              exacta_payout: resultForm.exacta_payout ? Number(resultForm.exacta_payout) : null,
+                              trifecta_payout: resultForm.trifecta_payout ? Number(resultForm.trifecta_payout) : null,
+                              superfecta_payout: resultForm.superfecta_payout ? Number(resultForm.superfecta_payout) : null,
+                            })
+                          });
+                          setResultSaving(false);
+                          window.location.reload();
+                        }}
+                        disabled={resultSaving}
+                        className="w-full px-4 py-2 bg-black text-white font-mono text-sm border-2 border-black"
+                      >
+                        {resultSaving ? 'SAVING...' : 'SAVE RESULTS'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center">
+                      <div className="font-mono text-sm text-gray-500">No results yet.</div>
+                      <div className="font-mono text-xs text-gray-400 mt-1">Results are posted after the race is official.</div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
