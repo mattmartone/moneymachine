@@ -42,6 +42,8 @@ interface RaceResult {
   place_pp: number | null;
   show_horse: string | null;
   show_pp: number | null;
+  fourth_horse: string | null;
+  fourth_pp: number | null;
   win_payout: number | null;
   exacta_payout: number | null;
   trifecta_payout: number | null;
@@ -492,7 +494,7 @@ export function RaceDetail() {
             <div>
               {raceResult ? (
                 <div>
-                  {/* Finish Order Table */}
+                  {/* Finish Order — clean, just position + PP + horse name */}
                   <div className="overflow-x-auto">
                     <table className="web-table font-mono text-xs w-full">
                       <thead>
@@ -500,9 +502,6 @@ export function RaceDetail() {
                           <th className="py-2">POS</th>
                           <th className="py-2">PP</th>
                           <th className="py-2 text-left">HORSE</th>
-                          <th className="py-2">WIN</th>
-                          <th className="py-2">PLACE</th>
-                          <th className="py-2">SHOW</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -510,71 +509,64 @@ export function RaceDetail() {
                           <td className="text-center font-bold text-[#d4af37]">1st</td>
                           <td className="text-center font-bold">{raceResult.win_pp}</td>
                           <td className="text-left font-bold">{raceResult.win_horse}</td>
-                          <td className="text-center font-bold text-green-700">${raceResult.win_payout?.toFixed(2) || '—'}</td>
-                          <td className="text-center">—</td>
-                          <td className="text-center">—</td>
                         </tr>
                         <tr>
                           <td className="text-center font-bold text-gray-500">2nd</td>
                           <td className="text-center font-bold">{raceResult.place_pp || '—'}</td>
                           <td className="text-left font-bold">{raceResult.place_horse || '—'}</td>
-                          <td className="text-center">—</td>
-                          <td className="text-center">—</td>
-                          <td className="text-center">—</td>
                         </tr>
                         <tr>
                           <td className="text-center font-bold text-[#cd7f32]">3rd</td>
                           <td className="text-center font-bold">{raceResult.show_pp || '—'}</td>
                           <td className="text-left font-bold">{raceResult.show_horse || '—'}</td>
-                          <td className="text-center">—</td>
-                          <td className="text-center">—</td>
-                          <td className="text-center">—</td>
                         </tr>
+                        {raceResult.fourth_pp && (
+                          <tr>
+                            <td className="text-center font-bold text-gray-400">4th</td>
+                            <td className="text-center font-bold">{raceResult.fourth_pp}</td>
+                            <td className="text-left font-bold">{raceResult.fourth_horse || '—'}</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Exotic Payouts Table */}
+                  {/* Payouts */}
                   <div className="overflow-x-auto mt-4">
                     <table className="web-table font-mono text-xs w-full">
                       <thead>
                         <tr>
                           <th className="py-2 text-left">WAGER</th>
                           <th className="py-2 text-left">WINNING #s</th>
-                          <th className="py-2">BASE</th>
                           <th className="py-2">PAYOUT</th>
                         </tr>
                       </thead>
                       <tbody>
                         {raceResult.win_payout && (
                           <tr>
-                            <td className="text-left font-bold">WIN</td>
+                            <td className="text-left font-bold">WIN ($2)</td>
                             <td className="text-left">{raceResult.win_pp}</td>
-                            <td className="text-center">$2.00</td>
                             <td className="text-center font-bold text-green-700">${raceResult.win_payout.toFixed(2)}</td>
                           </tr>
                         )}
                         {raceResult.exacta_payout && (
                           <tr>
-                            <td className="text-left font-bold">EXACTA</td>
+                            <td className="text-left font-bold">EXACTA ($1)</td>
                             <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}</td>
-                            <td className="text-center">$1.00</td>
                             <td className="text-center font-bold text-green-700">${raceResult.exacta_payout.toFixed(2)}</td>
                           </tr>
                         )}
                         {raceResult.trifecta_payout && (
                           <tr>
-                            <td className="text-left font-bold">TRIFECTA</td>
+                            <td className="text-left font-bold">TRIFECTA ($1)</td>
                             <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp}</td>
-                            <td className="text-center">$1.00</td>
                             <td className="text-center font-bold text-green-700">${raceResult.trifecta_payout.toFixed(2)}</td>
                           </tr>
                         )}
                         {raceResult.superfecta_payout && (
                           <tr>
-                            <td className="text-left font-bold">SUPERFECTA</td>
-                            <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp}-…</td>
-                            <td className="text-center">$0.10</td>
+                            <td className="text-left font-bold">SUPER ($0.10)</td>
+                            <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp}-{raceResult.fourth_pp || '?'}</td>
                             <td className="text-center font-bold text-green-700">${raceResult.superfecta_payout.toFixed(2)}</td>
                           </tr>
                         )}
@@ -583,85 +575,92 @@ export function RaceDetail() {
                   </div>
 
                   {/* Bet Performance — only if we had action on this race */}
-                  {bets.length > 0 && (
-                    <div className="mt-6 border-t-4 border-[#000080] pt-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">🤌</span>
-                        <span className="font-serif font-bold text-[#000080] text-lg">COMMISSION BET PERFORMANCE</span>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="web-table font-mono text-xs w-full">
-                          <thead>
-                            <tr>
-                              <th className="py-2 text-left">BET</th>
-                              <th className="py-2">STAKE</th>
-                              <th className="py-2">RESULT</th>
-                              <th className="py-2">COLLECTED</th>
-                              <th className="py-2">NET</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {bets.map(bet => {
-                              const betKey = bet.bet_type.toLowerCase();
-                              let hit = false;
-                              let collected = 0;
+                  {bets.length > 0 && (() => {
+                    const betResults = bets.map(bet => {
+                      const betKey = bet.bet_type.toLowerCase();
+                      let hit = false;
+                      let collected = 0;
 
-                              if (betKey === 'win' && bet.entries_used?.length) {
-                                const winPP = bet.entries_used[0]?.replace('#', '').split(' ')[0];
-                                hit = winPP === String(raceResult.win_pp);
-                                if (hit && raceResult.win_payout) {
-                                  collected = (raceResult.win_payout / 2) * bet.stake;
-                                }
-                              } else if (betKey === 'exacta' && bet.entries_used?.length) {
-                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp));
-                                if (hit && raceResult.exacta_payout) {
-                                  collected = raceResult.exacta_payout * (bet.stake / 60 * 10);
-                                }
-                              } else if (betKey === 'trifecta' && bet.entries_used?.length) {
-                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
-                                if (hit && raceResult.trifecta_payout) {
-                                  collected = raceResult.trifecta_payout * (bet.stake / 24);
-                                }
-                              } else if (betKey === 'superfecta' && bet.entries_used?.length) {
-                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
-                                if (hit && raceResult.superfecta_payout) {
-                                  collected = raceResult.superfecta_payout * (bet.stake / 2.4);
-                                }
-                              }
+                      if (betKey === 'win' && bet.entries_used?.length) {
+                        const winPP = bet.entries_used[0]?.replace('#', '').split(' ')[0];
+                        hit = winPP === String(raceResult.win_pp);
+                        if (hit && raceResult.win_payout) {
+                          collected = (raceResult.win_payout / 2) * bet.stake;
+                        }
+                      } else if (betKey === 'exacta' && bet.entries_used?.length) {
+                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp));
+                        if (hit && raceResult.exacta_payout) {
+                          collected = raceResult.exacta_payout * (bet.stake / 60 * 10);
+                        }
+                      } else if (betKey === 'trifecta' && bet.entries_used?.length) {
+                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                        if (hit && raceResult.trifecta_payout) {
+                          collected = raceResult.trifecta_payout * (bet.stake / 24);
+                        }
+                      } else if (betKey === 'superfecta' && bet.entries_used?.length) {
+                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                        if (hit && raceResult.superfecta_payout) {
+                          collected = raceResult.superfecta_payout * (bet.stake / 2.4);
+                        }
+                      }
 
-                              const net = collected - bet.stake;
+                      return { ...bet, hit, collected, net: collected - bet.stake };
+                    });
 
-                              return (
-                                <tr key={bet.id} className={hit ? 'bg-green-50' : ''}>
+                    const totalStake = betResults.reduce((s, b) => s + b.stake, 0);
+                    const totalCollected = betResults.reduce((s, b) => s + b.collected, 0);
+                    const totalNet = totalCollected - totalStake;
+
+                    return (
+                      <div className="mt-6 border-t-4 border-[#000080] pt-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="font-serif font-bold text-[#000080] text-lg">COMMISSION BET PERFORMANCE</span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="web-table font-mono text-xs w-full">
+                            <thead>
+                              <tr>
+                                <th className="py-2 text-left">BET</th>
+                                <th className="py-2">STAKE</th>
+                                <th className="py-2">RESULT</th>
+                                <th className="py-2">COLLECTED</th>
+                                <th className="py-2">NET</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {betResults.map(bet => (
+                                <tr key={bet.id} className={bet.hit ? 'bg-green-50' : ''}>
                                   <td className="text-left font-bold capitalize">{bet.bet_type}{bet.doubled ? ' (2x)' : ''}</td>
                                   <td className="text-center">${bet.stake.toFixed(2)}</td>
                                   <td className="text-center">
-                                    <span className={`font-bold ${hit ? 'text-green-700' : 'text-web-red'}`}>
-                                      {hit ? 'HIT' : 'MISS'}
+                                    <span className={`font-bold ${bet.hit ? 'text-green-700' : 'text-web-red'}`}>
+                                      {bet.hit ? 'HIT' : 'MISS'}
                                     </span>
                                   </td>
-                                  <td className="text-center font-bold">{hit ? `$${collected.toFixed(2)}` : '—'}</td>
-                                  <td className={`text-center font-bold ${net >= 0 ? 'text-green-700' : 'text-web-red'}`}>
-                                    {net >= 0 ? '+' : ''}${net.toFixed(2)}
+                                  <td className="text-center font-bold">{bet.hit ? `$${bet.collected.toFixed(2)}` : '—'}</td>
+                                  <td className={`text-center font-bold ${bet.net >= 0 ? 'text-green-700' : 'text-web-red'}`}>
+                                    {bet.net >= 0 ? '+' : ''}{bet.net.toFixed(2)}
                                   </td>
                                 </tr>
-                              );
-                            })}
-                            <tr className="border-t-2 border-black">
-                              <td className="text-left font-bold">TOTAL</td>
-                              <td className="text-center font-bold">${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)}</td>
-                              <td className="text-center">—</td>
-                              <td className="text-center font-bold">—</td>
-                              <td className="text-center font-bold">—</td>
-                            </tr>
-                          </tbody>
-                        </table>
+                              ))}
+                              <tr className="border-t-2 border-black">
+                                <td className="text-left font-bold">TOTAL</td>
+                                <td className="text-center font-bold">${totalStake.toFixed(2)}</td>
+                                <td className="text-center">—</td>
+                                <td className="text-center font-bold">${totalCollected.toFixed(2)}</td>
+                                <td className={`text-center font-bold ${totalNet >= 0 ? 'text-green-700' : 'text-web-red'}`}>
+                                  {totalNet >= 0 ? '+' : ''}${totalNet.toFixed(2)}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {raceResult.settled_at && (
                     <div className="mt-3 font-mono text-[10px] text-gray-400">
