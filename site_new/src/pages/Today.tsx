@@ -85,13 +85,13 @@ export function Today() {
   // Fetch performance — re-runs when trackFilter changes
   useEffect(() => {
     if (!token) return;
-    const trackParam = trackFilter !== 'all' && trackFilter !== 'commission' ? `&track=${encodeURIComponent(trackFilter)}` : '';
-    fetch(`/api/lab/performance?${trackParam}`, { headers: { 'Authorization': `Bearer ${token}` } })
+    const trackParam = trackFilter !== 'all' && trackFilter !== 'commission' ? `?track=${encodeURIComponent(trackFilter)}` : '';
+    fetch(`/api/lab/performance${trackParam}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => {
-        if (data?.performance) setPerformance(data.performance);
+        setPerformance(data?.performance || null);
       })
-      .catch(() => {});
+      .catch(() => setPerformance(null));
   }, [token, trackFilter]);
 
   const now = new Date();
