@@ -199,18 +199,206 @@ export default async function handler(req: any, res: any) {
       `🚨 FTC SCRATCH ALERT — ${alerts.length} horse${alerts.length > 1 ? 's' : ''} scratched from today's card`,
       `<div style="font-family: monospace; padding: 16px; max-width: 600px;">
         <h2 style="color: #c00; margin-bottom: 4px;">SCRATCH ALERT</h2>
-        <p style="color: #666; margin-top: 0;">${timeStr} ET — Sunday June 14</p>
+        <p style="color: #666; margin-top: 0;">${timeStr} ET</p>
         ${alerts.join('')}
         <p style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #ccc; font-size: 12px; color: #666;">
-          The Commission is monitoring all 16 plays for scratches. Alerts fire only when the favorite or a horse in our exotic box is scratched.
+          The Commission is monitoring all plays for scratches. Alerts fire only when the favorite or a horse in our exotic box is scratched.
         </p>
       </div>`
     );
   }
 
+  // === RESULTS COLLECTION ===
+  // Check each watched race for has_finished, pull results if new
+  let resultsCollected = 0;
+
+  // Group watched races by track to minimize API calls
+  const trackGroups: Record<string, WatchedRace[]> = {};
+  for (const race of WATCHED_RACES) {
+    if (!trackGroups[race.track_api]) trackGroups[race.track_api] = [];
+    trackGroups[race.track_api].push(race);
+  }
+
+  for (const [trackApi, trackRaces] of Object.entries(trackGroups)) {
+    const meetId = MEET_IDS[trackApi];
+    if (!meetId) continue;
+
+    // Check entries endpoint for has_finished flags
+    let entriesData: any;
+    try {
+      entriesData = await apiFetch(`/meets/${meetId}/entries`);
+    } catch { continue; }
+
+    const finishedRaceNumbers: number[] = [];
+    for (const apiRace of (entriesData.races || [])) {
+      if (apiRace.has_finished) {
+        const rn = parseInt(apiRace.race_key?.race_number);
+        if (rn) finishedRaceNumbers.push(rn);
+      }
+    }
+
+    // Filter to only our watched races that have finished
+    const finishedWatched = trackRaces.filter(r => finishedRaceNumbers.includes(r.race_number));
+    if (finishedWatched.length === 0) continue;
+
+    // Check which ones we already have results for
+    const raceIds = await query(
+      `SELECT id, race_number FROM races WHERE track = $1 AND date = CURRENT_DATE AND race_number = ANY($2)`,
+      [finishedWatched[0].track_name, finishedWatched.map(r => r.race_number)]
+    );
+
+    const raceIdMap: Record<number, number> = {};
+    for (const row of raceIds.rows) {
+      raceIdMap[row.race_number] = row.id;
+    }
+
+    // Check which race_ids already have results
+    const existingResults = await query(
+      `SELECT race_id FROM results WHERE race_id = ANY($1)`,
+      [Object.values(raceIdMap)]
+    );
+    const settledRaceIds = new Set(existingResults.rows.map((r: any) => r.race_id));
+
+    // Find races that need results
+    const needResults = finishedWatched.filter(r => {
+      const dbId = raceIdMap[r.race_number];
+      return dbId && !settledRaceIds.has(dbId);
+    });
+
+    if (needResults.length === 0) continue;
+
+    // Pull results from API
+    let resultsData: any;
+    try {
+      resultsData = await apiFetch(`/meets/${meetId}/results`);
+    } catch { continue; }
+
+    for (const race of needResults) {
+      const apiResult = (resultsData.races || []).find(
+        (r: any) => r.race_key?.race_number === String(race.race_number)
+      );
+      if (!apiResult || !apiResult.runners || apiResult.runners.length < 3) continue;
+
+      const dbRaceId = raceIdMap[race.race_number];
+      const runners = apiResult.runners;
+
+      // Get post positions from program_number
+      const winPP = parseInt(runners[0]?.program_number);
+      const placePP = parseInt(runners[1]?.program_number);
+      const showPP = parseInt(runners[2]?.program_number);
+      const fourthPP = runners[3] ? parseInt(runners[3]?.program_number) : null;
+
+      // Look up entry IDs
+      const lookupEntry = async (pp: number) => {
+        const { rows } = await query(
+          'SELECT id FROM entries WHERE race_id = $1 AND post_position = $2', [dbRaceId, pp]
+        );
+        return rows.length ? rows[0].id : null;
+      };
+
+      const winEntryId = await lookupEntry(winPP);
+      const placeEntryId = await lookupEntry(placePP);
+      const showEntryId = await lookupEntry(showPP);
+
+      // Extract payouts — normalize to standard bases ($2 win, $1 exacta, $1 tri, $0.10 super)
+      const payoffs = apiResult.payoffs || [];
+      const findPayout = (name: string) => payoffs.find((p: any) =>
+        p.wager_name?.toUpperCase().includes(name)
+      );
+
+      const winPayoff = runners[0]?.win_payoff || null;
+      const exactaRaw = findPayout('EXACTA');
+      const trifectaRaw = findPayout('TRIFECTA');
+      const superfectaRaw = findPayout('SUPERFECTA');
+
+      // Normalize to $1 base for exacta/tri (API may report at $2 or $0.50 base)
+      const normalizeToBase = (raw: any, targetBase: number) => {
+        if (!raw) return null;
+        const amount = parseFloat(raw.payoff_amount);
+        const base = parseFloat(raw.base_amount);
+        if (!amount || !base) return null;
+        return amount * (targetBase / base);
+      };
+
+      const exactaPayout = normalizeToBase(exactaRaw, 1);
+      const trifectaPayout = normalizeToBase(trifectaRaw, 1);
+      const superfectaPayout = superfectaRaw ? parseFloat(superfectaRaw.payoff_amount) : null;
+
+      // Insert results
+      await query(
+        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (race_id) DO NOTHING`,
+        [dbRaceId, winEntryId, placeEntryId, showEntryId, winPayoff, exactaPayout, trifectaPayout, superfectaPayout]
+      );
+
+      resultsCollected++;
+
+      // Email members about the result
+      const winHorse = runners[0]?.horse_name || '?';
+      const placeHorse = runners[1]?.horse_name || '?';
+      const showHorse = runners[2]?.horse_name || '?';
+
+      // Check if our bets hit
+      const boxUpper = race.box.map(h => h.toUpperCase());
+      const top3 = [winHorse, placeHorse, showHorse].map(h => h.toUpperCase());
+      const winPickHit = race.win_pick.toUpperCase() === top3[0];
+      const exactaHit = boxUpper.includes(top3[0]) && boxUpper.includes(top3[1]);
+      const trifectaHit = exactaHit && boxUpper.includes(top3[2]);
+
+      let performanceLine = '';
+      if (winPickHit) {
+        performanceLine = `✅ WIN BET HIT — ${race.win_pick} won!`;
+      } else if (trifectaHit) {
+        performanceLine = `✅ TRIFECTA HIT — all 3 finishers were in our box`;
+      } else if (exactaHit) {
+        performanceLine = `✅ EXACTA HIT — top 2 were in our box`;
+      } else {
+        const inBox = top3.filter(h => boxUpper.includes(h)).length;
+        performanceLine = `❌ ${inBox}/3 finishers were in our box`;
+      }
+
+      await sendEmailToAll(
+        `🏁 ${race.track_name} R${race.race_number} — ${winHorse} wins`,
+        `<div style="font-family: monospace; padding: 16px; max-width: 600px;">
+          <h2 style="color: #000080; margin-bottom: 4px;">🏁 RACE RESULT</h2>
+          <p style="font-size: 16px; font-weight: bold; margin: 4px 0;">${race.track_name} R${race.race_number} — ${race.product}</p>
+          <table style="border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px;">
+            <tr style="border-bottom: 1px solid #ccc;">
+              <td style="padding: 6px 8px; font-weight: bold; color: #d4af37;">1st</td>
+              <td style="padding: 6px 8px; font-weight: bold;">#${winPP} ${winHorse}</td>
+              <td style="padding: 6px 8px; color: green;">${winPayoff ? '$' + winPayoff.toFixed(2) : ''}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ccc;">
+              <td style="padding: 6px 8px; font-weight: bold; color: #888;">2nd</td>
+              <td style="padding: 6px 8px; font-weight: bold;">#${placePP} ${placeHorse}</td>
+              <td style="padding: 6px 8px;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ccc;">
+              <td style="padding: 6px 8px; font-weight: bold; color: #cd7f32;">3rd</td>
+              <td style="padding: 6px 8px; font-weight: bold;">#${showPP} ${showHorse}</td>
+              <td style="padding: 6px 8px;"></td>
+            </tr>
+          </table>
+          ${exactaPayout ? `<p style="margin: 4px 0;">Exacta (${winPP}-${placePP}): <strong>$${exactaPayout.toFixed(2)}</strong></p>` : ''}
+          ${trifectaPayout ? `<p style="margin: 4px 0;">Trifecta (${winPP}-${placePP}-${showPP}): <strong>$${trifectaPayout.toFixed(2)}</strong></p>` : ''}
+          ${superfectaPayout ? `<p style="margin: 4px 0;">Superfecta: <strong>$${superfectaPayout.toFixed(2)}</strong></p>` : ''}
+          <div style="background: ${winPickHit || trifectaHit || exactaHit ? '#e8f5e9' : '#fff3e0'}; border: 2px solid ${winPickHit || trifectaHit || exactaHit ? '#4caf50' : '#ff9800'}; padding: 12px; margin: 16px 0;">
+            <p style="margin: 0; font-weight: bold; font-size: 14px;">${performanceLine}</p>
+            <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Our box: ${race.box.join(', ')}</p>
+          </div>
+          <p style="font-size: 12px; color: #666; margin-top: 12px;">
+            <a href="https://fadethechalk.vercel.app/today/${dbRaceId}" style="color: #000080;">View full results →</a>
+          </p>
+        </div>`
+      );
+    }
+  }
+
   return res.status(200).json({
     time: now.toISOString(),
     alerts_sent: alerts.length,
+    results_collected: resultsCollected,
     races_checked: WATCHED_RACES.length
   });
 }
