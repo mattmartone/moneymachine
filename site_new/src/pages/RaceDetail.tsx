@@ -482,69 +482,176 @@ export function RaceDetail() {
             <div>
               {raceResult ? (
                 <div>
-                  <div className="font-serif text-lg font-bold mb-4">Race Results</div>
-
-                  {/* Finish Order */}
-                  <div className="border-2 border-black mb-4">
-                    <div className="bg-black text-white px-3 py-2 font-mono text-xs font-bold">OFFICIAL ORDER OF FINISH</div>
-                    <div className="divide-y divide-gray-200">
-                      <div className="flex items-center px-4 py-3">
-                        <span className="font-mono text-2xl font-bold text-[#d4af37] w-10">1st</span>
-                        <span className="font-serif font-bold text-lg">#{raceResult.win_pp} {raceResult.win_horse}</span>
-                      </div>
-                      <div className="flex items-center px-4 py-3">
-                        <span className="font-mono text-xl font-bold text-gray-500 w-10">2nd</span>
-                        <span className="font-serif font-bold">{raceResult.place_pp ? `#${raceResult.place_pp} ${raceResult.place_horse}` : '—'}</span>
-                      </div>
-                      <div className="flex items-center px-4 py-3">
-                        <span className="font-mono text-lg font-bold text-[#cd7f32] w-10">3rd</span>
-                        <span className="font-serif font-bold">{raceResult.show_pp ? `#${raceResult.show_pp} ${raceResult.show_horse}` : '—'}</span>
-                      </div>
-                    </div>
+                  {/* Finish Order Table */}
+                  <div className="overflow-x-auto">
+                    <table className="web-table font-mono text-xs w-full">
+                      <thead>
+                        <tr>
+                          <th className="py-2">POS</th>
+                          <th className="py-2">PP</th>
+                          <th className="py-2 text-left">HORSE</th>
+                          <th className="py-2">WIN</th>
+                          <th className="py-2">PLACE</th>
+                          <th className="py-2">SHOW</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="bg-[#fffbe0]">
+                          <td className="text-center font-bold text-[#d4af37]">1st</td>
+                          <td className="text-center font-bold">{raceResult.win_pp}</td>
+                          <td className="text-left font-bold">{raceResult.win_horse}</td>
+                          <td className="text-center font-bold text-green-700">${raceResult.win_payout?.toFixed(2) || '—'}</td>
+                          <td className="text-center">—</td>
+                          <td className="text-center">—</td>
+                        </tr>
+                        <tr>
+                          <td className="text-center font-bold text-gray-500">2nd</td>
+                          <td className="text-center font-bold">{raceResult.place_pp || '—'}</td>
+                          <td className="text-left font-bold">{raceResult.place_horse || '—'}</td>
+                          <td className="text-center">—</td>
+                          <td className="text-center">—</td>
+                          <td className="text-center">—</td>
+                        </tr>
+                        <tr>
+                          <td className="text-center font-bold text-[#cd7f32]">3rd</td>
+                          <td className="text-center font-bold">{raceResult.show_pp || '—'}</td>
+                          <td className="text-left font-bold">{raceResult.show_horse || '—'}</td>
+                          <td className="text-center">—</td>
+                          <td className="text-center">—</td>
+                          <td className="text-center">—</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
-                  {/* Payouts */}
-                  <div className="border-2 border-black">
-                    <div className="bg-[#000080] text-white px-3 py-2 font-mono text-xs font-bold">PAYOUTS</div>
-                    <div className="divide-y divide-gray-200">
-                      {raceResult.win_payout && (
-                        <div className="flex justify-between items-center px-4 py-3">
-                          <div>
-                            <span className="font-mono font-bold text-sm">WIN</span>
-                            <span className="font-mono text-xs text-gray-500 ml-2">$2 base</span>
-                          </div>
-                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.win_payout.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {raceResult.exacta_payout && (
-                        <div className="flex justify-between items-center px-4 py-3">
-                          <div>
-                            <span className="font-mono font-bold text-sm">EXACTA</span>
-                            <span className="font-mono text-xs text-gray-500 ml-2">{raceResult.win_pp}-{raceResult.place_pp} • $1 base</span>
-                          </div>
-                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.exacta_payout.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {raceResult.trifecta_payout && (
-                        <div className="flex justify-between items-center px-4 py-3">
-                          <div>
-                            <span className="font-mono font-bold text-sm">TRIFECTA</span>
-                            <span className="font-mono text-xs text-gray-500 ml-2">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp} • $1 base</span>
-                          </div>
-                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.trifecta_payout.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {raceResult.superfecta_payout && (
-                        <div className="flex justify-between items-center px-4 py-3">
-                          <div>
-                            <span className="font-mono font-bold text-sm">SUPERFECTA</span>
-                            <span className="font-mono text-xs text-gray-500 ml-2">$0.10 base</span>
-                          </div>
-                          <span className="font-mono text-lg font-bold text-green-700">${raceResult.superfecta_payout.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Exotic Payouts Table */}
+                  <div className="overflow-x-auto mt-4">
+                    <table className="web-table font-mono text-xs w-full">
+                      <thead>
+                        <tr>
+                          <th className="py-2 text-left">WAGER</th>
+                          <th className="py-2 text-left">WINNING #s</th>
+                          <th className="py-2">BASE</th>
+                          <th className="py-2">PAYOUT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {raceResult.win_payout && (
+                          <tr>
+                            <td className="text-left font-bold">WIN</td>
+                            <td className="text-left">{raceResult.win_pp}</td>
+                            <td className="text-center">$2.00</td>
+                            <td className="text-center font-bold text-green-700">${raceResult.win_payout.toFixed(2)}</td>
+                          </tr>
+                        )}
+                        {raceResult.exacta_payout && (
+                          <tr>
+                            <td className="text-left font-bold">EXACTA</td>
+                            <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}</td>
+                            <td className="text-center">$1.00</td>
+                            <td className="text-center font-bold text-green-700">${raceResult.exacta_payout.toFixed(2)}</td>
+                          </tr>
+                        )}
+                        {raceResult.trifecta_payout && (
+                          <tr>
+                            <td className="text-left font-bold">TRIFECTA</td>
+                            <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp}</td>
+                            <td className="text-center">$1.00</td>
+                            <td className="text-center font-bold text-green-700">${raceResult.trifecta_payout.toFixed(2)}</td>
+                          </tr>
+                        )}
+                        {raceResult.superfecta_payout && (
+                          <tr>
+                            <td className="text-left font-bold">SUPERFECTA</td>
+                            <td className="text-left">{raceResult.win_pp}-{raceResult.place_pp}-{raceResult.show_pp}-…</td>
+                            <td className="text-center">$0.10</td>
+                            <td className="text-center font-bold text-green-700">${raceResult.superfecta_payout.toFixed(2)}</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
+
+                  {/* Bet Performance — only if we had action on this race */}
+                  {bets.length > 0 && (
+                    <div className="mt-6 border-t-4 border-[#000080] pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg">🤌</span>
+                        <span className="font-serif font-bold text-[#000080] text-lg">COMMISSION BET PERFORMANCE</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="web-table font-mono text-xs w-full">
+                          <thead>
+                            <tr>
+                              <th className="py-2 text-left">BET</th>
+                              <th className="py-2">STAKE</th>
+                              <th className="py-2">RESULT</th>
+                              <th className="py-2">COLLECTED</th>
+                              <th className="py-2">NET</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bets.map(bet => {
+                              const betKey = bet.bet_type.toLowerCase();
+                              let hit = false;
+                              let collected = 0;
+
+                              if (betKey === 'win' && bet.entries_used?.length) {
+                                const winPP = bet.entries_used[0]?.replace('#', '').split(' ')[0];
+                                hit = winPP === String(raceResult.win_pp);
+                                if (hit && raceResult.win_payout) {
+                                  collected = (raceResult.win_payout / 2) * bet.stake;
+                                }
+                              } else if (betKey === 'exacta' && bet.entries_used?.length) {
+                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp));
+                                if (hit && raceResult.exacta_payout) {
+                                  collected = raceResult.exacta_payout * (bet.stake / 60 * 10);
+                                }
+                              } else if (betKey === 'trifecta' && bet.entries_used?.length) {
+                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                                if (hit && raceResult.trifecta_payout) {
+                                  collected = raceResult.trifecta_payout * (bet.stake / 24);
+                                }
+                              } else if (betKey === 'superfecta' && bet.entries_used?.length) {
+                                const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
+                                hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                                if (hit && raceResult.superfecta_payout) {
+                                  collected = raceResult.superfecta_payout * (bet.stake / 2.4);
+                                }
+                              }
+
+                              const net = collected - bet.stake;
+
+                              return (
+                                <tr key={bet.id} className={hit ? 'bg-green-50' : ''}>
+                                  <td className="text-left font-bold capitalize">{bet.bet_type}{bet.doubled ? ' (2x)' : ''}</td>
+                                  <td className="text-center">${bet.stake.toFixed(2)}</td>
+                                  <td className="text-center">
+                                    <span className={`font-bold ${hit ? 'text-green-700' : 'text-web-red'}`}>
+                                      {hit ? 'HIT' : 'MISS'}
+                                    </span>
+                                  </td>
+                                  <td className="text-center font-bold">{hit ? `$${collected.toFixed(2)}` : '—'}</td>
+                                  <td className={`text-center font-bold ${net >= 0 ? 'text-green-700' : 'text-web-red'}`}>
+                                    {net >= 0 ? '+' : ''}${net.toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            <tr className="border-t-2 border-black">
+                              <td className="text-left font-bold">TOTAL</td>
+                              <td className="text-center font-bold">${bets.reduce((s, b) => s + b.stake, 0).toFixed(2)}</td>
+                              <td className="text-center">—</td>
+                              <td className="text-center font-bold">—</td>
+                              <td className="text-center font-bold">—</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
 
                   {raceResult.settled_at && (
                     <div className="mt-3 font-mono text-[10px] text-gray-400">
@@ -555,7 +662,6 @@ export function RaceDetail() {
                   {/* Admin: edit results */}
                   {isAdmin && (
                     <div className="mt-4 border-t-2 border-gray-300 pt-3">
-                      <div className="font-mono text-xs text-gray-500 mb-2">Admin — update results</div>
                       <button
                         onClick={() => {
                           setResultForm({
@@ -580,8 +686,7 @@ export function RaceDetail() {
                 <div>
                   {isAdmin ? (
                     <div>
-                      <div className="font-serif text-lg font-bold mb-2">Enter Results</div>
-                      <p className="font-mono text-xs text-gray-600 mb-4">Post positions for the top 3 finishers and payouts.</p>
+                      <p className="font-mono text-xs text-gray-600 mb-4">Enter post positions for the top 3 finishers and payouts.</p>
 
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
@@ -603,7 +708,7 @@ export function RaceDetail() {
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                          <label className="font-mono text-xs text-gray-600 block mb-1">WIN PAYOUT ($2)</label>
+                          <label className="font-mono text-xs text-gray-600 block mb-1">WIN ($2)</label>
                           <input type="number" step="0.01" value={resultForm.win_payout} onChange={e => setResultForm({...resultForm, win_payout: e.target.value})}
                             className="w-full px-2 py-1 border-2 border-gray-400 font-mono text-sm" placeholder="$0.00" />
                         </div>
