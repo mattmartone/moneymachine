@@ -30,6 +30,8 @@ export function Today() {
   const [trackFilter, setTrackFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [performance, setPerformance] = useState<any>(null);
+  const [perfOpen, setPerfOpen] = useState(true);
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
@@ -77,6 +79,13 @@ export function Today() {
           setCommissionRaces(map);
         }
       });
+
+    fetch('/api/lab/performance', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.performance) setPerformance(data.performance);
+      })
+      .catch(() => {});
   }, [token, navigate, today]);
 
   const now = new Date();
@@ -178,6 +187,50 @@ export function Today() {
               ? `All races today — ${filteredRaces.length} across ${tracks.length} tracks`
               : `${trackFilter} — ${filteredRaces.length} races`
             }
+          </div>
+        )}
+
+        {/* Performance Summary — collapsible */}
+        {performance && trackFilter === 'commission' && (
+          <div className="mb-4 border-2 border-[#000080]">
+            <button
+              onClick={() => setPerfOpen(!perfOpen)}
+              className="w-full flex justify-between items-center px-3 py-2 bg-[#000080] text-white font-mono text-xs font-bold cursor-pointer"
+            >
+              <span>DAY PERFORMANCE</span>
+              <span>{perfOpen ? '▼' : '▶'} {performance.closed_races}/{performance.total_races} settled</span>
+            </button>
+            {perfOpen && (
+              <div className="p-3 bg-white font-mono text-xs">
+                <div className="grid grid-cols-3 gap-4 mb-2">
+                  <div>
+                    <div className="text-gray-500">RACES</div>
+                    <div className="font-bold text-sm">{performance.closed_races} closed / {performance.open_races} open</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">WAGERED</div>
+                    <div className="font-bold text-sm">${performance.total_wagered.toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500">COLLECTED</div>
+                    <div className="font-bold text-sm">${performance.total_collected.toFixed(2)}</div>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <div>
+                    <span className="text-gray-500">NET: </span>
+                    <span className={`font-bold text-lg ${performance.net >= 0 ? 'text-green-700' : 'text-web-red'}`}>
+                      {performance.net >= 0 ? '+' : ''}${performance.net.toFixed(2)}
+                    </span>
+                  </div>
+                  {performance.last_settled && (
+                    <div className="text-[10px] text-gray-400">
+                      Last updated: {new Date(performance.last_settled).toLocaleTimeString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
