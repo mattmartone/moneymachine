@@ -80,13 +80,19 @@ export function Today() {
         }
       });
 
-    fetch('/api/lab/performance', { headers: { 'Authorization': `Bearer ${token}` } })
+  }, [token, navigate, today]);
+
+  // Fetch performance — re-runs when trackFilter changes
+  useEffect(() => {
+    if (!token) return;
+    const trackParam = trackFilter !== 'all' && trackFilter !== 'commission' ? `&track=${encodeURIComponent(trackFilter)}` : '';
+    fetch(`/api/lab/performance?${trackParam}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => {
         if (data?.performance) setPerformance(data.performance);
       })
       .catch(() => {});
-  }, [token, navigate, today]);
+  }, [token, trackFilter]);
 
   const now = new Date();
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;

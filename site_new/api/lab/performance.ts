@@ -19,14 +19,15 @@ export default async function handler(req: any, res: any) {
 
   try {
     const today = new Date().toISOString().split('T')[0];
+    const { track } = req.query;
 
-    // Get all bets for today with their entries_used
+    // Get bets for today, optionally filtered by track
     const { rows: bets } = await query(
       `SELECT b.id, b.race_id, b.bet_type, b.stake, b.doubled, b.entries_used
        FROM bets b JOIN races r ON r.id = b.race_id
-       WHERE r.date = $1
+       WHERE r.date = $1 ${track ? 'AND r.track = $2' : ''}
        ORDER BY b.race_id`,
-      [today]
+      track ? [today, track] : [today]
     );
 
     // Get all results for today's races that have bets
