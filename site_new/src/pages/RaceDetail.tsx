@@ -597,19 +597,28 @@ export function RaceDetail() {
                         const boxPPs = bet.entries_used.map(parsePP);
                         hit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
                         if (hit && raceResult.exacta_payout) {
-                          collected = raceResult.exacta_payout * (bet.stake / 60 * 10);
+                          const n = boxPPs.length;
+                          const combos = n * (n - 1);
+                          const perCombo = bet.stake / combos;
+                          collected = raceResult.exacta_payout * perCombo;
                         }
                       } else if (betKey === 'trifecta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
                         hit = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
                         if (hit && raceResult.trifecta_payout) {
-                          collected = raceResult.trifecta_payout * (bet.stake / 24);
+                          const n = boxPPs.length;
+                          const combos = n * (n - 1) * (n - 2);
+                          const perCombo = bet.stake / combos;
+                          collected = raceResult.trifecta_payout * perCombo;
                         }
                       } else if (betKey === 'superfecta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
                         hit = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
                         if (hit && raceResult.superfecta_payout) {
-                          collected = raceResult.superfecta_payout * (bet.stake / 2.4);
+                          const n = boxPPs.length;
+                          const combos = n * (n - 1) * (n - 2) * (n - 3);
+                          const perCombo = bet.stake / combos;
+                          collected = raceResult.superfecta_payout * perCombo;
                         }
                       }
 

@@ -87,17 +87,26 @@ export default async function handler(req: any, res: any) {
       } else if (betKey === 'exacta') {
         const boxPPs = bet.entries_used.map(parsePP);
         if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && result.exacta_payout) {
-          totalCollected += result.exacta_payout * (bet.stake / 60 * 10);
+          const n = boxPPs.length;
+          const combos = n * (n - 1);
+          const perCombo = bet.stake / combos;
+          totalCollected += result.exacta_payout * perCombo;
         }
       } else if (betKey === 'trifecta') {
         const boxPPs = bet.entries_used.map(parsePP);
         if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && result.trifecta_payout) {
-          totalCollected += result.trifecta_payout * (bet.stake / 24);
+          const n = boxPPs.length;
+          const combos = n * (n - 1) * (n - 2);
+          const perCombo = bet.stake / combos;
+          totalCollected += result.trifecta_payout * perCombo;
         }
       } else if (betKey === 'superfecta') {
         const boxPPs = bet.entries_used.map(parsePP);
         if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && result.superfecta_payout) {
-          totalCollected += result.superfecta_payout * (bet.stake / 2.4);
+          const n = boxPPs.length;
+          const combos = n * (n - 1) * (n - 2) * (n - 3);
+          const perCombo = bet.stake / combos;
+          totalCollected += result.superfecta_payout * perCombo;
         }
       }
     }
