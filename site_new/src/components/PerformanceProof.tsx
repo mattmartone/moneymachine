@@ -7,7 +7,7 @@ export function PerformanceProof() {
           *** PAST PERFORMANCE ***
         </h2>
         <h3 className="font-serif text-2xl font-bold text-black">
-          Lifetime Record — 4 Race Days
+          Lifetime Record — 5 Race Days
         </h3>
       </div>
 
@@ -61,13 +61,22 @@ export function PerformanceProof() {
               <td className="py-3 text-web-red font-bold">-$567</td>
               <td className="py-3 text-web-red font-bold">-72%</td>
             </tr>
+            <tr>
+              <td className="py-3 font-bold">June 13</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">5</td>
+              <td className="py-3">$532</td>
+              <td className="py-3">$184</td>
+              <td className="py-3 text-web-red font-bold">-$348</td>
+              <td className="py-3 text-web-red font-bold">-65%</td>
+            </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
-              <td className="py-4 text-lg font-bold">29</td>
-              <td className="py-4 text-lg font-bold">$3,810</td>
-              <td className="py-4 text-lg font-bold">$4,606</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$796</td>
-              <td className="py-4 text-lg text-web-green font-bold">+21%</td>
+              <td className="py-4 text-lg font-bold">34</td>
+              <td className="py-4 text-lg font-bold">$4,342</td>
+              <td className="py-4 text-lg font-bold">$4,790</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$448</td>
+              <td className="py-4 text-lg text-web-green font-bold">+10%</td>
             </tr>
           </tbody>
         </table>
@@ -75,7 +84,7 @@ export function PerformanceProof() {
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
         <div className="font-bold text-web-green">Called the Belmont Stakes winner: Golden Tempo (5/1) — not the favorite.</div>
-        <div className="font-bold">June 11 loss led to 8 new strategies added to the model. We get better every day.</div>
+        <div className="font-bold">Two losing days led to 10 new strategies. The model finds winners — we just learned to back them.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
