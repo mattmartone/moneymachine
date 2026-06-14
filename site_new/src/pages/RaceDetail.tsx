@@ -629,11 +629,26 @@ export function RaceDetail() {
                     const totalCollected = betResults.reduce((s, b) => s + b.collected, 0);
                     const totalNet = totalCollected - totalStake;
 
+                    const winBetResult = betResults.find(b => b.bet_type.toLowerCase() === 'win');
+                    const exoticBet = betResults.find(b => b.bet_type.toLowerCase() === 'exacta' || b.bet_type.toLowerCase() === 'trifecta');
+
                     return (
                       <div className="mt-6 border-t-4 border-[#000080] pt-4">
                         <div className="flex items-center gap-2 mb-3">
                           <span className="font-serif font-bold text-[#000080] text-lg">COMMISSION BET PERFORMANCE</span>
                         </div>
+
+                        {/* Commission Prediction */}
+                        <div className="bg-[#f0f0ff] border-2 border-[#000080] p-3 mb-3 font-mono text-xs">
+                          <div className="font-bold text-[#000080] mb-1">OUR CALL</div>
+                          {winBetResult?.entries_used?.[0] && (
+                            <div>Win pick: <span className="font-bold">{winBetResult.entries_used[0]}</span></div>
+                          )}
+                          {exoticBet?.entries_used && (
+                            <div>Box: <span className="font-bold">{exoticBet.entries_used.join(', ')}</span></div>
+                          )}
+                        </div>
+
                         <div className="overflow-x-auto">
                           <table className="web-table font-mono text-xs w-full">
                             <thead>
