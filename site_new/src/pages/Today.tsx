@@ -169,6 +169,18 @@ export function Today() {
           </div>
         </div>
 
+        {/* Context subheader */}
+        {!loading && filteredRaces.length > 0 && (
+          <div className="font-mono text-xs text-gray-600 mb-3 px-1">
+            {trackFilter === 'commission'
+              ? `All Commission Races — ${filteredRaces.length} plays across ${new Set(filteredRaces.map(r => r.track)).size} tracks • $${Array.from(commissionRaces.values()).reduce((s, c) => s + c.total_stake, 0).toLocaleString()} committed`
+              : trackFilter === 'all'
+              ? `All races today — ${filteredRaces.length} across ${tracks.length} tracks`
+              : `${trackFilter} — ${filteredRaces.length} races`
+            }
+          </div>
+        )}
+
         {loading ? (
           <div className="font-mono animate-blink p-4">Loading races...</div>
         ) : filteredRaces.length === 0 ? (
