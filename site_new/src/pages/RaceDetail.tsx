@@ -346,6 +346,9 @@ export function RaceDetail() {
                       {winBet && (
                         <div className="mb-3 bg-[#ffffcc] border-2 border-black p-3">
                           <div className="font-sans font-bold text-web-red text-sm">WIN BET{winBet.doubled ? ' — DOUBLED STAKE' : ''}</div>
+                          <div className="font-mono text-sm font-bold mt-1">
+                            {winBet.entries_used?.length ? winBet.entries_used.join(', ') : '—'}
+                          </div>
                           <div className="font-mono text-xs text-gray-600 mt-1">Stake: ${winBet.stake.toFixed(2)}</div>
                         </div>
                       )}
@@ -356,9 +359,16 @@ export function RaceDetail() {
                       )}
                       <div className="space-y-2">
                         {exotics.map(bet => (
-                          <div key={bet.id} className="flex justify-between items-center border-b border-gray-200 pb-2">
-                            <span className="font-mono font-bold text-sm capitalize">{bet.bet_type}</span>
-                            <span className="font-mono font-bold">${bet.stake.toFixed(2)}</span>
+                          <div key={bet.id} className="border-b border-gray-200 pb-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-mono font-bold text-sm capitalize">{bet.bet_type} box</span>
+                              <span className="font-mono font-bold">${bet.stake.toFixed(2)}</span>
+                            </div>
+                            {bet.entries_used?.length && (
+                              <div className="font-mono text-xs text-gray-700 mt-1">
+                                {bet.entries_used.join(', ')}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
