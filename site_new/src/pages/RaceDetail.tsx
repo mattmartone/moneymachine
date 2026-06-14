@@ -639,7 +639,12 @@ export function RaceDetail() {
                             <tbody>
                               {betResults.map(bet => (
                                 <tr key={bet.id} className={bet.hit ? 'bg-green-50' : ''}>
-                                  <td className="text-left font-bold capitalize">{bet.bet_type}{bet.doubled ? ' (2x)' : ''}</td>
+                                  <td className="text-left">
+                                    <span className="font-bold capitalize">{bet.bet_type}{bet.doubled ? ' (2x)' : ''}</span>
+                                    {bet.entries_used?.length && (
+                                      <div className="text-[10px] text-gray-600 mt-0.5">{bet.entries_used.join(', ')}</div>
+                                    )}
+                                  </td>
                                   <td className="text-center">${bet.stake.toFixed(2)}</td>
                                   <td className="text-center">
                                     <span className={`font-bold ${bet.hit ? 'text-green-700' : 'text-web-red'}`}>
