@@ -576,32 +576,38 @@ export function RaceDetail() {
 
                   {/* Bet Performance — only if we had action on this race */}
                   {bets.length > 0 && (() => {
+                    const wpp = String(raceResult.win_pp);
+                    const ppp = String(raceResult.place_pp);
+                    const spp = String(raceResult.show_pp);
+
+                    const parsePP = (entry: string) => entry.replace(/^#/, '').split(' ')[0];
+
                     const betResults = bets.map(bet => {
                       const betKey = bet.bet_type.toLowerCase();
                       let hit = false;
                       let collected = 0;
 
                       if (betKey === 'win' && bet.entries_used?.length) {
-                        const winPP = bet.entries_used[0]?.replace('#', '').split(' ')[0];
-                        hit = winPP === String(raceResult.win_pp);
+                        const pickPP = parsePP(bet.entries_used[0]);
+                        hit = pickPP === wpp;
                         if (hit && raceResult.win_payout) {
                           collected = (raceResult.win_payout / 2) * bet.stake;
                         }
                       } else if (betKey === 'exacta' && bet.entries_used?.length) {
-                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp));
+                        const boxPPs = bet.entries_used.map(parsePP);
+                        hit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
                         if (hit && raceResult.exacta_payout) {
                           collected = raceResult.exacta_payout * (bet.stake / 60 * 10);
                         }
                       } else if (betKey === 'trifecta' && bet.entries_used?.length) {
-                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                        const boxPPs = bet.entries_used.map(parsePP);
+                        hit = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
                         if (hit && raceResult.trifecta_payout) {
                           collected = raceResult.trifecta_payout * (bet.stake / 24);
                         }
                       } else if (betKey === 'superfecta' && bet.entries_used?.length) {
-                        const boxPPs = bet.entries_used.map(e => e.replace('#', '').split(' ')[0]);
-                        hit = boxPPs.includes(String(raceResult.win_pp)) && boxPPs.includes(String(raceResult.place_pp)) && boxPPs.includes(String(raceResult.show_pp));
+                        const boxPPs = bet.entries_used.map(parsePP);
+                        hit = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
                         if (hit && raceResult.superfecta_payout) {
                           collected = raceResult.superfecta_payout * (bet.stake / 2.4);
                         }
