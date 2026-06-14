@@ -591,7 +591,7 @@ export function RaceDetail() {
                         const pickPP = parsePP(bet.entries_used[0]);
                         hit = pickPP === wpp;
                         if (hit && raceResult.win_payout) {
-                          collected = (raceResult.win_payout / 2) * bet.stake;
+                          collected = raceResult.win_payout * (bet.stake / 2);
                         }
                       } else if (betKey === 'exacta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
@@ -600,7 +600,7 @@ export function RaceDetail() {
                           const n = boxPPs.length;
                           const combos = n * (n - 1);
                           const perCombo = bet.stake / combos;
-                          collected = raceResult.exacta_payout * perCombo;
+                          collected = raceResult.exacta_payout * (perCombo / 1);
                         }
                       } else if (betKey === 'trifecta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
@@ -609,7 +609,7 @@ export function RaceDetail() {
                           const n = boxPPs.length;
                           const combos = n * (n - 1) * (n - 2);
                           const perCombo = bet.stake / combos;
-                          collected = raceResult.trifecta_payout * perCombo;
+                          collected = raceResult.trifecta_payout * (perCombo / 1);
                         }
                       } else if (betKey === 'superfecta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
@@ -618,7 +618,7 @@ export function RaceDetail() {
                           const n = boxPPs.length;
                           const combos = n * (n - 1) * (n - 2) * (n - 3);
                           const perCombo = bet.stake / combos;
-                          collected = raceResult.superfecta_payout * perCombo;
+                          collected = raceResult.superfecta_payout * (perCombo / 0.10);
                         }
                       }
 

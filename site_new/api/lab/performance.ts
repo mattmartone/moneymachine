@@ -82,7 +82,7 @@ export default async function handler(req: any, res: any) {
       if (betKey === 'win') {
         const pickPP = parsePP(bet.entries_used[0]);
         if (pickPP === wpp && result.win_payout) {
-          totalCollected += (result.win_payout / 2) * bet.stake;
+          totalCollected += result.win_payout * (bet.stake / 2);
         }
       } else if (betKey === 'exacta') {
         const boxPPs = bet.entries_used.map(parsePP);
@@ -90,7 +90,7 @@ export default async function handler(req: any, res: any) {
           const n = boxPPs.length;
           const combos = n * (n - 1);
           const perCombo = bet.stake / combos;
-          totalCollected += result.exacta_payout * perCombo;
+          totalCollected += result.exacta_payout * (perCombo / 1);
         }
       } else if (betKey === 'trifecta') {
         const boxPPs = bet.entries_used.map(parsePP);
@@ -98,7 +98,7 @@ export default async function handler(req: any, res: any) {
           const n = boxPPs.length;
           const combos = n * (n - 1) * (n - 2);
           const perCombo = bet.stake / combos;
-          totalCollected += result.trifecta_payout * perCombo;
+          totalCollected += result.trifecta_payout * (perCombo / 1);
         }
       } else if (betKey === 'superfecta') {
         const boxPPs = bet.entries_used.map(parsePP);
@@ -106,7 +106,7 @@ export default async function handler(req: any, res: any) {
           const n = boxPPs.length;
           const combos = n * (n - 1) * (n - 2) * (n - 3);
           const perCombo = bet.stake / combos;
-          totalCollected += result.superfecta_payout * perCombo;
+          totalCollected += result.superfecta_payout * (perCombo / 0.10);
         }
       }
     }
