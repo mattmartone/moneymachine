@@ -64,19 +64,19 @@ export function PerformanceProof() {
             <tr>
               <td className="py-3 font-bold">June 13</td>
               <td className="py-3">Multi-Track</td>
-              <td className="py-3">5</td>
-              <td className="py-3">$532</td>
+              <td className="py-3">4</td>
+              <td className="py-3">$346</td>
               <td className="py-3">$184</td>
-              <td className="py-3 text-web-red font-bold">-$348</td>
-              <td className="py-3 text-web-red font-bold">-65%</td>
+              <td className="py-3 text-web-red font-bold">-$162</td>
+              <td className="py-3 text-web-red font-bold">-47%</td>
             </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
-              <td className="py-4 text-lg font-bold">34</td>
-              <td className="py-4 text-lg font-bold">$4,342</td>
+              <td className="py-4 text-lg font-bold">33</td>
+              <td className="py-4 text-lg font-bold">$4,156</td>
               <td className="py-4 text-lg font-bold">$4,790</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$448</td>
-              <td className="py-4 text-lg text-web-green font-bold">+10%</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$634</td>
+              <td className="py-4 text-lg text-web-green font-bold">+15%</td>
             </tr>
           </tbody>
         </table>
