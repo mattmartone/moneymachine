@@ -35,8 +35,9 @@ export default async function handler(req: any, res: any) {
     );
 
     const grouped = rows.reduce((acc: any, race: any) => {
-      const key = `${race.track} — ${race.date.toISOString().split('T')[0]}`;
-      if (!acc[key]) acc[key] = { track: race.track, date: race.date, races: [] };
+      const dateStr = typeof race.date === 'string' ? race.date.split('T')[0] : race.date.toISOString().split('T')[0];
+      const key = `${race.track} — ${dateStr}`;
+      if (!acc[key]) acc[key] = { track: race.track, date: dateStr, races: [] };
       acc[key].races.push(race);
       return acc;
     }, {});

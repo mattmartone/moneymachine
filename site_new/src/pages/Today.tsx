@@ -43,9 +43,8 @@ export function Today() {
         if (data?.cards) {
           const todayRaces = data.cards
             .filter((c: any) => {
-              const dt = new Date(c.date);
-              const d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-              return d === today;
+              const raw = typeof c.date === 'string' ? c.date : '';
+              return raw.startsWith(today);
             })
             .flatMap((c: any) => c.races.map((r: any) => ({ ...r, track: c.track })));
           todayRaces.sort((a: TodayRace, b: TodayRace) => {
