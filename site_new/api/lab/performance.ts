@@ -40,11 +40,13 @@ export default async function handler(req: any, res: any) {
 
     const { rows: results } = await query(
       `SELECT r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
-              ew.post_position AS win_pp, ep.post_position AS place_pp, es.post_position AS show_pp
+              ew.post_position AS win_pp, ep.post_position AS place_pp, es.post_position AS show_pp,
+              ef.post_position AS fourth_pp
        FROM results r
        LEFT JOIN entries ew ON ew.id = r.win_entry_id
        LEFT JOIN entries ep ON ep.id = r.place_entry_id
        LEFT JOIN entries es ON es.id = r.show_entry_id
+       LEFT JOIN entries ef ON ef.id = r.fourth_entry_id
        WHERE r.race_id = ANY($1)`,
       [raceIds]
     );
@@ -104,7 +106,8 @@ export default async function handler(req: any, res: any) {
         }
       } else if (betKey === 'superfecta') {
         const boxPPs = bet.entries_used.map(parsePP);
-        if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && result.superfecta_payout) {
+        const fpp = result.fourth_pp ? String(result.fourth_pp) : null;
+        if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && fpp && boxPPs.includes(fpp) && result.superfecta_payout) {
           const n = boxPPs.length;
           const combos = n * (n - 1) * (n - 2) * (n - 3);
           const perCombo = bet.stake / combos;

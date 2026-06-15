@@ -655,7 +655,13 @@ export function RaceDetail() {
                         }
                       } else if (betKey === 'superfecta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
-                        hit = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
+                        const fpp = raceResult.fourth_pp ? String(raceResult.fourth_pp) : null;
+                        const top3InBox = boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp);
+                        if (fpp) {
+                          hit = top3InBox && boxPPs.includes(fpp);
+                        } else {
+                          hit = false;
+                        }
                         if (hit && raceResult.superfecta_payout) {
                           const n = boxPPs.length;
                           const combos = n * (n - 1) * (n - 2) * (n - 3);

@@ -89,18 +89,20 @@ async function run() {
       const existing = await pool.query(`SELECT id FROM results WHERE race_id = $1`, [raceId]);
       if (existing.rows.length > 0 && !force) { skipped++; continue; }
 
-      // Get top 3 finishers from runners array
+      // Get top 4 finishers from runners array
       const runners = race.runners || [];
       if (runners.length < 3) { continue; }
 
       const winner = runners[0];
       const placer = runners[1];
       const shower = runners[2];
+      const fourth = runners[3] || null;
 
       // Match to entry_ids by post position
       const winPP = parseInt(winner.program_number);
       const placePP = parseInt(placer.program_number);
       const showPP = parseInt(shower.program_number);
+      const fourthPP = fourth ? parseInt(fourth.program_number) : null;
 
       const winEntry = await pool.query(
         `SELECT id FROM entries WHERE race_id = $1 AND post_position = $2`, [raceId, winPP]
@@ -111,6 +113,9 @@ async function run() {
       const showEntry = await pool.query(
         `SELECT id FROM entries WHERE race_id = $1 AND post_position = $2`, [raceId, showPP]
       );
+      const fourthEntry = fourthPP ? await pool.query(
+        `SELECT id FROM entries WHERE race_id = $1 AND post_position = $2`, [raceId, fourthPP]
+      ) : { rows: [null] };
 
       if (!winEntry.rows[0] || !placeEntry.rows[0] || !showEntry.rows[0]) {
         console.log(`  R${raceNum}: couldn't match entries, skipping`);
@@ -138,15 +143,18 @@ async function run() {
         }
       }
 
+      const fourthEntryId = fourthEntry.rows[0]?.id || null;
+
       await pool.query(
-        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          ON CONFLICT (race_id) DO UPDATE SET
            win_entry_id = EXCLUDED.win_entry_id, place_entry_id = EXCLUDED.place_entry_id,
-           show_entry_id = EXCLUDED.show_entry_id, win_payout = EXCLUDED.win_payout,
-           exacta_payout = EXCLUDED.exacta_payout, trifecta_payout = EXCLUDED.trifecta_payout,
-           superfecta_payout = EXCLUDED.superfecta_payout, settled_at = NOW()`,
-        [raceId, winEntry.rows[0].id, placeEntry.rows[0].id, showEntry.rows[0].id, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
+           show_entry_id = EXCLUDED.show_entry_id, fourth_entry_id = EXCLUDED.fourth_entry_id,
+           win_payout = EXCLUDED.win_payout, exacta_payout = EXCLUDED.exacta_payout,
+           trifecta_payout = EXCLUDED.trifecta_payout, superfecta_payout = EXCLUDED.superfecta_payout,
+           settled_at = NOW()`,
+        [raceId, winEntry.rows[0].id, placeEntry.rows[0].id, showEntry.rows[0].id, fourthEntryId, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
       );
 
       console.log(`  R${raceNum}: ✅ PP${winPP}-PP${placePP}-PP${showPP} | Win $${winPayout || '?'} | Ex $${exactaPayout?.toFixed(2) || '?'} | Tri $${trifectaPayout?.toFixed(2) || '?'} | Super $${superfectaPayout?.toFixed(2) || '?'}`);

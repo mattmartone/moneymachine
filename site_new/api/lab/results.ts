@@ -24,7 +24,8 @@ export default async function handler(req: any, res: any) {
         `SELECT r.id, r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
                 hw.name AS win_horse, ew.post_position AS win_pp,
                 hp.name AS place_horse, ep.post_position AS place_pp,
-                hs.name AS show_horse, es.post_position AS show_pp
+                hs.name AS show_horse, es.post_position AS show_pp,
+                hf.name AS fourth_horse, ef.post_position AS fourth_pp
          FROM results r
          LEFT JOIN entries ew ON ew.id = r.win_entry_id
          LEFT JOIN horses hw ON hw.id = ew.horse_id
@@ -32,6 +33,8 @@ export default async function handler(req: any, res: any) {
          LEFT JOIN horses hp ON hp.id = ep.horse_id
          LEFT JOIN entries es ON es.id = r.show_entry_id
          LEFT JOIN horses hs ON hs.id = es.horse_id
+         LEFT JOIN entries ef ON ef.id = r.fourth_entry_id
+         LEFT JOIN horses hf ON hf.id = ef.horse_id
          WHERE r.race_id = $1`,
         [race_id]
       );
