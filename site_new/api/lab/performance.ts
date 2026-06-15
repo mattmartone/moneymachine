@@ -18,7 +18,9 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const today = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
     const { track } = req.query;
 
     // Get bets for today, optionally filtered by track

@@ -23,7 +23,8 @@ interface CommissionRace {
 export function Today() {
   const navigate = useNavigate();
   const token = localStorage.getItem('ftc_token');
-  const today = new Date().toISOString().split('T')[0];
+  const now0 = new Date();
+  const today = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, '0')}-${String(now0.getDate()).padStart(2, '0')}`;
 
   const [races, setRaces] = useState<TodayRace[]>([]);
   const [commissionRaces, setCommissionRaces] = useState<Map<number, CommissionRace>>(new Map());
@@ -42,7 +43,8 @@ export function Today() {
         if (data?.cards) {
           const todayRaces = data.cards
             .filter((c: any) => {
-              const d = typeof c.date === 'string' ? c.date.split('T')[0] : new Date(c.date).toISOString().split('T')[0];
+              const dt = new Date(c.date);
+              const d = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
               return d === today;
             })
             .flatMap((c: any) => c.races.map((r: any) => ({ ...r, track: c.track })));
