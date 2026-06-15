@@ -15,9 +15,10 @@ const TRACK_IDS: Record<string, string> = {
   'Prairie Meadows': 'PRM', 'Lone Star Park': 'LS', 'Hawthorne': 'HAW',
 };
 
-function normalizeExoticPayout(payoffAmount: number, baseAmount: number, targetBase: number) {
-  if (!payoffAmount || !baseAmount) return null;
-  return (payoffAmount / baseAmount) * targetBase;
+function normalizeExoticPayout(payoffAmount: number, ticketsBet: number, targetBase: number) {
+  if (!payoffAmount) return null;
+  const baseDollars = (ticketsBet && ticketsBet > 0) ? ticketsBet / 100 : targetBase;
+  return (payoffAmount / baseDollars) * targetBase;
 }
 
 export default async function handler(req: any, res: any) {
@@ -104,12 +105,13 @@ export default async function handler(req: any, res: any) {
 
     for (const p of payoffs) {
       const wager = (p.wager_name || '').toLowerCase();
+      const tickets = parseInt(p.number_of_tickets_bet) || 0;
       if (wager.includes('exacta')) {
-        exactaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), parseFloat(p.base_amount), 1);
+        exactaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), tickets, 1);
       } else if (wager.includes('trifecta')) {
-        trifectaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), parseFloat(p.base_amount), 1);
+        trifectaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), tickets, 1);
       } else if (wager.includes('superfecta')) {
-        superfectaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), parseFloat(p.base_amount), 0.10);
+        superfectaPayout = normalizeExoticPayout(parseFloat(p.payoff_amount), tickets, 0.10);
       }
     }
 
