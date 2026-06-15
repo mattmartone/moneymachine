@@ -7,7 +7,7 @@ export function PerformanceProof() {
           *** PAST PERFORMANCE ***
         </h2>
         <h3 className="font-serif text-2xl font-bold text-black">
-          Lifetime Record — 5 Race Days
+          Lifetime Record — 6 Race Days
         </h3>
       </div>
 
@@ -70,21 +70,30 @@ export function PerformanceProof() {
               <td className="py-3 text-web-red font-bold">-$162</td>
               <td className="py-3 text-web-red font-bold">-47%</td>
             </tr>
+            <tr>
+              <td className="py-3 font-bold">June 14</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">7</td>
+              <td className="py-3">$1,412</td>
+              <td className="py-3">$2,327</td>
+              <td className="py-3 text-web-green font-bold">+$915</td>
+              <td className="py-3 text-web-green font-bold">+65%</td>
+            </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
-              <td className="py-4 text-lg font-bold">33</td>
-              <td className="py-4 text-lg font-bold">$4,156</td>
-              <td className="py-4 text-lg font-bold">$4,790</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$634</td>
-              <td className="py-4 text-lg text-web-green font-bold">+15%</td>
+              <td className="py-4 text-lg font-bold">40</td>
+              <td className="py-4 text-lg font-bold">$5,568</td>
+              <td className="py-4 text-lg font-bold">$7,117</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$1,549</td>
+              <td className="py-4 text-lg text-web-green font-bold">+28%</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
-        <div className="font-bold text-web-green">Called the Belmont Stakes winner: Golden Tempo (5/1) — not the favorite.</div>
-        <div className="font-bold">Two losing days led to 10 new strategies. The model finds winners — we just learned to back them.</div>
+        <div className="font-bold text-web-green">June 14: Commission Card +65% ROI. Four winners the public missed. Back in business.</div>
+        <div className="font-bold">6 race days. +$1,549 lifetime. +28% ROI. The model finds winners — we just learned to back them.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
