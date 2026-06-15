@@ -65,10 +65,10 @@ export default async function handler(req: any, res: any) {
     const parsePP = (entry: string) => entry.replace(/^#/, '').split(' ')[0];
 
     for (const bet of bets) {
-      totalWagered += bet.stake;
-
       const result = resultMap[bet.race_id];
       if (!result) continue;
+
+      totalWagered += bet.stake;
 
       if (result.settled_at && (!lastSettled || result.settled_at > lastSettled)) {
         lastSettled = result.settled_at;

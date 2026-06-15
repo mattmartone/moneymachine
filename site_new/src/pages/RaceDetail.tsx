@@ -77,6 +77,8 @@ export function RaceDetail() {
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
   const [resultForm, setResultForm] = useState({ win_pp: '', place_pp: '', show_pp: '', win_payout: '', exacta_payout: '', trifecta_payout: '', superfecta_payout: '' });
   const [resultSaving, setResultSaving] = useState(false);
+  const [fetchingResults, setFetchingResults] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
@@ -212,14 +214,16 @@ export function RaceDetail() {
           >
             BUILD YOUR BETS
           </button>
-          <button
-            onClick={() => setActiveTab('results')}
-            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
-              activeTab === 'results' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            RESULTS {raceResult ? '✓' : ''}
-          </button>
+          {raceResult && (
+            <button
+              onClick={() => setActiveTab('results')}
+              className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
+                activeTab === 'results' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              RESULTS ✓
+            </button>
+          )}
         </div>
 
         {/* Tab content */}
@@ -489,6 +493,44 @@ export function RaceDetail() {
             </div>
           )}
 
+          {/* RESULTS PENDING — shown when no results and not on results tab */}
+          {!raceResult && activeTab !== 'results' && (
+            <div className="mt-4 bg-gray-50 border-2 border-gray-300 p-4 flex items-center justify-between">
+              <div>
+                <div className="font-mono text-sm text-gray-600 font-bold">Results pending</div>
+                <div className="font-mono text-xs text-gray-400 mt-0.5">Results will appear once the race is official.</div>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={async () => {
+                    setFetchingResults(true);
+                    setFetchError(null);
+                    try {
+                      const res = await fetch(`/api/lab/fetch-results?race_id=${raceId}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      const data = await res.json();
+                      if (data?.results) {
+                        setRaceResult(data.results);
+                      } else {
+                        setFetchError(data?.error || 'No results available yet');
+                      }
+                    } catch {
+                      setFetchError('Failed to fetch results');
+                    }
+                    setFetchingResults(false);
+                  }}
+                  disabled={fetchingResults}
+                  className="px-4 py-2 bg-[#000080] text-white font-mono text-xs border-2 border-black"
+                >
+                  {fetchingResults ? 'CHECKING...' : 'FETCH RESULTS'}
+                </button>
+              )}
+              {fetchError && <span className="font-mono text-xs text-web-red ml-2">{fetchError}</span>}
+            </div>
+          )}
+
           {/* RESULTS TAB */}
           {activeTab === 'results' && (
             <div>
@@ -726,11 +768,9 @@ export function RaceDetail() {
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : isAdmin ? (
                 <div>
-                  {isAdmin ? (
-                    <div>
-                      <p className="font-mono text-xs text-gray-600 mb-4">Enter post positions for the top 3 finishers and payouts.</p>
+                  <p className="font-mono text-xs text-gray-600 mb-4">Enter post positions for the top 3 finishers and payouts.</p>
 
                       <div className="grid grid-cols-3 gap-3 mb-4">
                         <div>
@@ -798,15 +838,8 @@ export function RaceDetail() {
                       >
                         {resultSaving ? 'SAVING...' : 'SAVE RESULTS'}
                       </button>
-                    </div>
-                  ) : (
-                    <div className="p-8 text-center">
-                      <div className="font-mono text-sm text-gray-500">No results yet.</div>
-                      <div className="font-mono text-xs text-gray-400 mt-1">Results are posted after the race is official.</div>
-                    </div>
-                  )}
                 </div>
-              )}
+              ) : null}
             </div>
           )}
 
