@@ -51,7 +51,7 @@ interface RaceResult {
   settled_at: string | null;
 }
 
-type Tab = 'field' | 'build' | 'results';
+type Tab = 'field' | 'build' | 'results' | 'activity';
 
 const TOKEN_COST = 200000;
 
@@ -79,6 +79,7 @@ export function RaceDetail() {
   const [resultSaving, setResultSaving] = useState(false);
   const [fetchingResults, setFetchingResults] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [activity, setActivity] = useState<any[]>([]);
 
   useEffect(() => {
     if (!token) { navigate('/'); return; }
@@ -132,6 +133,13 @@ export function RaceDetail() {
       .then(res => res.json())
       .then(data => {
         if (data?.results) setRaceResult(data.results);
+      })
+      .catch(() => {});
+
+    fetch(`/api/lab/activity?race_id=${raceId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        if (data?.events) setActivity(data.events);
       })
       .catch(() => {});
   }, [token, navigate, raceId]);
@@ -213,6 +221,14 @@ export function RaceDetail() {
             }`}
           >
             BUILD YOUR BETS
+          </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            className={`px-4 py-2 font-serif font-bold text-sm border-2 border-b-0 -mb-[2px] ml-1 ${
+              activeTab === 'activity' ? 'bg-white border-black z-10' : 'bg-web-gray border-gray-400 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            ACTIVITY {activity.length > 0 ? `(${activity.length})` : ''}
           </button>
           {raceResult && (
             <button
@@ -493,8 +509,49 @@ export function RaceDetail() {
             </div>
           )}
 
+          {/* ACTIVITY TAB */}
+          {activeTab === 'activity' && (
+            <div>
+              <div className="font-serif text-lg font-bold mb-3">Pipeline Activity</div>
+              {activity.length === 0 ? (
+                <div className="p-6 text-center font-mono text-sm text-gray-500">
+                  No pipeline activity yet. Events will appear as the race day pipeline runs.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {activity.map((event: any) => {
+                    const typeColors: Record<string, string> = {
+                      'results_settled': 'border-l-green-600 bg-green-50',
+                      'pre_race_email': 'border-l-blue-600 bg-blue-50',
+                      'scratch_detected': 'border-l-orange-500 bg-orange-50',
+                      'race_dropped': 'border-l-red-600 bg-red-50',
+                      'box_rebuilt': 'border-l-orange-500 bg-orange-50',
+                      'odds_pulled': 'border-l-gray-400 bg-gray-50',
+                      'scratches_checked': 'border-l-gray-400 bg-gray-50',
+                    };
+                    const colorClass = typeColors[event.event_type] || 'border-l-gray-400 bg-gray-50';
+                    const time = new Date(event.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York' });
+                    return (
+                      <div key={event.id} className={`border-l-4 ${colorClass} p-3`}>
+                        <div className="flex justify-between items-start">
+                          <div className="font-mono text-sm">{event.message}</div>
+                          <div className="font-mono text-[10px] text-gray-400 shrink-0 ml-3">{time}</div>
+                        </div>
+                        {event.details && (
+                          <div className="font-mono text-[10px] text-gray-500 mt-1">
+                            {typeof event.details === 'string' ? event.details : JSON.stringify(event.details).slice(0, 120)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* RESULTS PENDING — shown when no results and not on results tab */}
-          {!raceResult && activeTab !== 'results' && (
+          {!raceResult && activeTab !== 'results' && activeTab !== 'activity' && (
             <div className="mt-4 bg-gray-50 border-2 border-gray-300 p-4 flex items-center justify-between">
               <div>
                 <div className="font-mono text-sm text-gray-600 font-bold">Results pending</div>

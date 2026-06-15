@@ -5,8 +5,8 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/scratch-monitor",
-      "schedule": "*/10 * * * *"
+      "path": "/api/cron/race-day-pipeline",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
