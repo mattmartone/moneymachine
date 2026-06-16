@@ -94,11 +94,11 @@ export function Dashboard() {
             className="w-full max-w-3xl mx-auto rounded"
             poster=""
           >
-            <source src="/ftc-thursdays-massive-card.mp4" type="video/mp4" />
+            <source src="/ftc-postmortem-061426.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           <p className="text-center text-gray-300 font-mono text-sm mt-3">
-            Thursday's Massive Card — Full Breakdown
+            Post-Mortem 6/14/2026 — Saratoga Recap
           </p>
         </div>
       </div>
