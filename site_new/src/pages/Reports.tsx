@@ -77,11 +77,11 @@ export function Reports() {
               preload="metadata"
               className="w-full"
             >
-              <source src="/ftc-thursdays-massive-card.mp4" type="video/mp4" />
+              <source src="/ftc-dont-stress-the-stretch.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
             <p className="text-center text-gray-300 font-mono text-xs mt-2">
-              The Turnpike Bounty — Saturday's Card
+              Don't Stress the Stretch — Thursday's Card
             </p>
           </div>
         </div>
