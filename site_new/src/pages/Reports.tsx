@@ -72,16 +72,18 @@ export function Reports() {
             <span>LATEST DROP</span>
           </div>
           <div className="p-3">
-            <video
-              controls
-              preload="metadata"
-              className="w-full"
-            >
-              <source src="/ftc-dont-stress-the-stretch.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            <iframe
+              width="100%"
+              height="400"
+              src="https://www.youtube.com/embed/QyEzTFRMs5A?si=QCkfMsBohSVBNLlG"
+              title="Don't Stress the Stretch"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
             <p className="text-center text-gray-300 font-mono text-xs mt-2">
-              Don't Stress the Stretch — Thursday's Card
+              Don't Stress the Stretch — Wednesday's Card
             </p>
           </div>
         </div>
