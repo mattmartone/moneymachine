@@ -69,12 +69,16 @@ async function run() {
       let postTime = race.post_time || null;
       if (!postTime && race.post_time_long) {
         const d = new Date(race.post_time_long);
-        const et = new Date(d.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-        postTime = `${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}:00`;
+        if (!isNaN(d.getTime())) {
+          const et = new Date(d.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+          postTime = `${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}:00`;
+        }
       }
-      const fieldSize = race.runners?.length || 0;
+      if (postTime && postTime.includes('NaN')) postTime = null;
+      const fieldSize = race.runners?.length || null;
       const conditions = race.race_class || race.race_type_description || null;
-      const purse = race.purse || null;
+      const rawPurse = parseInt(race.purse);
+      const purse = isNaN(rawPurse) ? null : rawPurse;
 
       // Upsert race
       const raceRes = await pool.query(
@@ -108,12 +112,14 @@ async function run() {
         );
         const horseId = horseRes.rows[0].id;
 
-        const postPos = parseInt(runner.post_pos) || null;
+        const rawPostPos = parseInt(runner.post_pos);
+        const postPos = isNaN(rawPostPos) ? null : rawPostPos;
         const ml = parseOdds(runner.morning_line_odds);
         const liveOdds = parseOdds(runner.live_odds);
         const jockey = runner.jockey?.alias || [runner.jockey?.last_name, runner.jockey?.first_name_initial].filter(Boolean).join(' ') || null;
         const trainer = runner.trainer?.alias || [runner.trainer?.last_name, runner.trainer?.first_name_initial].filter(Boolean).join(' ') || null;
-        const weight = parseInt(runner.weight) || null;
+        const rawWeight = parseInt(runner.weight);
+        const weight = isNaN(rawWeight) ? null : rawWeight;
 
         await pool.query(
           `INSERT INTO entries (race_id, horse_id, post_position, morning_line_odds, live_odds, jockey, trainer, weight)
