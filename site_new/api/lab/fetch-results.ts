@@ -13,6 +13,9 @@ const TRACK_IDS: Record<string, string> = {
   'Woodbine': 'WO', 'Oaklawn Park': 'OP', 'Tampa Bay': 'TAM', 'Fair Grounds': 'FG',
   'Parx Racing': 'PRX', 'Charles Town': 'CT', 'Penn National': 'PEN', 'Canterbury Park': 'CBY',
   'Prairie Meadows': 'PRM', 'Lone Star Park': 'LS', 'Hawthorne': 'HAW',
+  'DEL': 'DEL', 'Delaware Park': 'DEL', 'IND': 'IND', 'Horseshoe Indianapolis': 'IND',
+  'CBY': 'CBY', 'EMD': 'EMD', 'Emerald Downs': 'EMD', 'ALB': 'ALB', 'WYO': 'WYO',
+  'LS': 'LS', 'PRM': 'PRM',
 };
 
 function normalizeExoticPayout(payoffAmount: number, ticketsBet: number, targetBase: number) {
