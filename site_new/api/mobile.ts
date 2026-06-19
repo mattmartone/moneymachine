@@ -143,6 +143,8 @@ export default async function handler(req: any, res: any) {
             if (num !== race.race_number) return;
 
             // Check if already patched
+            var cardEl = btn.parentElement;
+            if (cardEl && cardEl.querySelector('.ftc-result-overlay')) return;
             if (btn.querySelector('.ftc-result-overlay')) return;
 
             // Change "Projected order" to "Finish"
@@ -178,39 +180,36 @@ export default async function handler(req: any, res: any) {
 
             overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
 
-            // Find the expanded content area for this race
-            // The button is the collapsed card. The expanded detail is a sibling or child.
-            // Strategy: find the element containing "wagering plan" text within this race's section
-            var raceSection = btn.parentElement;
-            // Walk up until we find a container that holds both the button and expanded content
-            while (raceSection && !raceSection.querySelector('[class*="overflow-hidden"]')) {
-              raceSection = raceSection.parentElement;
-            }
-            if (!raceSection) raceSection = btn.parentElement;
-
-            // Look for the wagering plan label inside the expanded area
-            var inserted = false;
-            var allLabels = raceSection.querySelectorAll('span');
-            for (var i = 0; i < allLabels.length; i++) {
-              var lbl = allLabels[i];
-              if (lbl.textContent && lbl.textContent.includes('wagering plan')) {
-                // Found it — find the containing section div and append after it
-                var wagerContainer = lbl.closest('div');
-                // Go up a couple levels to find the full wagering section
-                var wagerSection = wagerContainer;
-                for (var j = 0; j < 4; j++) {
-                  if (wagerSection.parentElement && wagerSection.parentElement !== raceSection) {
-                    wagerSection = wagerSection.parentElement;
-                  }
-                }
-                wagerSection.parentElement.insertBefore(overlay, wagerSection.nextSibling);
-                inserted = true;
+            // Insert inside the race's expanded panel (the overflow-hidden div)
+            // Walk up from button to find the card wrapper, then find its overflow-hidden child
+            var card = btn.parentElement;
+            var expandedPanel = null;
+            // Try sibling of button first
+            var sibling = btn.nextElementSibling;
+            while (sibling) {
+              if (sibling.className && sibling.className.indexOf('overflow') >= 0) {
+                expandedPanel = sibling;
                 break;
               }
+              sibling = sibling.nextElementSibling;
             }
-            if (!inserted) {
-              // Fallback: append to the race section
-              raceSection.appendChild(overlay);
+            // If not found, check parent's children
+            if (!expandedPanel && card) {
+              var children = card.children;
+              for (var k = 0; k < children.length; k++) {
+                if (children[k] !== btn && children[k].className && children[k].className.indexOf('overflow') >= 0) {
+                  expandedPanel = children[k];
+                  break;
+                }
+              }
+            }
+            if (expandedPanel) {
+              // Append at the end of the expanded content
+              var innerDiv = expandedPanel.firstElementChild || expandedPanel;
+              innerDiv.appendChild(overlay);
+            } else {
+              // Last resort: right after the button
+              btn.parentElement.appendChild(overlay);
             }
           });
         });
