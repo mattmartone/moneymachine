@@ -101,6 +101,10 @@ export default async function handler(req: any, res: any) {
         ex: exHit && result.exacta_payout ? (result.exacta_payout * ((exBet?.stake || 50) / (n * (n - 1)))).toFixed(2) : null,
         tri: triHit && result.trifecta_payout ? (result.trifecta_payout * ((triBet?.stake || 24) / (n * (n - 1) * (n - 2)))).toFixed(2) : null,
         super: superHit && result.superfecta_payout ? (result.superfecta_payout * ((superBet?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3)))).toFixed(2) : null,
+        winStake: (winBet?.stake || 25).toFixed(2),
+        exStake: (exBet?.stake || 50).toFixed(2),
+        triStake: (triBet?.stake || 24).toFixed(2),
+        superStake: (superBet?.stake || 2.4).toFixed(2),
         totalStake: totalStake.toFixed(2),
         collected: collected.toFixed(2),
         net: (collected - totalStake).toFixed(2),
@@ -125,19 +129,17 @@ export default async function handler(req: any, res: any) {
   <body>
     <div id="root"></div>
     <style>
-      .ftc-result-overlay { margin-top: 12px; padding: 12px; border-radius: 10px; font-family: Inter, sans-serif; font-size: 12px; }
-      .ftc-result-overlay.hit { background: rgba(22,163,74,0.06); border: 1px solid rgba(22,163,74,0.25); }
-      .ftc-result-overlay.miss { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.15); }
+      .ftc-result-overlay { margin-top: 12px; padding: 12px; border-radius: 10px; font-family: Inter, sans-serif; font-size: 12px; background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.06); }
       .ftc-result-overlay .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; color: #6b7280; margin-bottom: 8px; }
       .ftc-result-overlay .finish-order { font-weight: 600; color: #111827; margin-bottom: 10px; font-size: 13px; }
       .ftc-result-overlay table { width: 100%; border-collapse: collapse; font-size: 11px; }
-      .ftc-result-overlay th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
-      .ftc-result-overlay td { padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
-      .ftc-result-overlay td.result-hit { color: #16a34a; font-weight: 700; }
-      .ftc-result-overlay td.result-miss { color: #9ca3af; }
-      .ftc-result-overlay .verdict { margin-top: 10px; font-weight: 700; font-size: 12px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.08); }
-      .ftc-result-overlay .verdict.positive { color: #16a34a; }
-      .ftc-result-overlay .verdict.negative { color: #ef4444; }
+      .ftc-result-overlay th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; padding: 4px 6px 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+      .ftc-result-overlay td { padding: 5px 6px 5px 0; border-bottom: 1px solid rgba(0,0,0,0.04); color: #374151; }
+      .ftc-result-overlay td.payout-hit { color: #16a34a; font-weight: 600; }
+      .ftc-result-overlay td.payout-miss { color: #9ca3af; }
+      .ftc-result-overlay .net-row td { border-bottom: none; padding-top: 8px; font-weight: 700; font-size: 12px; }
+      .ftc-result-overlay .net-positive { color: #16a34a; }
+      .ftc-result-overlay .net-negative { color: #ef4444; }
     </style>
     <script>
       function patchUI() {
@@ -181,24 +183,41 @@ export default async function handler(req: any, res: any) {
             // Build the result overlay
             var r = race.result;
             var h = race.hits;
-            var anyHit = h && (h.win || h.ex || h.tri);
+            var p = race.payouts || {};
 
             var overlay = document.createElement('div');
-            overlay.className = 'ftc-result-overlay ' + (anyHit ? 'hit' : 'miss');
+            overlay.className = 'ftc-result-overlay';
 
             var finishHtml = '<div class="section-title">Race Result</div>';
             finishHtml += '<div class="finish-order">#' + r.win_pp + ' ' + r.win_horse + ' &mdash; #' + r.place_pp + ' ' + r.place_horse + ' &mdash; #' + r.show_pp + ' ' + r.show_horse + '</div>';
 
-            var p = race.payouts || {};
-            var betsHtml = '<table><tr><th>Bet</th><th>Result</th><th>Payout</th></tr>';
-            betsHtml += '<tr><td>Win</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (h.win ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (p.win ? '$' + p.win : '—') + '</td></tr>';
-            betsHtml += '<tr><td>Exacta</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (h.ex ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (p.ex ? '$' + p.ex : '—') + '</td></tr>';
-            betsHtml += '<tr><td>Trifecta</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (h.tri ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (p.tri ? '$' + p.tri : '—') + '</td></tr>';
-            betsHtml += '<tr><td>Superfecta</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? '$' + p.super : '—') + '</td></tr>';
-            betsHtml += '</table>';
+            // Per-bet rows: Bet | Wagered | Result | Payout | Net
+            var winStake = p.winStake || '25.00';
+            var exStake = p.exStake || '50.00';
+            var triStake = p.triStake || '24.00';
+            var superStake = p.superStake || '2.40';
+
+            var betsHtml = '<table><tr><th>Bet</th><th>Wagered</th><th>Result</th><th>Payout</th><th>Net</th></tr>';
+
+            function betRow(name, hit, stake, payout) {
+              var pay = payout ? parseFloat(payout) : 0;
+              var stk = parseFloat(stake);
+              var net = pay - stk;
+              var payClass = hit ? 'payout-hit' : 'payout-miss';
+              var netClass = net >= 0 ? 'payout-hit' : 'payout-miss';
+              return '<tr><td>' + name + '</td><td>$' + stk.toFixed(0) + '</td><td class="' + payClass + '">' + (hit ? 'HIT' : 'miss') + '</td><td class="' + payClass + '">' + (pay > 0 ? '$' + pay.toFixed(2) : '—') + '</td><td class="' + netClass + '">' + (net >= 0 ? '+' : '') + '$' + net.toFixed(2) + '</td></tr>';
+            }
+
+            betsHtml += betRow('Win', h.win, winStake, p.win);
+            betsHtml += betRow('Exacta', h.ex, exStake, p.ex);
+            betsHtml += betRow('Trifecta', h.tri, triStake, p.tri);
+            betsHtml += betRow('Super', p.super ? true : false, superStake, p.super);
 
             var netVal = parseFloat(p.net || '0');
-            var verdictHtml = '<div class="verdict ' + (netVal >= 0 ? 'positive' : 'negative') + '">Wagered $' + (p.totalStake || '0') + ' &middot; Collected $' + (p.collected || '0') + ' &middot; Net: ' + (netVal >= 0 ? '+' : '') + '$' + (p.net || '0') + '</div>';
+            betsHtml += '<tr class="net-row"><td colspan="3"></td><td class="' + (netVal >= 0 ? 'net-positive' : 'net-negative') + '">$' + parseFloat(p.collected || '0').toFixed(2) + '</td><td class="' + (netVal >= 0 ? 'net-positive' : 'net-negative') + '">' + (netVal >= 0 ? '+' : '') + '$' + netVal.toFixed(2) + '</td></tr>';
+            betsHtml += '</table>';
+
+            var verdictHtml = '';
 
             overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
 
