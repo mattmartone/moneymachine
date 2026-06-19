@@ -75,13 +75,36 @@ export default async function handler(req: any, res: any) {
       };
       const boxPPs = (exBet?.entries_used || []).map(parsePP);
       const wpp = String(result.win_pp), ppp = String(result.place_pp), spp = String(result.show_pp);
-      entry.hits = {
-        win: winPickPP === wpp,
-        ex: boxPPs.includes(wpp) && boxPPs.includes(ppp),
-        tri: boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp),
-      };
+      const winHit = winPickPP === wpp;
+      const exHit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
+      const triHit = exHit && boxPPs.includes(spp);
+      entry.hits = { win: winHit, ex: exHit, tri: triHit };
       (entry as any).winPickPP = winPickPP;
       (entry as any).winPickName = winPickName;
+
+      // Calculate payouts
+      const triBet = raceBets.find((b: any) => b.bet_type === 'trifecta');
+      const superBet = raceBets.find((b: any) => b.bet_type === 'superfecta');
+      const fpp = result.fourth_pp ? String(result.fourth_pp) : null;
+      const superHit = triHit && fpp && boxPPs.includes(fpp);
+      let totalStake = raceBets.reduce((s: number, b: any) => s + b.stake, 0);
+      let collected = 0;
+      const n = boxPPs.length;
+
+      if (winHit && result.win_payout) collected += (result.win_payout / 2) * (winBet?.stake || 25);
+      if (exHit && result.exacta_payout) collected += result.exacta_payout * ((exBet?.stake || 50) / (n * (n - 1)));
+      if (triHit && result.trifecta_payout) collected += result.trifecta_payout * ((triBet?.stake || 24) / (n * (n - 1) * (n - 2)));
+      if (superHit && result.superfecta_payout) collected += result.superfecta_payout * ((superBet?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3)));
+
+      (entry as any).payouts = {
+        win: winHit && result.win_payout ? ((result.win_payout / 2) * (winBet?.stake || 25)).toFixed(2) : null,
+        ex: exHit && result.exacta_payout ? (result.exacta_payout * ((exBet?.stake || 50) / (n * (n - 1)))).toFixed(2) : null,
+        tri: triHit && result.trifecta_payout ? (result.trifecta_payout * ((triBet?.stake || 24) / (n * (n - 1) * (n - 2)))).toFixed(2) : null,
+        super: superHit && result.superfecta_payout ? (result.superfecta_payout * ((superBet?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3)))).toFixed(2) : null,
+        totalStake: totalStake.toFixed(2),
+        collected: collected.toFixed(2),
+        net: (collected - totalStake).toFixed(2),
+      };
     }
     raceStatuses.push(entry);
   }
@@ -166,17 +189,15 @@ export default async function handler(req: any, res: any) {
             var finishHtml = '<div class="section-title">Race Result</div>';
             finishHtml += '<div class="finish-order">#' + r.win_pp + ' ' + r.win_horse + ' &mdash; #' + r.place_pp + ' ' + r.place_horse + ' &mdash; #' + r.show_pp + ' ' + r.show_horse + '</div>';
 
-            var betsHtml = '<table><tr><th>Bet</th><th>Needed</th><th>Result</th></tr>';
-            betsHtml += '<tr><td>Win</td><td>#' + (race.winPickPP || '?') + ' ' + (race.winPickName || '') + ' to win</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (h.win ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
-            betsHtml += '<tr><td>Exacta</td><td>1st + 2nd both in box</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (h.ex ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
-            betsHtml += '<tr><td>Trifecta</td><td>1st + 2nd + 3rd all in box</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (h.tri ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
+            var p = race.payouts || {};
+            var betsHtml = '<table><tr><th>Bet</th><th>Result</th><th>Payout</th></tr>';
+            betsHtml += '<tr><td>Win</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (h.win ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (p.win ? '$' + p.win : '—') + '</td></tr>';
+            betsHtml += '<tr><td>Exacta</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (h.ex ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (p.ex ? '$' + p.ex : '—') + '</td></tr>';
+            betsHtml += '<tr><td>Trifecta</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (h.tri ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (p.tri ? '$' + p.tri : '—') + '</td></tr>';
+            betsHtml += '<tr><td>Superfecta</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? '$' + p.super : '—') + '</td></tr>';
             betsHtml += '</table>';
 
-            var hits = [];
-            if (h.win) hits.push('WIN');
-            if (h.ex) hits.push('EXACTA');
-            if (h.tri) hits.push('TRIFECTA');
-            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">' + (anyHit ? hits.join(' + ') + ' HIT' : 'NO BETS HIT') + '</div>';
+            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">Wagered $' + (p.totalStake || '0') + ' &middot; Collected $' + (p.collected || '0') + ' &middot; Net: ' + (parseFloat(p.net || '0') >= 0 ? '+' : '') + '$' + (p.net || '0') + '</div>';
 
             overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
 
