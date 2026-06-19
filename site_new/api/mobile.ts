@@ -18,7 +18,7 @@ const HTML = `<!DOCTYPE html>
       --c-danger: 239 68 68; --c-muted: 107 114 128; --c-gray-900: 17 24 39;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, sans-serif; background: rgb(var(--c-app)); color: rgb(var(--c-gray-900)); -webkit-font-smoothing: antialiased; }
+    body { font-family: Inter, sans-serif; background: #faf9f6; color: #111827; -webkit-font-smoothing: antialiased; }
     .container { max-width: 28rem; margin: 0 auto; padding: 1rem; padding-bottom: 6rem; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
     .header h1 { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.025em; }
@@ -62,7 +62,7 @@ const HTML = `<!DOCTYPE html>
     .box-row { margin-top: 0.5rem; font-size: 0.6875rem; color: rgb(var(--c-muted)); }
     .box-row .horse { display: inline-block; margin-right: 0.25rem; padding: 1px 4px; border-radius: 3px; background: rgb(var(--c-primary) / 0.06); }
     .box-row .horse.winner { background: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); font-weight: 600; }
-    .loading { text-align: center; padding: 3rem 1rem; color: rgb(var(--c-muted)); font-size: 0.875rem; }
+    .loading { text-align: center; padding: 3rem 1rem; color: #6b7280; font-size: 0.875rem; }
     .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--c-success)); animation: pulse 2s infinite; margin-right: 4px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     .hidden { display: none; }
@@ -70,7 +70,7 @@ const HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="container" id="app">
-    <div class="loading">Loading race day...</div>
+    <div class="loading" style="color:#111827;">Loading race day...</div>
   </div>
   <script>
     const TOKEN_KEY = 'ftc_token';
@@ -94,7 +94,7 @@ const HTML = `<!DOCTYPE html>
 
     async function load() {
       if (!token) {
-        document.getElementById('app').innerHTML = '<div class="loading">No session. <a href="/" style="color:#111827;text-decoration:underline;">Login first</a>, then come back.</div>';
+        document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">No token found. <a href="/">Login first</a>, then come back to /mobile.</div>';
         return;
       }
 
@@ -102,7 +102,7 @@ const HTML = `<!DOCTYPE html>
       const perfResponse = await fetch('/api/lab/performance', { headers: headers });
 
       if (picksResponse.status === 401 || perfResponse.status === 401) {
-        document.getElementById('app').innerHTML = '<div class="loading">Session expired. <a href="/" style="color:#111827;text-decoration:underline;">Login</a>, then come back.</div>';
+        document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">Session expired (401). <a href="/">Login</a>, then come back.</div>';
         return;
       }
 
@@ -259,7 +259,7 @@ const HTML = `<!DOCTYPE html>
     }
 
     load().catch(function(e) {
-      document.getElementById('app').innerHTML = '<div class="loading">Error: ' + (e.message || 'Failed to load') + '. <a href="/" style="color:#111827;text-decoration:underline;">Login</a></div>';
+      document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">Error: ' + (e.message || 'Failed to load') + '. <a href="/">Login</a></div>';
     });
 
     setInterval(function() { load().catch(function() {}); }, 120000);
