@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AppNav } from '../components/AppNav';
+import { RaceTheory } from '../components/RaceTheory';
 
 interface TodayRace {
   id: number;
@@ -289,12 +290,27 @@ export function Today() {
   );
 }
 
+interface RaceEntry {
+  post_position: number;
+  horse_name: string;
+  running_style: string | null;
+  morning_line_odds: string | null;
+  scratched: boolean;
+}
+
 function RaceRow({ race, commission, trackFilter, status }: {
   race: any;
   commission?: { has_win_bet: boolean; total_stake: number };
   trackFilter: string;
   status: 'pending' | 'next' | 'upcoming' | 'completed';
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const [entries, setEntries] = useState<RaceEntry[]>([]);
+  const [loadingEntries, setLoadingEntries] = useState(false);
+  const [winPickPP, setWinPickPP] = useState<number | null>(null);
+
+  const token = localStorage.getItem('ftc_token');
+
   const formatTime = (t: string | null) => {
     if (!t) return '—';
     const [h, m] = t.split(':').map(Number);
@@ -302,6 +318,51 @@ function RaceRow({ race, commission, trackFilter, status }: {
     const hr = h > 12 ? h - 12 : h === 0 ? 12 : h;
     return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`;
   };
+
+  const handleExpand = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!expanded && entries.length === 0) {
+      setLoadingEntries(true);
+      fetch(`/api/lab/entries?race_id=${race.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.entries) setEntries(data.entries);
+          setLoadingEntries(false);
+        })
+        .catch(() => setLoadingEntries(false));
+
+      fetch('/api/lab/today', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.picks) {
+            const winBet = data.picks.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'win');
+            if (winBet?.entries_used?.[0]) {
+              const pp = Number(winBet.entries_used[0].replace(/^#/, '').split(' ')[0]);
+              if (!isNaN(pp)) setWinPickPP(pp);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+    setExpanded(!expanded);
+  };
+
+  const favePP = entries.length > 0
+    ? (() => {
+        const sorted = [...entries]
+          .filter(e => !e.scratched && e.morning_line_odds)
+          .sort((a, b) => {
+            const parseOdds = (o: string | null) => {
+              if (!o) return 999;
+              const parts = o.split('/');
+              return parts.length === 2 ? Number(parts[0]) / Number(parts[1]) : Number(o);
+            };
+            return parseOdds(a.morning_line_odds) - parseOdds(b.morning_line_odds);
+          });
+        return sorted[0]?.post_position ?? null;
+      })()
+    : null;
 
   const borderClass = commission
     ? 'border-[#000080] bg-[#f0f0ff]'
@@ -314,38 +375,64 @@ function RaceRow({ race, commission, trackFilter, status }: {
     : 'border-gray-400 bg-white hover:bg-[#fffbe0]';
 
   return (
-    <Link
-      to={`/today/${race.id}`}
-      className={`flex items-center gap-3 px-3 py-3 border-2 transition-colors no-underline text-black ${borderClass}`}
-    >
-      <div className="font-mono text-2xl font-bold w-12 shrink-0 text-center text-[#000080]">
-        {race.race_number}
-      </div>
-      <div className="w-px h-10 bg-gray-300 shrink-0"></div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          {(trackFilter === 'all' || trackFilter === 'commission') && (
-            <span className="font-serif font-bold text-[#000080]">{race.track}</span>
-          )}
-          <span className="font-mono text-xs text-gray-500">{formatTime(race.post_time)}</span>
-          {status === 'next' && <span className="font-mono text-[10px] bg-black text-white px-1.5 py-0.5">NEXT</span>}
-          {status === 'pending' && <span className="font-mono text-[10px] bg-orange-500 text-white px-1.5 py-0.5">PENDING</span>}
-          {commission && (
-            <span className="font-mono text-[10px] bg-[#000080] text-white px-1.5 py-0.5">
-              🤌 {commission.has_win_bet ? 'WIN + EXOTICS' : 'EXOTICS'}
-            </span>
-          )}
+    <div className={`border-2 transition-colors ${borderClass}`}>
+      <div
+        className="flex items-center gap-3 px-3 py-3 cursor-pointer"
+        onClick={handleExpand}
+      >
+        <div className="font-mono text-2xl font-bold w-12 shrink-0 text-center text-[#000080]">
+          {race.race_number}
         </div>
-        <div className="font-mono text-xs text-gray-600 mt-0.5 truncate">
-          {race.conditions} • {race.distance} • {race.surface} • {race.field_size} horses
+        <div className="w-px h-10 bg-gray-300 shrink-0"></div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            {(trackFilter === 'all' || trackFilter === 'commission') && (
+              <span className="font-serif font-bold text-[#000080]">{race.track}</span>
+            )}
+            <span className="font-mono text-xs text-gray-500">{formatTime(race.post_time)}</span>
+            {status === 'next' && <span className="font-mono text-[10px] bg-black text-white px-1.5 py-0.5">NEXT</span>}
+            {status === 'pending' && <span className="font-mono text-[10px] bg-orange-500 text-white px-1.5 py-0.5">PENDING</span>}
+            {commission && (
+              <span className="font-mono text-[10px] bg-[#000080] text-white px-1.5 py-0.5">
+                🤌 {commission.has_win_bet ? 'WIN + EXOTICS' : 'EXOTICS'}
+              </span>
+            )}
+          </div>
+          <div className="font-mono text-xs text-gray-600 mt-0.5 truncate">
+            {race.conditions} • {race.distance} • {race.surface} • {race.field_size} horses
+          </div>
         </div>
+        {commission && (
+          <div className="font-mono text-xs font-bold text-[#000080] shrink-0">
+            ${commission.total_stake.toFixed(0)}
+          </div>
+        )}
+        <span className="font-mono text-sm text-gray-400 shrink-0">{expanded ? '▼' : '→'}</span>
       </div>
-      {commission && (
-        <div className="font-mono text-xs font-bold text-[#000080] shrink-0">
-          ${commission.total_stake.toFixed(0)}
+
+      {/* Expanded: Race Theory animation */}
+      {expanded && (
+        <div className="px-3 pb-3">
+          {loadingEntries ? (
+            <div className="font-mono text-xs text-gray-500 animate-pulse py-2">Loading field...</div>
+          ) : entries.filter(e => !e.scratched && e.running_style).length >= 3 ? (
+            <RaceTheory
+              entries={entries}
+              surface={race.surface}
+              winPickPP={winPickPP}
+              favePP={favePP}
+            />
+          ) : entries.length > 0 ? (
+            <div className="font-mono text-xs text-gray-500 py-2">Not enough style data for animation.</div>
+          ) : null}
+          <Link
+            to={`/today/${race.id}`}
+            className="block text-center font-mono text-xs text-[#000080] underline mt-1"
+          >
+            Full race details →
+          </Link>
         </div>
       )}
-      <span className="font-mono text-sm text-gray-400 shrink-0">→</span>
-    </Link>
+    </div>
   );
 }

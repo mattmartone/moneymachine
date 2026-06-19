@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppNav } from '../components/AppNav';
+import { RaceTheory } from '../components/RaceTheory';
 
 interface Entry {
   id: number;
@@ -342,6 +343,28 @@ export function RaceDetail() {
                 <span className="text-blue-600 ml-1">S</span> = closer •
                 <span className="ml-2 italic">Hover style letters for details</span>
               </div>
+
+              {/* Race Theory Animation */}
+              {entries.filter(e => !e.scratched && e.running_style).length >= 3 && (
+                <RaceTheory
+                  entries={entries.map(e => ({ ...e, scratched: scratchList.includes(e.id) }))}
+                  surface={raceInfo?.surface}
+                  winPickPP={winBet?.entries_used?.[0] ? Number(winBet.entries_used[0].replace(/^#/, '').split(' ')[0]) : null}
+                  favePP={(() => {
+                    const sorted = [...entries]
+                      .filter(e => !scratchList.includes(e.id) && e.morning_line_odds)
+                      .sort((a, b) => {
+                        const parseOdds = (o: string | null) => {
+                          if (!o) return 999;
+                          const parts = o.split('/');
+                          return parts.length === 2 ? Number(parts[0]) / Number(parts[1]) : Number(o);
+                        };
+                        return parseOdds(a.morning_line_odds) - parseOdds(b.morning_line_odds);
+                      });
+                    return sorted[0]?.post_position ?? null;
+                  })()}
+                />
+              )}
 
               {/* Commission Bets — shown below field when we have action */}
               {bets.length > 0 && (
