@@ -1,8 +1,8 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!mobile).*)", "destination": "/index.html" }
+    { "source": "/mobile", "destination": "/api/mobile" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
     {
