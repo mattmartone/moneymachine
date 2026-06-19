@@ -70,9 +70,8 @@
   <script>
     const TOKEN_KEY = 'ftc_token';
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) { window.location.href = '/'; }
 
-    const headers = { 'Authorization': `Bearer ${token}` };
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
     const parsePP = (s) => s.replace(/^#/, '').split(' ')[0];
 
     function formatTime(t) {
@@ -90,9 +89,22 @@
     }
 
     async function load() {
+      if (!token) {
+        document.getElementById('app').innerHTML = `<div class="loading">No session. <a href="/" style="color:rgb(var(--c-primary));text-decoration:underline;">Login first</a>, then come back.</div>`;
+        return;
+      }
+
+      const picksResponse = await fetch('/api/lab/today', { headers });
+      const perfResponse = await fetch('/api/lab/performance', { headers });
+
+      if (picksResponse.status === 401 || perfResponse.status === 401) {
+        document.getElementById('app').innerHTML = `<div class="loading">Session expired. <a href="/" style="color:rgb(var(--c-primary));text-decoration:underline;">Login</a>, then come back.</div>`;
+        return;
+      }
+
       const [picksRes, perfRes] = await Promise.all([
-        fetch('/api/lab/today', { headers }).then(r => r.json()),
-        fetch('/api/lab/performance', { headers }).then(r => r.json())
+        picksResponse.json(),
+        perfResponse.json()
       ]);
 
       const picks = picksRes.picks || [];
@@ -308,7 +320,7 @@
     }
 
     load().catch(e => {
-      document.getElementById('app').innerHTML = `<div class="loading">Error loading data. <a href="/" style="color:rgb(var(--c-primary));text-decoration:underline;">Login</a></div>`;
+      document.getElementById('app').innerHTML = `<div class="loading">Error: ${e.message || 'Failed to load'}. <a href="/" style="color:rgb(var(--c-primary));text-decoration:underline;">Login</a></div>`;
     });
 
     // Auto-refresh every 2 minutes
