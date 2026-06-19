@@ -29,6 +29,7 @@ export function Today() {
 
   const [races, setRaces] = useState<TodayRace[]>([]);
   const [commissionRaces, setCommissionRaces] = useState<Map<number, CommissionRace>>(new Map());
+  const [allPicks, setAllPicks] = useState<any[]>([]);
   const [trackFilter, setTrackFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export function Today() {
       .then(res => res.json())
       .then(data => {
         if (data?.picks) {
+          setAllPicks(data.picks);
           const map = new Map<number, CommissionRace>();
           for (const pick of data.picks) {
             const existing = map.get(pick.race_id);
@@ -106,14 +108,6 @@ export function Today() {
     : trackFilter === 'commission'
     ? races.filter(r => commissionRaces.has(r.id))
     : races.filter(r => r.track === trackFilter);
-
-  const formatTime = (t: string | null) => {
-    if (!t) return '—';
-    const [h, m] = t.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const hr = h > 12 ? h - 12 : h === 0 ? 12 : h;
-    return `${hr}:${m.toString().padStart(2, '0')} ${ampm}`;
-  };
 
   // Categorize races: pending (just ran, no results), upcoming, results
   const pendingRaces: TodayRace[] = [];
@@ -255,7 +249,7 @@ export function Today() {
               <div className="mb-4">
                 <div className="font-mono text-xs font-bold text-orange-600 mb-1 uppercase">⏳ Awaiting Results</div>
                 {mostRecentPending.map(race => (
-                  <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status="pending" />
+                  <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status="pending" picks={allPicks} />
                 ))}
               </div>
             )}
@@ -266,7 +260,7 @@ export function Today() {
                 <div className="font-mono text-xs font-bold text-[#000080] mb-1 uppercase">Upcoming</div>
                 <div className="space-y-1">
                   {upcomingRaces.map((race, idx) => (
-                    <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status={idx === 0 ? 'next' : 'upcoming'} />
+                    <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status={idx === 0 ? 'next' : 'upcoming'} picks={allPicks} />
                   ))}
                 </div>
               </div>
@@ -278,7 +272,7 @@ export function Today() {
                 <div className="font-mono text-xs font-bold text-gray-500 mb-1 uppercase">Results</div>
                 <div className="space-y-1">
                   {[...olderPending.reverse(), ...completedRaces.reverse()].map(race => (
-                    <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status="completed" />
+                    <RaceRow key={race.id} race={race} commission={commissionRaces.get(race.id)} trackFilter={trackFilter} status="completed" picks={allPicks} />
                   ))}
                 </div>
               </div>
@@ -298,18 +292,64 @@ interface RaceEntry {
   scratched: boolean;
 }
 
-function RaceRow({ race, commission, trackFilter, status }: {
+interface RaceResult {
+  win_horse: string;
+  win_pp: number;
+  place_horse: string;
+  place_pp: number;
+  show_horse: string;
+  show_pp: number;
+  fourth_horse: string | null;
+  fourth_pp: number | null;
+  win_payout: number | null;
+  exacta_payout: number | null;
+  trifecta_payout: number | null;
+  superfecta_payout: number | null;
+}
+
+function RaceRow({ race, commission, trackFilter, status, picks }: {
   race: any;
   commission?: { has_win_bet: boolean; total_stake: number };
   trackFilter: string;
   status: 'pending' | 'next' | 'upcoming' | 'completed';
+  picks?: any[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<RaceEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [winPickPP, setWinPickPP] = useState<number | null>(null);
+  const [result, setResult] = useState<RaceResult | null>(null);
 
   const token = localStorage.getItem('ftc_token');
+
+  useEffect(() => {
+    if (race.has_results && commission) {
+      fetch(`/api/lab/results?race_id=${race.id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => { if (data?.results) setResult(data.results); })
+        .catch(() => {});
+    }
+  }, [race.id, race.has_results]);
+
+  const parsePP = (entry: string) => entry.replace(/^#/, '').split(' ')[0];
+
+  const winBet = picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'win');
+  const exBet = picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'exacta');
+  const boxPPs = (exBet?.entries_used || []).map((e: string) => parsePP(e));
+  const winPickFromBet = winBet?.entries_used?.[0] ? parsePP(winBet.entries_used[0]) : null;
+
+  const winHit = result && winPickFromBet ? String(result.win_pp) === winPickFromBet : false;
+  const exHit = result ? boxPPs.includes(String(result.win_pp)) && boxPPs.includes(String(result.place_pp)) : false;
+  const triHit = result ? exHit && boxPPs.includes(String(result.show_pp)) : false;
+  const superHit = result ? triHit && (result.fourth_pp ? boxPPs.includes(String(result.fourth_pp)) : false) : false;
+  const anyHit = winHit || exHit || triHit || superHit;
+
+  const collected = result && commission ? (
+    (winHit && result.win_payout ? (result.win_payout / 2) * (winBet?.stake || 25) : 0) +
+    (exHit && result.exacta_payout ? (result.exacta_payout / 2) * 5 : 0) +
+    (triHit && result.trifecta_payout ? (result.trifecta_payout / 0.5) * 1 : 0) +
+    (superHit && result.superfecta_payout ? (result.superfecta_payout / 0.1) * 0.1 : 0)
+  ) : 0;
 
   const formatTime = (t: string | null) => {
     if (!t) return '—';
@@ -332,18 +372,22 @@ function RaceRow({ race, commission, trackFilter, status }: {
         })
         .catch(() => setLoadingEntries(false));
 
-      fetch('/api/lab/today', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(res => res.json())
-        .then(data => {
-          if (data?.picks) {
-            const winBet = data.picks.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'win');
-            if (winBet?.entries_used?.[0]) {
-              const pp = Number(winBet.entries_used[0].replace(/^#/, '').split(' ')[0]);
-              if (!isNaN(pp)) setWinPickPP(pp);
+      if (!winPickFromBet) {
+        fetch('/api/lab/today', { headers: { 'Authorization': `Bearer ${token}` } })
+          .then(res => res.json())
+          .then(data => {
+            if (data?.picks) {
+              const wb = data.picks.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'win');
+              if (wb?.entries_used?.[0]) {
+                const pp = Number(wb.entries_used[0].replace(/^#/, '').split(' ')[0]);
+                if (!isNaN(pp)) setWinPickPP(pp);
+              }
             }
-          }
-        })
-        .catch(() => {});
+          })
+          .catch(() => {});
+      } else {
+        setWinPickPP(Number(winPickFromBet));
+      }
     }
     setExpanded(!expanded);
   };
@@ -364,7 +408,11 @@ function RaceRow({ race, commission, trackFilter, status }: {
       })()
     : null;
 
-  const borderClass = commission
+  const borderClass = result && commission
+    ? anyHit
+      ? 'border-green-600 bg-green-50'
+      : 'border-red-400 bg-red-50'
+    : commission
     ? 'border-[#000080] bg-[#f0f0ff]'
     : status === 'pending'
     ? 'border-orange-400 bg-orange-50'
@@ -380,38 +428,88 @@ function RaceRow({ race, commission, trackFilter, status }: {
         className="flex items-center gap-3 px-3 py-3 cursor-pointer"
         onClick={handleExpand}
       >
-        <div className="font-mono text-2xl font-bold w-12 shrink-0 text-center text-[#000080]">
+        <div className={`font-mono text-2xl font-bold w-12 shrink-0 text-center ${result && commission ? (anyHit ? 'text-green-700' : 'text-red-500') : 'text-[#000080]'}`}>
           {race.race_number}
         </div>
         <div className="w-px h-10 bg-gray-300 shrink-0"></div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             {(trackFilter === 'all' || trackFilter === 'commission') && (
-              <span className="font-serif font-bold text-[#000080]">{race.track}</span>
+              <span className={`font-serif font-bold ${result && commission ? (anyHit ? 'text-green-700' : 'text-red-600') : 'text-[#000080]'}`}>{race.track}</span>
             )}
             <span className="font-mono text-xs text-gray-500">{formatTime(race.post_time)}</span>
             {status === 'next' && <span className="font-mono text-[10px] bg-black text-white px-1.5 py-0.5">NEXT</span>}
             {status === 'pending' && <span className="font-mono text-[10px] bg-orange-500 text-white px-1.5 py-0.5">PENDING</span>}
-            {commission && (
+            {result && commission && (
+              <span className={`font-mono text-[10px] px-1.5 py-0.5 ${anyHit ? 'bg-green-700 text-white' : 'bg-red-500 text-white'}`}>
+                {winHit ? 'WIN' : triHit ? 'TRI' : exHit ? 'EX' : superHit ? 'SUPER' : 'MISS'}
+              </span>
+            )}
+            {!result && commission && (
               <span className="font-mono text-[10px] bg-[#000080] text-white px-1.5 py-0.5">
                 🤌 {commission.has_win_bet ? 'WIN + EXOTICS' : 'EXOTICS'}
               </span>
             )}
           </div>
-          <div className="font-mono text-xs text-gray-600 mt-0.5 truncate">
-            {race.conditions} • {race.distance} • {race.surface} • {race.field_size} horses
-          </div>
+          {result && commission ? (
+            <div className="font-mono text-xs mt-0.5">
+              <span className="text-gray-700">
+                {result.win_pp}-{result.place_pp}-{result.show_pp}{result.fourth_pp ? `-${result.fourth_pp}` : ''}
+              </span>
+              <span className="text-gray-400 mx-1">|</span>
+              <span className="text-gray-600">
+                {result.win_horse}
+              </span>
+            </div>
+          ) : (
+            <div className="font-mono text-xs text-gray-600 mt-0.5 truncate">
+              {race.conditions} • {race.distance} • {race.surface} • {race.field_size} horses
+            </div>
+          )}
         </div>
-        {commission && (
+        {result && commission ? (
+          <div className={`font-mono text-xs font-bold shrink-0 ${anyHit ? 'text-green-700' : 'text-red-500'}`}>
+            {anyHit ? `+$${collected.toFixed(0)}` : `-$${(commission.total_stake).toFixed(0)}`}
+          </div>
+        ) : commission ? (
           <div className="font-mono text-xs font-bold text-[#000080] shrink-0">
             ${commission.total_stake.toFixed(0)}
           </div>
-        )}
+        ) : null}
         <span className="font-mono text-sm text-gray-400 shrink-0">{expanded ? '▼' : '→'}</span>
       </div>
 
-      {/* Expanded: Race Theory animation */}
-      {expanded && (
+      {/* Results detail when expanded */}
+      {expanded && result && commission && (
+        <div className="px-3 pb-3 border-t border-gray-200 pt-2">
+          <div className="font-mono text-xs space-y-1">
+            <div className="flex justify-between">
+              <span>Finish: <strong>#{result.win_pp} {result.win_horse}</strong> — #{result.place_pp} {result.place_horse} — #{result.show_pp} {result.show_horse}{result.fourth_pp ? ` — #${result.fourth_pp} ${result.fourth_horse}` : ''}</span>
+            </div>
+            <div className="flex gap-3 mt-1">
+              <span className={winHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>WIN {winHit && result.win_payout ? `$${((result.win_payout / 2) * (winBet?.stake || 25)).toFixed(2)}` : ''}</span>
+              <span className={exHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>EX {exHit && result.exacta_payout ? `$${((result.exacta_payout / 2) * 5).toFixed(2)}` : ''}</span>
+              <span className={triHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>TRI {triHit && result.trifecta_payout ? `$${((result.trifecta_payout / 0.5) * 1).toFixed(2)}` : ''}</span>
+              <span className={superHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>SUPER {superHit && result.superfecta_payout ? `$${((result.superfecta_payout / 0.1) * 0.1).toFixed(2)}` : ''}</span>
+            </div>
+            <div className="flex justify-between items-center pt-1 border-t border-gray-100 mt-1">
+              <span className="text-gray-500">Wagered: ${commission.total_stake.toFixed(2)}</span>
+              <span className={`font-bold ${anyHit ? 'text-green-700' : 'text-red-500'}`}>
+                Net: {anyHit ? '+' : '-'}${anyHit ? (collected - commission.total_stake).toFixed(2) : commission.total_stake.toFixed(2)}
+              </span>
+            </div>
+          </div>
+          <Link
+            to={`/today/${race.id}`}
+            className="block text-center font-mono text-xs text-[#000080] underline mt-2"
+          >
+            Full race details →
+          </Link>
+        </div>
+      )}
+
+      {/* Expanded: Race Theory animation (non-settled races) */}
+      {expanded && !result && (
         <div className="px-3 pb-3">
           {loadingEntries ? (
             <div className="font-mono text-xs text-gray-500 animate-pulse py-2">Loading field...</div>
