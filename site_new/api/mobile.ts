@@ -1,10 +1,167 @@
-export default function handler(req: any, res: any) {
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.status(200).send(HTML);
+import { query } from './db.js';
+
+function formatTime(t: string | null): string {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hr = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  return `${hr}:${String(m).padStart(2, '0')} ${ampm}`;
 }
 
-const HTML = `<!DOCTYPE html>
-<html lang="en" data-theme="ink">
+function parsePP(entry: string): string {
+  return entry.replace(/^#/, '').split(' ')[0];
+}
+
+export default async function handler(req: any, res: any) {
+  const now = new Date();
+  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const today = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
+  const currentTime = `${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}`;
+
+  // Get today's bets
+  const { rows: bets } = await query(
+    `SELECT b.id, b.race_id, b.bet_type, b.stake, b.doubled, b.conviction, b.entries_used,
+            r.track, r.race_number, r.conditions, r.distance, r.surface, r.field_size, r.post_time
+     FROM bets b JOIN races r ON r.id = b.race_id
+     WHERE r.date = $1
+     ORDER BY r.post_time NULLS LAST, r.track, r.race_number, b.id`,
+    [today]
+  );
+
+  // Get results
+  const raceIds = [...new Set(bets.map((b: any) => b.race_id))];
+  let results: Record<number, any> = {};
+  if (raceIds.length > 0) {
+    const { rows: resultRows } = await query(
+      `SELECT r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout,
+              ew.post_position AS win_pp, hw.name AS win_horse,
+              ep.post_position AS place_pp, hp.name AS place_horse,
+              es.post_position AS show_pp, hs.name AS show_horse,
+              ef.post_position AS fourth_pp, hf.name AS fourth_horse
+       FROM results r
+       LEFT JOIN entries ew ON ew.id = r.win_entry_id LEFT JOIN horses hw ON hw.id = ew.horse_id
+       LEFT JOIN entries ep ON ep.id = r.place_entry_id LEFT JOIN horses hp ON hp.id = ep.horse_id
+       LEFT JOIN entries es ON es.id = r.show_entry_id LEFT JOIN horses hs ON hs.id = es.horse_id
+       LEFT JOIN entries ef ON ef.id = r.fourth_entry_id LEFT JOIN horses hf ON hf.id = ef.horse_id
+       WHERE r.race_id = ANY($1)`,
+      [raceIds]
+    );
+    for (const r of resultRows) results[r.race_id] = r;
+  }
+
+  // Group bets by race
+  interface Race { race_id: number; track: string; race_number: number; post_time: string | null; bets: any[]; total_stake: number; }
+  const raceMap = new Map<number, Race>();
+  for (const bet of bets) {
+    if (!raceMap.has(bet.race_id)) {
+      raceMap.set(bet.race_id, { race_id: bet.race_id, track: bet.track, race_number: bet.race_number, post_time: bet.post_time, bets: [], total_stake: 0 });
+    }
+    const r = raceMap.get(bet.race_id)!;
+    r.bets.push(bet);
+    r.total_stake += bet.stake;
+  }
+  const races = [...raceMap.values()].sort((a, b) => {
+    if (!a.post_time && !b.post_time) return 0;
+    if (!a.post_time) return 1;
+    if (!b.post_time) return -1;
+    return a.post_time.localeCompare(b.post_time);
+  });
+
+  // Categorize
+  const upcoming: Race[] = [], pending: Race[] = [], settled: (Race & { result: any })[] = [];
+  for (const race of races) {
+    const result = results[race.race_id];
+    if (result) settled.push({ ...race, result });
+    else if (race.post_time && race.post_time.slice(0, 5) < currentTime) pending.push(race);
+    else upcoming.push(race);
+  }
+
+  // Performance
+  let totalWagered = 0, totalCollected = 0;
+  for (const race of settled) {
+    const result = race.result;
+    for (const bet of race.bets) {
+      totalWagered += bet.stake;
+      const boxPPs = (bet.entries_used || []).map(parsePP);
+      const wpp = String(result.win_pp), ppp = String(result.place_pp), spp = String(result.show_pp);
+      const fpp = result.fourth_pp ? String(result.fourth_pp) : null;
+      if (bet.bet_type === 'win') {
+        const pickPP = parsePP(bet.entries_used[0]);
+        if (pickPP === wpp && result.win_payout) totalCollected += (result.win_payout / 2) * bet.stake;
+      } else if (bet.bet_type === 'exacta') {
+        if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && result.exacta_payout) {
+          const n = boxPPs.length; totalCollected += result.exacta_payout * (bet.stake / (n * (n - 1)));
+        }
+      } else if (bet.bet_type === 'trifecta') {
+        if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && result.trifecta_payout) {
+          const n = boxPPs.length; totalCollected += result.trifecta_payout * (bet.stake / (n * (n - 1) * (n - 2)));
+        }
+      } else if (bet.bet_type === 'superfecta') {
+        if (boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp) && fpp && boxPPs.includes(fpp) && result.superfecta_payout) {
+          const n = boxPPs.length; totalCollected += result.superfecta_payout * (bet.stake / (n * (n - 1) * (n - 2) * (n - 3)));
+        }
+      }
+    }
+  }
+  for (const race of [...pending, ...upcoming]) {
+    for (const bet of race.bets) totalWagered += bet.stake;
+  }
+  const net = totalCollected - totalWagered;
+
+  // Build cards HTML
+  function renderCard(race: Race, result: any, status: string): string {
+    const winBet = race.bets.find(b => b.bet_type === 'win');
+    const exBet = race.bets.find(b => b.bet_type === 'exacta');
+    const boxPPs = (exBet?.entries_used || []).map(parsePP);
+    let cardClass = 'race-card', badgeHtml = '', stakeHtml = `<span class="race-stake">$${race.total_stake.toFixed(0)}</span>`, detailHtml = '';
+
+    if (result) {
+      const wpp = String(result.win_pp), ppp = String(result.place_pp), spp = String(result.show_pp);
+      const winHit = winBet ? parsePP(winBet.entries_used[0]) === wpp : false;
+      const exHit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
+      const triHit = exHit && boxPPs.includes(spp);
+      const anyHit = winHit || exHit || triHit;
+      cardClass += anyHit ? ' hit' : ' miss';
+      const bestHit = winHit ? 'WIN' : triHit ? 'TRI' : exHit ? 'EX' : 'MISS';
+      badgeHtml = `<span class="badge ${anyHit ? 'badge-hit' : 'badge-miss'}">${bestHit}</span>`;
+
+      let collected = 0;
+      if (winHit && result.win_payout) collected += (result.win_payout / 2) * (winBet?.stake || 25);
+      if (exHit && result.exacta_payout) { const n = boxPPs.length; collected += result.exacta_payout * ((exBet?.stake || 50) / (n * (n - 1))); }
+      if (triHit && result.trifecta_payout) { const n = boxPPs.length; const triBet = race.bets.find(b => b.bet_type === 'trifecta'); collected += result.trifecta_payout * ((triBet?.stake || 24) / (n * (n - 1) * (n - 2))); }
+      const raceNet = collected - race.total_stake;
+      stakeHtml = `<span class="race-stake ${raceNet >= 0 ? 'positive' : 'negative'}">${raceNet >= 0 ? '+' : '-'}$${Math.abs(raceNet).toFixed(0)}</span>`;
+      detailHtml = `<div class="race-detail"><div class="finish-row"><strong>#${result.win_pp} ${result.win_horse}</strong> &mdash; #${result.place_pp} ${result.place_horse} &mdash; #${result.show_pp} ${result.show_horse}${result.fourth_pp ? ` &mdash; #${result.fourth_pp} ${result.fourth_horse || ''}` : ''}</div><div class="bets-row"><span class="bet-chip ${winHit ? 'hit' : 'miss'}">WIN</span><span class="bet-chip ${exHit ? 'hit' : 'miss'}">EX${exHit ? ' HIT' : ''}</span><span class="bet-chip ${triHit ? 'hit' : 'miss'}">TRI</span></div></div>`;
+    } else if (status === 'pending') {
+      cardClass += ' live';
+      badgeHtml = '<span class="badge badge-pending">PENDING</span>';
+      detailHtml = `<div class="race-detail"><div class="finish-row">Win pick: <strong>${winBet?.entries_used?.[0] || ''}</strong></div></div>`;
+    } else {
+      if (status === 'next') badgeHtml = '<span class="badge badge-next">NEXT</span>';
+      detailHtml = `<div class="race-detail"><div class="finish-row">Win pick: <strong>${winBet?.entries_used?.[0] || ''}</strong>${winBet?.doubled ? ' <span class="badge badge-hit">2x</span>' : ''}</div></div>`;
+    }
+
+    return `<div class="${cardClass}"><div class="race-top"><div class="race-left"><div class="race-track">${race.track}</div><div class="race-num-row"><span class="race-prefix">R</span><span class="race-number">${race.race_number}</span></div><div class="race-time">${formatTime(race.post_time)} ${badgeHtml}</div></div><div class="race-right">${stakeHtml}</div></div>${detailHtml}</div>`;
+  }
+
+  let cardsHtml = '';
+  if (pending.length > 0) {
+    cardsHtml += '<div class="section-label"><span class="dot"></span> Awaiting Results</div>';
+    for (const race of pending) cardsHtml += renderCard(race, null, 'pending');
+  }
+  if (upcoming.length > 0) {
+    cardsHtml += '<div class="section-label">Upcoming</div>';
+    upcoming.forEach((race, i) => { cardsHtml += renderCard(race, null, i === 0 ? 'next' : 'upcoming'); });
+  }
+  if (settled.length > 0) {
+    cardsHtml += '<div class="section-label">Results</div>';
+    for (const race of settled) cardsHtml += renderCard(race, race.result, 'settled');
+  }
+
+  const dateStr = et.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -12,257 +169,79 @@ const HTML = `<!DOCTYPE html>
   <title>FTC Race Day</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --c-app: 250 249 246; --c-surface: 255 255 255; --c-border: 229 231 235;
-      --c-primary: 17 24 39; --c-accent: 22 163 74; --c-success: 22 163 74;
-      --c-danger: 239 68 68; --c-muted: 107 114 128; --c-gray-900: 17 24 39;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Inter, sans-serif; background: #faf9f6; color: #111827; -webkit-font-smoothing: antialiased; }
-    .container { max-width: 28rem; margin: 0 auto; padding: 1rem; padding-bottom: 6rem; }
+    .container { max-width: 28rem; margin: 0 auto; padding: 1rem; padding-bottom: 4rem; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .header h1 { font-size: 1.125rem; font-weight: 700; letter-spacing: -0.025em; }
-    .header .meta { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: rgb(var(--c-muted)); font-weight: 600; }
-    .perf-bar { background: rgb(var(--c-surface)); border: 1px solid rgb(var(--c-border)); border-radius: 0.75rem; padding: 0.875rem; margin-bottom: 1rem; }
+    .header h1 { font-size: 1.125rem; font-weight: 700; }
+    .header .meta { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; }
+    .perf-bar { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 0.875rem; margin-bottom: 1rem; }
     .perf-row { display: flex; justify-content: space-between; align-items: baseline; }
-    .perf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(var(--c-muted)); font-weight: 600; }
+    .perf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600; }
     .perf-value { font-size: 1.875rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-    .perf-value.positive { color: rgb(var(--c-success)); }
-    .perf-value.negative { color: rgb(var(--c-danger)); }
-    .perf-sub { font-size: 0.75rem; color: rgb(var(--c-muted)); margin-top: 0.25rem; }
-    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(var(--c-muted)); font-weight: 600; padding: 0 0.25rem; margin-bottom: 0.5rem; margin-top: 1.25rem; }
-    .race-card { background: rgb(var(--c-surface)); border: 1px solid rgb(var(--c-border)); border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.5rem; cursor: pointer; transition: box-shadow 0.15s; }
-    .race-card:active { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .race-card.hit { border-color: rgb(var(--c-success) / 0.4); background: rgb(var(--c-success) / 0.05); }
-    .race-card.miss { border-color: rgb(var(--c-danger) / 0.3); background: rgb(var(--c-danger) / 0.03); }
-    .race-card.live { border-color: rgb(var(--c-accent) / 0.4); }
+    .perf-value.positive { color: #16a34a; }
+    .perf-value.negative { color: #ef4444; }
+    .perf-sub { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
+    .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600; padding: 0 0.25rem; margin-bottom: 0.5rem; margin-top: 1.25rem; }
+    .race-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.5rem; }
+    .race-card.hit { border-color: rgba(22,163,74,0.4); background: rgba(22,163,74,0.04); }
+    .race-card.miss { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
+    .race-card.live { border-color: rgba(22,163,74,0.4); }
     .race-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; }
     .race-left { display: flex; flex-direction: column; min-width: 0; }
-    .race-track { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(var(--c-muted)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .race-track { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600; }
     .race-num-row { display: flex; align-items: baseline; gap: 2px; line-height: 1; }
-    .race-prefix { font-size: 0.875rem; font-weight: 700; color: rgb(var(--c-muted)); }
+    .race-prefix { font-size: 0.875rem; font-weight: 700; color: #6b7280; }
     .race-number { font-size: 1.875rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
-    .race-time { font-size: 0.75rem; color: rgb(var(--c-muted)); font-variant-numeric: tabular-nums; margin-top: 0.25rem; }
+    .race-time { font-size: 0.75rem; color: #6b7280; font-variant-numeric: tabular-nums; margin-top: 0.25rem; }
     .race-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
-    .race-stake { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.025em; color: rgb(var(--c-primary)); }
-    .race-stake.positive { color: rgb(var(--c-success)); }
-    .race-stake.negative { color: rgb(var(--c-danger)); }
-    .badge { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
-    .badge-pending { background: rgb(var(--c-primary) / 0.1); color: rgb(var(--c-primary)); }
-    .badge-hit { background: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); }
-    .badge-miss { background: rgb(var(--c-danger) / 0.1); color: rgb(var(--c-danger)); }
-    .badge-next { background: rgb(var(--c-primary)); color: white; }
-    .race-detail { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgb(var(--c-border)); }
-    .finish-row { font-size: 0.6875rem; color: rgb(var(--c-muted)); margin-bottom: 0.375rem; }
-    .finish-row strong { color: rgb(var(--c-gray-900)); }
+    .race-stake { font-size: 1.125rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #111827; }
+    .race-stake.positive { color: #16a34a; }
+    .race-stake.negative { color: #ef4444; }
+    .badge { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+    .badge-pending { background: rgba(17,24,39,0.1); color: #111827; }
+    .badge-hit { background: rgba(22,163,74,0.15); color: #16a34a; }
+    .badge-miss { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .badge-next { background: #111827; color: #fff; }
+    .race-detail { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb; }
+    .finish-row { font-size: 0.6875rem; color: #6b7280; margin-bottom: 0.375rem; }
+    .finish-row strong { color: #111827; }
     .bets-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .bet-chip { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
-    .bet-chip.hit { background: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); }
-    .bet-chip.miss { color: rgb(var(--c-muted) / 0.5); text-decoration: line-through; }
-    .box-row { margin-top: 0.5rem; font-size: 0.6875rem; color: rgb(var(--c-muted)); }
-    .box-row .horse { display: inline-block; margin-right: 0.25rem; padding: 1px 4px; border-radius: 3px; background: rgb(var(--c-primary) / 0.06); }
-    .box-row .horse.winner { background: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); font-weight: 600; }
-    .loading { text-align: center; padding: 3rem 1rem; color: #6b7280; font-size: 0.875rem; }
-    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--c-success)); animation: pulse 2s infinite; margin-right: 4px; }
+    .bet-chip.hit { background: rgba(22,163,74,0.15); color: #16a34a; }
+    .bet-chip.miss { color: rgba(107,114,128,0.5); text-decoration: line-through; }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #16a34a; animation: pulse 2s infinite; margin-right: 4px; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .hidden { display: none; }
+    .refresh { text-align: center; margin-top: 1.5rem; }
+    .refresh a { font-size: 0.75rem; color: #6b7280; text-decoration: underline; }
   </style>
 </head>
 <body>
-  <div class="container" id="app">
-    <div class="loading" style="color:#111827;">Loading race day...</div>
+  <div class="container">
+    <div class="header">
+      <h1>Race Day</h1>
+      <div class="meta">${dateStr}</div>
+    </div>
+    <div class="perf-bar">
+      <div class="perf-row">
+        <div>
+          <div class="perf-label">P/L</div>
+          <div class="perf-value ${net >= 0 ? 'positive' : 'negative'}">${net >= 0 ? '+' : ''}$${net.toFixed(2)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="perf-label">Settled</div>
+          <div style="font-size:1.25rem;font-weight:700;">${settled.length}/${races.length}</div>
+        </div>
+      </div>
+      <div class="perf-sub">Wagered $${totalWagered.toFixed(0)} &middot; Collected $${totalCollected.toFixed(2)}</div>
+    </div>
+    ${cardsHtml}
+    <div class="refresh"><a href="/mobile">Refresh</a></div>
   </div>
-  <script>
-    const TOKEN_KEY = 'ftc_token';
-    const token = localStorage.getItem(TOKEN_KEY);
-    const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-    const parsePP = (s) => s.replace(/^#/, '').split(' ')[0];
-
-    function formatTime(t) {
-      if (!t) return '';
-      const [h, m] = t.split(':').map(Number);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const hr = h > 12 ? h - 12 : h === 0 ? 12 : h;
-      return hr + ':' + String(m).padStart(2, '0') + ' ' + ampm;
-    }
-
-    function getNowET() {
-      const now = new Date();
-      const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-      return String(et.getHours()).padStart(2, '0') + ':' + String(et.getMinutes()).padStart(2, '0');
-    }
-
-    async function load() {
-      if (!token) {
-        document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">No token found. <a href="/">Login first</a>, then come back to /mobile.</div>';
-        return;
-      }
-
-      const picksResponse = await fetch('/api/lab/today', { headers: headers });
-      const perfResponse = await fetch('/api/lab/performance', { headers: headers });
-
-      if (picksResponse.status === 401 || perfResponse.status === 401) {
-        document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">Session expired (401). <a href="/">Login</a>, then come back.</div>';
-        return;
-      }
-
-      const picksRes = await picksResponse.json();
-      const perfRes = await perfResponse.json();
-
-      const picks = picksRes.picks || [];
-      const perf = perfRes.performance;
-
-      var raceMap = new Map();
-      for (var i = 0; i < picks.length; i++) {
-        var pick = picks[i];
-        if (!raceMap.has(pick.race_id)) {
-          raceMap.set(pick.race_id, {
-            race_id: pick.race_id, track: pick.track, race_number: pick.race_number,
-            post_time: pick.post_time, conditions: pick.conditions,
-            distance: pick.distance, surface: pick.surface,
-            bets: [], total_stake: 0
-          });
-        }
-        var r = raceMap.get(pick.race_id);
-        r.bets.push(pick);
-        r.total_stake += pick.stake;
-      }
-
-      var races = Array.from(raceMap.values()).sort(function(a, b) {
-        if (!a.post_time && !b.post_time) return 0;
-        if (!a.post_time) return 1;
-        if (!b.post_time) return -1;
-        return a.post_time.localeCompare(b.post_time);
-      });
-
-      var results = {};
-      var resultPromises = races.map(function(race) {
-        return fetch('/api/lab/results?race_id=' + race.race_id, { headers: headers })
-          .then(function(res) { return res.json(); })
-          .then(function(data) { if (data && data.results) results[race.race_id] = data.results; })
-          .catch(function() {});
-      });
-      await Promise.all(resultPromises);
-
-      render(races, results, perf);
-    }
-
-    function computeHits(race, result) {
-      var winBet = race.bets.find(function(b) { return b.bet_type === 'win'; });
-      var exBet = race.bets.find(function(b) { return b.bet_type === 'exacta'; });
-      var boxPPs = (exBet && exBet.entries_used || []).map(parsePP);
-      var winPickPP = winBet && winBet.entries_used && winBet.entries_used[0] ? parsePP(winBet.entries_used[0]) : null;
-      var wpp = String(result.win_pp), ppp = String(result.place_pp), spp = String(result.show_pp);
-      var fpp = result.fourth_pp ? String(result.fourth_pp) : null;
-      return {
-        win: winPickPP === wpp,
-        ex: boxPPs.indexOf(wpp) >= 0 && boxPPs.indexOf(ppp) >= 0,
-        tri: boxPPs.indexOf(wpp) >= 0 && boxPPs.indexOf(ppp) >= 0 && boxPPs.indexOf(spp) >= 0,
-        super: boxPPs.indexOf(wpp) >= 0 && boxPPs.indexOf(ppp) >= 0 && boxPPs.indexOf(spp) >= 0 && fpp && boxPPs.indexOf(fpp) >= 0,
-        boxPPs: boxPPs, winPickPP: winPickPP
-      };
-    }
-
-    function render(races, results, perf) {
-      var now = getNowET();
-      var upcoming = [], pending = [], settled = [];
-      for (var i = 0; i < races.length; i++) {
-        var race = races[i];
-        var result = results[race.race_id];
-        if (result) { settled.push(Object.assign({}, race, { result: result })); }
-        else if (race.post_time && race.post_time.slice(0,5) < now) { pending.push(race); }
-        else { upcoming.push(race); }
-      }
-
-      var html = '<div class="header"><h1>Race Day</h1><div class="meta">' + new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '</div></div>';
-
-      if (perf) {
-        var net = perf.net || 0;
-        var cls = net >= 0 ? 'positive' : 'negative';
-        html += '<div class="perf-bar"><div class="perf-row"><div><div class="perf-label">Today P/L</div><div class="perf-value ' + cls + '">' + (net >= 0 ? '+' : '') + '$' + net.toFixed(2) + '</div></div><div style="text-align:right"><div class="perf-label">Settled</div><div style="font-size:1.25rem;font-weight:700;">' + perf.closed_races + '/' + perf.total_races + '</div></div></div><div class="perf-sub">Wagered $' + perf.total_wagered.toFixed(0) + ' · Collected $' + perf.total_collected.toFixed(2) + '</div></div>';
-      }
-
-      if (pending.length > 0) {
-        html += '<div class="section-label"><span class="dot"></span> Awaiting Results</div>';
-        for (var i = 0; i < pending.length; i++) html += renderCard(pending[i], null, 'pending');
-      }
-      if (upcoming.length > 0) {
-        html += '<div class="section-label">Upcoming</div>';
-        for (var i = 0; i < upcoming.length; i++) html += renderCard(upcoming[i], null, i === 0 ? 'next' : 'upcoming');
-      }
-      if (settled.length > 0) {
-        html += '<div class="section-label">Results</div>';
-        for (var i = 0; i < settled.length; i++) html += renderCard(settled[i], settled[i].result, 'settled');
-      }
-
-      document.getElementById('app').innerHTML = html;
-      document.querySelectorAll('.race-card').forEach(function(card) {
-        card.addEventListener('click', function() {
-          var detail = card.querySelector('.race-detail');
-          if (detail) detail.classList.toggle('hidden');
-        });
-      });
-    }
-
-    function renderCard(race, result, status) {
-      var cardClass = 'race-card';
-      var badgeHtml = '';
-      var stakeHtml = '<span class="race-stake">$' + race.total_stake.toFixed(0) + '</span>';
-      var detailHtml = '';
-
-      if (result) {
-        var hits = computeHits(race, result);
-        var anyHit = hits.win || hits.ex || hits.tri || hits.super;
-        cardClass += anyHit ? ' hit' : ' miss';
-        var bestHit = hits.win ? 'WIN' : hits.super ? 'SUPER' : hits.tri ? 'TRI' : hits.ex ? 'EX' : 'MISS';
-        badgeHtml = '<span class="badge ' + (anyHit ? 'badge-hit' : 'badge-miss') + '">' + bestHit + '</span>';
-
-        var collected = 0;
-        var winBet = race.bets.find(function(b) { return b.bet_type === 'win'; });
-        if (hits.win && result.win_payout) collected += (result.win_payout / 2) * (winBet ? winBet.stake : 25);
-        if (hits.ex && result.exacta_payout) {
-          var n = hits.boxPPs.length;
-          var exBet = race.bets.find(function(b) { return b.bet_type === 'exacta'; });
-          var perCombo = (exBet ? exBet.stake : 50) / (n * (n - 1));
-          collected += result.exacta_payout * perCombo;
-        }
-        if (hits.tri && result.trifecta_payout) {
-          var n = hits.boxPPs.length;
-          var triBet = race.bets.find(function(b) { return b.bet_type === 'trifecta'; });
-          var perCombo = (triBet ? triBet.stake : 24) / (n * (n - 1) * (n - 2));
-          collected += result.trifecta_payout * perCombo;
-        }
-        if (hits.super && result.superfecta_payout) {
-          var n = hits.boxPPs.length;
-          var superBet = race.bets.find(function(b) { return b.bet_type === 'superfecta'; });
-          var perCombo = (superBet ? superBet.stake : 2.4) / (n * (n - 1) * (n - 2) * (n - 3));
-          collected += result.superfecta_payout * perCombo;
-        }
-        var raceNet = collected - race.total_stake;
-        stakeHtml = '<span class="race-stake ' + (raceNet >= 0 ? 'positive' : 'negative') + '">' + (raceNet >= 0 ? '+' : '') + '$' + Math.abs(raceNet).toFixed(0) + '</span>';
-
-        detailHtml = '<div class="race-detail hidden"><div class="finish-row"><strong>#' + result.win_pp + ' ' + result.win_horse + '</strong> — #' + result.place_pp + ' ' + result.place_horse + ' — #' + result.show_pp + ' ' + result.show_horse + (result.fourth_pp ? ' — #' + result.fourth_pp + ' ' + (result.fourth_horse || '') : '') + '</div><div class="bets-row"><span class="bet-chip ' + (hits.win ? 'hit' : 'miss') + '">WIN</span><span class="bet-chip ' + (hits.ex ? 'hit' : 'miss') + '">EX' + (hits.ex ? ' HIT' : '') + '</span><span class="bet-chip ' + (hits.tri ? 'hit' : 'miss') + '">TRI</span><span class="bet-chip ' + (hits.super ? 'hit' : 'miss') + '">SUPER</span></div></div>';
-      } else if (status === 'pending') {
-        cardClass += ' live';
-        badgeHtml = '<span class="badge badge-pending">PENDING</span>';
-        var winBet = race.bets.find(function(b) { return b.bet_type === 'win'; });
-        var exBet = race.bets.find(function(b) { return b.bet_type === 'exacta'; });
-        detailHtml = '<div class="race-detail hidden"><div class="finish-row">Win pick: <strong>' + (winBet && winBet.entries_used ? winBet.entries_used[0] : '') + '</strong></div></div>';
-      } else {
-        if (status === 'next') badgeHtml = '<span class="badge badge-next">NEXT</span>';
-        var winBet = race.bets.find(function(b) { return b.bet_type === 'win'; });
-        var exBet = race.bets.find(function(b) { return b.bet_type === 'exacta'; });
-        detailHtml = '<div class="race-detail hidden"><div class="finish-row">Win pick: <strong>' + (winBet && winBet.entries_used ? winBet.entries_used[0] : '') + '</strong>' + (winBet && winBet.doubled ? ' <span class="badge badge-hit">2x</span>' : '') + '</div></div>';
-      }
-
-      return '<div class="' + cardClass + '"><div class="race-top"><div class="race-left"><div class="race-track">' + race.track + '</div><div class="race-num-row"><span class="race-prefix">R</span><span class="race-number">' + race.race_number + '</span></div><div class="race-time">' + formatTime(race.post_time) + ' ' + badgeHtml + '</div></div><div class="race-right">' + stakeHtml + '</div></div>' + detailHtml + '</div>';
-    }
-
-    load().catch(function(e) {
-      document.getElementById('app').innerHTML = '<div style="padding:2rem;color:red;font-size:16px;font-weight:bold;">Error: ' + (e.message || 'Failed to load') + '. <a href="/">Login</a></div>';
-    });
-
-    setInterval(function() { load().catch(function() {}); }, 120000);
-  </script>
 </body>
 </html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store');
+  res.status(200).send(html);
+}
