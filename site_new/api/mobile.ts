@@ -197,7 +197,8 @@ export default async function handler(req: any, res: any) {
             betsHtml += '<tr><td>Superfecta</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? 'HIT \\u2713' : 'MISS') + '</td><td class="' + (p.super ? 'result-hit' : 'result-miss') + '">' + (p.super ? '$' + p.super : '—') + '</td></tr>';
             betsHtml += '</table>';
 
-            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">Wagered $' + (p.totalStake || '0') + ' &middot; Collected $' + (p.collected || '0') + ' &middot; Net: ' + (parseFloat(p.net || '0') >= 0 ? '+' : '') + '$' + (p.net || '0') + '</div>';
+            var netVal = parseFloat(p.net || '0');
+            var verdictHtml = '<div class="verdict ' + (netVal >= 0 ? 'positive' : 'negative') + '">Wagered $' + (p.totalStake || '0') + ' &middot; Collected $' + (p.collected || '0') + ' &middot; Net: ' + (netVal >= 0 ? '+' : '') + '$' + (p.net || '0') + '</div>';
 
             overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
 
