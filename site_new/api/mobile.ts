@@ -65,6 +65,8 @@ export default async function handler(req: any, res: any) {
 
     const entry: RaceStatus = { race_number: bet.race_number, track: bet.track, status };
     if (result) {
+      const winPickPP = winBet?.entries_used?.[0] ? parsePP(winBet.entries_used[0]) : '';
+      const winPickName = winBet?.entries_used?.[0]?.replace(/^#\d+\s*/, '') || '';
       entry.result = {
         win_pp: result.win_pp, win_horse: result.win_horse,
         place_pp: result.place_pp, place_horse: result.place_horse,
@@ -73,12 +75,13 @@ export default async function handler(req: any, res: any) {
       };
       const boxPPs = (exBet?.entries_used || []).map(parsePP);
       const wpp = String(result.win_pp), ppp = String(result.place_pp), spp = String(result.show_pp);
-      const winPickPP = winBet?.entries_used?.[0] ? parsePP(winBet.entries_used[0]) : '';
       entry.hits = {
         win: winPickPP === wpp,
         ex: boxPPs.includes(wpp) && boxPPs.includes(ppp),
         tri: boxPPs.includes(wpp) && boxPPs.includes(ppp) && boxPPs.includes(spp),
       };
+      (entry as any).winPickPP = winPickPP;
+      (entry as any).winPickName = winPickName;
     }
     raceStatuses.push(entry);
   }
@@ -99,15 +102,17 @@ export default async function handler(req: any, res: any) {
   <body>
     <div id="root"></div>
     <style>
-      .ftc-result-overlay { margin-top: 8px; padding: 10px 12px; border-radius: 8px; font-family: Inter, sans-serif; font-size: 12px; }
-      .ftc-result-overlay.hit { background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.3); }
-      .ftc-result-overlay.miss { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); }
-      .ftc-result-overlay .finish-order { font-weight: 600; color: #111827; margin-bottom: 4px; }
-      .ftc-result-overlay .bet-results { display: flex; gap: 8px; flex-wrap: wrap; }
-      .ftc-result-overlay .bet-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; }
-      .ftc-result-overlay .bet-tag.hit { background: rgba(22,163,74,0.15); color: #16a34a; }
-      .ftc-result-overlay .bet-tag.miss { background: rgba(107,114,128,0.1); color: #9ca3af; text-decoration: line-through; }
-      .ftc-result-overlay .verdict { margin-top: 6px; font-weight: 700; font-size: 11px; }
+      .ftc-result-overlay { margin-top: 12px; padding: 12px; border-radius: 10px; font-family: Inter, sans-serif; font-size: 12px; }
+      .ftc-result-overlay.hit { background: rgba(22,163,74,0.06); border: 1px solid rgba(22,163,74,0.25); }
+      .ftc-result-overlay.miss { background: rgba(239,68,68,0.04); border: 1px solid rgba(239,68,68,0.15); }
+      .ftc-result-overlay .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; color: #6b7280; margin-bottom: 8px; }
+      .ftc-result-overlay .finish-order { font-weight: 600; color: #111827; margin-bottom: 10px; font-size: 13px; }
+      .ftc-result-overlay table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      .ftc-result-overlay th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; font-weight: 600; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
+      .ftc-result-overlay td { padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
+      .ftc-result-overlay td.result-hit { color: #16a34a; font-weight: 700; }
+      .ftc-result-overlay td.result-miss { color: #9ca3af; }
+      .ftc-result-overlay .verdict { margin-top: 10px; font-weight: 700; font-size: 12px; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.08); }
       .ftc-result-overlay .verdict.positive { color: #16a34a; }
       .ftc-result-overlay .verdict.negative { color: #ef4444; }
     </style>
@@ -156,20 +161,57 @@ export default async function handler(req: any, res: any) {
             var overlay = document.createElement('div');
             overlay.className = 'ftc-result-overlay ' + (anyHit ? 'hit' : 'miss');
 
-            var finishHtml = '<div class="finish-order">#' + r.win_pp + ' ' + r.win_horse + ' &mdash; #' + r.place_pp + ' ' + r.place_horse + ' &mdash; #' + r.show_pp + ' ' + r.show_horse + '</div>';
+            var finishHtml = '<div class="section-title">Race Result</div>';
+            finishHtml += '<div class="finish-order">#' + r.win_pp + ' ' + r.win_horse + ' &mdash; #' + r.place_pp + ' ' + r.place_horse + ' &mdash; #' + r.show_pp + ' ' + r.show_horse + '</div>';
 
-            var betsHtml = '<div class="bet-results">';
-            betsHtml += '<span class="bet-tag ' + (h.win ? 'hit' : 'miss') + '">WIN ' + (h.win ? '\\u2713' : '\\u2717') + '</span>';
-            betsHtml += '<span class="bet-tag ' + (h.ex ? 'hit' : 'miss') + '">EXACTA ' + (h.ex ? '\\u2713' : '\\u2717') + '</span>';
-            betsHtml += '<span class="bet-tag ' + (h.tri ? 'hit' : 'miss') + '">TRIFECTA ' + (h.tri ? '\\u2713' : '\\u2717') + '</span>';
-            betsHtml += '</div>';
+            var betsHtml = '<table><tr><th>Bet</th><th>Needed</th><th>Result</th></tr>';
+            betsHtml += '<tr><td>Win</td><td>#' + (race.winPickPP || '?') + ' ' + (race.winPickName || '') + ' to win</td><td class="' + (h.win ? 'result-hit' : 'result-miss') + '">' + (h.win ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
+            betsHtml += '<tr><td>Exacta</td><td>1st + 2nd both in box</td><td class="' + (h.ex ? 'result-hit' : 'result-miss') + '">' + (h.ex ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
+            betsHtml += '<tr><td>Trifecta</td><td>1st + 2nd + 3rd all in box</td><td class="' + (h.tri ? 'result-hit' : 'result-miss') + '">' + (h.tri ? 'HIT \\u2713' : 'MISS') + '</td></tr>';
+            betsHtml += '</table>';
 
-            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">' + (anyHit ? (h.win ? 'WIN BET + EXACTA HIT' : h.ex ? 'EXACTA HIT' : 'TRIFECTA HIT') : 'ALL MISS') + '</div>';
+            var hits = [];
+            if (h.win) hits.push('WIN');
+            if (h.ex) hits.push('EXACTA');
+            if (h.tri) hits.push('TRIFECTA');
+            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">' + (anyHit ? hits.join(' + ') + ' HIT' : 'NO BETS HIT') + '</div>';
 
             overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
 
-            // Insert at end of button content
-            btn.appendChild(overlay);
+            // Find the expanded content area for this race
+            // The button is the collapsed card. The expanded detail is a sibling or child.
+            // Strategy: find the element containing "wagering plan" text within this race's section
+            var raceSection = btn.parentElement;
+            // Walk up until we find a container that holds both the button and expanded content
+            while (raceSection && !raceSection.querySelector('[class*="overflow-hidden"]')) {
+              raceSection = raceSection.parentElement;
+            }
+            if (!raceSection) raceSection = btn.parentElement;
+
+            // Look for the wagering plan label inside the expanded area
+            var inserted = false;
+            var allLabels = raceSection.querySelectorAll('span');
+            for (var i = 0; i < allLabels.length; i++) {
+              var lbl = allLabels[i];
+              if (lbl.textContent && lbl.textContent.includes('wagering plan')) {
+                // Found it — find the containing section div and append after it
+                var wagerContainer = lbl.closest('div');
+                // Go up a couple levels to find the full wagering section
+                var wagerSection = wagerContainer;
+                for (var j = 0; j < 4; j++) {
+                  if (wagerSection.parentElement && wagerSection.parentElement !== raceSection) {
+                    wagerSection = wagerSection.parentElement;
+                  }
+                }
+                wagerSection.parentElement.insertBefore(overlay, wagerSection.nextSibling);
+                inserted = true;
+                break;
+              }
+            }
+            if (!inserted) {
+              // Fallback: append to the race section
+              raceSection.appendChild(overlay);
+            }
           });
         });
       }
