@@ -98,61 +98,86 @@ export default async function handler(req: any, res: any) {
   </head>
   <body>
     <div id="root"></div>
+    <style>
+      .ftc-result-overlay { margin-top: 8px; padding: 10px 12px; border-radius: 8px; font-family: Inter, sans-serif; font-size: 12px; }
+      .ftc-result-overlay.hit { background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.3); }
+      .ftc-result-overlay.miss { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.2); }
+      .ftc-result-overlay .finish-order { font-weight: 600; color: #111827; margin-bottom: 4px; }
+      .ftc-result-overlay .bet-results { display: flex; gap: 8px; flex-wrap: wrap; }
+      .ftc-result-overlay .bet-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em; }
+      .ftc-result-overlay .bet-tag.hit { background: rgba(22,163,74,0.15); color: #16a34a; }
+      .ftc-result-overlay .bet-tag.miss { background: rgba(107,114,128,0.1); color: #9ca3af; text-decoration: line-through; }
+      .ftc-result-overlay .verdict { margin-top: 6px; font-weight: 700; font-size: 11px; }
+      .ftc-result-overlay .verdict.positive { color: #16a34a; }
+      .ftc-result-overlay .verdict.negative { color: #ef4444; }
+    </style>
     <script>
-      // Patch the UI after React mounts with live results
       function patchUI() {
         var data = window.__LIVE_DATA__;
         if (!data || !data.races) return;
 
         // Update the "last updated" time
-        var timeEls = document.querySelectorAll('[class*="text-muted"]');
-        timeEls.forEach(function(el) {
-          if (el.textContent && el.textContent.includes('Updated')) {
+        var allEls = document.querySelectorAll('span, div, p');
+        allEls.forEach(function(el) {
+          if (el.textContent && el.textContent.includes('Updated') && el.children.length === 0) {
             el.textContent = 'Updated ' + data.updated + ' ET (live)';
           }
         });
 
-        // Find race cards and patch status
-        var cards = document.querySelectorAll('[class*="focus:outline-none"]');
-        if (cards.length === 0) cards = document.querySelectorAll('button[class]');
+        // Find race cards by looking for the big race numbers
+        var buttons = document.querySelectorAll('button');
 
         data.races.forEach(function(race) {
           if (race.status !== 'finished' || !race.result) return;
 
-          // Find the card matching this race number
-          cards.forEach(function(card) {
-            var numEl = card.querySelector('[class*="text-3xl"]');
+          buttons.forEach(function(btn) {
+            // Find the race number element (big bold number)
+            var numEl = btn.querySelector('[class*="text-3xl"]');
             if (!numEl) return;
             var num = parseInt(numEl.textContent);
             if (num !== race.race_number) return;
 
-            // Find "Projected order" label and change to "Finish"
-            var labels = card.querySelectorAll('[class*="tracking-wider"]');
-            labels.forEach(function(label) {
-              if (label.textContent && label.textContent.trim() === 'Projected order') {
-                label.textContent = 'Finish';
+            // Check if already patched
+            if (btn.querySelector('.ftc-result-overlay')) return;
+
+            // Change "Projected order" to "Finish"
+            var spans = btn.querySelectorAll('span');
+            spans.forEach(function(span) {
+              if (span.textContent && span.textContent.trim() === 'Projected order') {
+                span.textContent = 'Finish';
               }
             });
 
-            // Find the order display and update with actual results
-            var orderEls = card.querySelectorAll('[class*="tabular-nums"]');
-            // Look for the projected finish section
-            var allText = card.querySelectorAll('span');
-            allText.forEach(function(span) {
-              var t = span.textContent || '';
-              // Update status badge
-              if (t === 'upcoming' || t === 'Upcoming') {
-                span.textContent = race.hits && (race.hits.win || race.hits.ex || race.hits.tri) ? 'HIT' : 'Result';
-                span.style.color = race.hits && (race.hits.win || race.hits.ex || race.hits.tri) ? '#16a34a' : '#6b7280';
-              }
-            });
+            // Build the result overlay
+            var r = race.result;
+            var h = race.hits;
+            var anyHit = h && (h.win || h.ex || h.tri);
+
+            var overlay = document.createElement('div');
+            overlay.className = 'ftc-result-overlay ' + (anyHit ? 'hit' : 'miss');
+
+            var finishHtml = '<div class="finish-order">#' + r.win_pp + ' ' + r.win_horse + ' &mdash; #' + r.place_pp + ' ' + r.place_horse + ' &mdash; #' + r.show_pp + ' ' + r.show_horse + '</div>';
+
+            var betsHtml = '<div class="bet-results">';
+            betsHtml += '<span class="bet-tag ' + (h.win ? 'hit' : 'miss') + '">WIN ' + (h.win ? '\\u2713' : '\\u2717') + '</span>';
+            betsHtml += '<span class="bet-tag ' + (h.ex ? 'hit' : 'miss') + '">EXACTA ' + (h.ex ? '\\u2713' : '\\u2717') + '</span>';
+            betsHtml += '<span class="bet-tag ' + (h.tri ? 'hit' : 'miss') + '">TRIFECTA ' + (h.tri ? '\\u2713' : '\\u2717') + '</span>';
+            betsHtml += '</div>';
+
+            var verdictHtml = '<div class="verdict ' + (anyHit ? 'positive' : 'negative') + '">' + (anyHit ? (h.win ? 'WIN BET + EXACTA HIT' : h.ex ? 'EXACTA HIT' : 'TRIFECTA HIT') : 'ALL MISS') + '</div>';
+
+            overlay.innerHTML = finishHtml + betsHtml + verdictHtml;
+
+            // Insert at end of button content
+            btn.appendChild(overlay);
           });
         });
       }
 
       // Wait for React to mount then patch
-      setTimeout(patchUI, 1500);
-      setTimeout(patchUI, 3000);
+      setTimeout(patchUI, 1000);
+      setTimeout(patchUI, 2500);
+      setTimeout(patchUI, 5000);
     </script>
   </body>
 </html>`);
