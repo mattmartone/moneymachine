@@ -12,7 +12,7 @@ export default async function handler(req: any, res: any) {
 
   // Get today's bets
   const { rows: bets } = await query(
-    `SELECT b.race_id, b.bet_type, b.stake, b.doubled, b.entries_used,
+    `SELECT b.race_id, b.bet_type, b.stake, b.doubled, b.entries_used, b.conviction,
             r.track, r.race_number, r.post_time
      FROM bets b JOIN races r ON r.id = b.race_id
      WHERE r.date = $1 ORDER BY r.post_time NULLS LAST, r.race_number`,
@@ -63,7 +63,9 @@ export default async function handler(req: any, res: any) {
     if (result) status = 'finished';
     else if (bet.post_time && bet.post_time.slice(0, 5) < currentTime) status = 'pending';
 
+    const isPlanOnly = raceBets.every((b: any) => b.conviction === 'plan');
     const entry: RaceStatus = { race_number: bet.race_number, track: bet.track, status };
+    (entry as any).planOnly = isPlanOnly;
     if (result) {
       const winPickPP = winBet?.entries_used?.[0] ? parsePP(winBet.entries_used[0]) : '';
       const winPickName = winBet?.entries_used?.[0]?.replace(/^#\d+\s*/, '') || '';
@@ -122,7 +124,7 @@ export default async function handler(req: any, res: any) {
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Race Day Dashboard</title>
-    <script>window.__LIVE_DATA__ = ${JSON.stringify({ races: raceStatuses, updated: currentTime })};</script>
+    <script>window.__LIVE_DATA__ = ${JSON.stringify({ races: raceStatuses, updated: currentTime, totalNet: raceStatuses.reduce((s: number, r: any) => s + (r.payouts ? parseFloat(r.payouts.net) : 0), 0).toFixed(2) })};</script>
     <script type="module" crossorigin src="/mobile/assets/index-CqI2JM09.js"></script>
     <link rel="stylesheet" crossorigin href="/mobile/assets/index-S8yKncZX.css">
   </head>
@@ -154,10 +156,38 @@ export default async function handler(req: any, res: any) {
           }
         });
 
+        // Update the net P/L display in the header
+        if (data.totalNet) {
+          var netVal = parseFloat(data.totalNet);
+          var netEls = document.querySelectorAll('[class*="tabular-nums"], [class*="font-bold"]');
+          netEls.forEach(function(el) {
+            if (el.textContent && (el.textContent.trim() === '$0.00' || el.textContent.trim() === '+$0.00' || el.textContent.trim() === '-$0.00')) {
+              el.textContent = (netVal >= 0 ? '+' : '') + '$' + netVal.toFixed(2);
+              el.style.color = netVal >= 0 ? '#16a34a' : '#ef4444';
+            }
+          });
+        }
+
         // Find race cards by looking for the big race numbers
         var buttons = document.querySelectorAll('button');
 
         data.races.forEach(function(race) {
+          // Mark plan-only races
+          if (race.planOnly) {
+            buttons.forEach(function(btn) {
+              var numEl = btn.querySelector('[class*="text-3xl"]');
+              if (!numEl) return;
+              var num = parseInt(numEl.textContent);
+              if (num !== race.race_number) return;
+              if (btn.querySelector('.ftc-plan-badge')) return;
+              var badge = document.createElement('span');
+              badge.className = 'ftc-plan-badge';
+              badge.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(107,114,128,0.1);color:#6b7280;margin-left:6px;';
+              badge.textContent = 'PLAN ONLY';
+              numEl.parentElement.appendChild(badge);
+            });
+          }
+
           if (race.status !== 'finished' || !race.result) return;
 
           buttons.forEach(function(btn) {
