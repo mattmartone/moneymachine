@@ -179,7 +179,7 @@ const HTML = `<!DOCTYPE html>
       if (perf) {
         var net = perf.net || 0;
         var cls = net >= 0 ? 'positive' : 'negative';
-        html += '<div class="perf-bar"><div class="perf-row"><div><div class="perf-label">Today\\'s P/L</div><div class="perf-value ' + cls + '">' + (net >= 0 ? '+' : '') + '$' + net.toFixed(2) + '</div></div><div style="text-align:right"><div class="perf-label">Settled</div><div style="font-size:1.25rem;font-weight:700;">' + perf.closed_races + '/' + perf.total_races + '</div></div></div><div class="perf-sub">Wagered $' + perf.total_wagered.toFixed(0) + ' · Collected $' + perf.total_collected.toFixed(2) + '</div></div>';
+        html += '<div class="perf-bar"><div class="perf-row"><div><div class="perf-label">Today P/L</div><div class="perf-value ' + cls + '">' + (net >= 0 ? '+' : '') + '$' + net.toFixed(2) + '</div></div><div style="text-align:right"><div class="perf-label">Settled</div><div style="font-size:1.25rem;font-weight:700;">' + perf.closed_races + '/' + perf.total_races + '</div></div></div><div class="perf-sub">Wagered $' + perf.total_wagered.toFixed(0) + ' · Collected $' + perf.total_collected.toFixed(2) + '</div></div>';
       }
 
       if (pending.length > 0) {
