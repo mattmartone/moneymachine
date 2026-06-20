@@ -82,7 +82,7 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
   }, [selectedDate]);
 
   const filteredRaces = races.filter((r) =>
-    activeTab === 'commission' ? r.conviction === 'COMMISSION' : r.conviction !== 'COMMISSION'
+    activeTab === 'commission' ? (r.conviction === 'COMMISSION' || r.conviction === 'DROPPED') : (r.conviction !== 'COMMISSION' && r.conviction !== 'DROPPED')
   );
   const hourGroups = groupRacesByHour(filteredRaces);
   // Where the "now" line falls: the first race that hasn't been run yet.
