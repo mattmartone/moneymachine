@@ -54,10 +54,13 @@ export function RaceCard({ race }: RaceCardProps) {
     }
   };
   return (
-    <div className="bg-surface border border-border rounded-2xl overflow-hidden transition-colors shadow-soft">
+    <div className="bg-surface border border-border rounded-2xl transition-colors shadow-soft">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full text-left p-4 focus:outline-none">
+        className={`w-full text-left p-4 focus:outline-none sticky top-[60px] z-10 bg-surface rounded-t-2xl relative overflow-hidden`}>
+        {isExpanded && (
+          <div className="absolute left-0 top-0 right-0 h-1 rounded-t-2xl" style={{ background: 'rgb(var(--c-primary))' }} />
+        )}
         
         {/* Collapsed view: race number on the left, projected horse order on the right */}
         <div className="flex flex-col gap-3">
@@ -139,6 +142,38 @@ export function RaceCard({ race }: RaceCardProps) {
           
             <div className="p-4 space-y-5">
 
+              {/* Field table */}
+              {race.field.length > 0 && (
+              <div>
+                <h4 className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
+                  Field
+                </h4>
+                <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-app border-b border-border">
+                      <tr>
+                        <th className="py-1.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold w-8">#</th>
+                        <th className="py-1.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold">Horse</th>
+                        <th className="py-1.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">ML</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {race.field.map((entry) => (
+                        <tr key={entry.pp} className={entry.scratched ? 'opacity-40 line-through' : ''}>
+                          <td className="py-1.5 px-3 tabular-nums text-gray-900 font-semibold">{entry.pp}</td>
+                          <td className={`py-1.5 px-3 text-gray-700 ${entry.scratched ? 'line-through' : ''}`}>
+                            {entry.name}
+                            {entry.scratched && <span className="ml-2 text-[9px] uppercase tracking-wider text-danger font-semibold">SCR</span>}
+                          </td>
+                          <td className="py-1.5 px-3 text-right tabular-nums text-muted">{entry.live || entry.ml}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              )}
+
               {/* Race theory */}
               {race.analysis.paceThesis && (
               <div className="border-t border-border pt-4">
@@ -173,49 +208,47 @@ export function RaceCard({ race }: RaceCardProps) {
                     Wagering Plan
                   </h4>
                   <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-app border-b border-border">
-                        <tr>
-                          <th className="py-2 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold">
-                            Type
-                          </th>
-                          <th className="py-2 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold">
-                            Bet
-                          </th>
-                          <th className="py-2 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">
-                            Wagered
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {race.wagers.map((wager, idx) =>
-                        <tr key={idx}>
-                              <td className="py-2.5 px-3 text-gray-700">
-                                {wager.type}
-                              </td>
-                              <td className="py-2.5 px-3 font-semibold tabular-nums text-gray-900">
-                                {wager.bet}
-                              </td>
-                              <td className="py-2.5 px-3 text-right tabular-nums text-gray-900">
-                                ${wager.cost}
-                              </td>
-                            </tr>
-                    )}
-                      </tbody>
-                      <tfoot className="bg-app border-t border-border">
-                        <tr>
-                            <td
-                        colSpan={2}
-                        className="py-2.5 px-3 text-right text-[10px] uppercase tracking-wider text-muted font-semibold">
-
-                              Total
-                            </td>
-                            <td className="py-2.5 px-3 text-right font-bold tabular-nums text-gray-900">
-                              ${race.totalStake}
-                            </td>
-                          </tr>
-                      </tfoot>
-                    </table>
+                    {/* Projected Finish — win pick + box */}
+                    {(() => {
+                      const winWager = race.wagers.find((w) => w.type === 'Win');
+                      const boxWager = race.wagers.find((w) => w.type === 'Exacta Box' || w.type === 'Trifecta Box');
+                      return (
+                        <div className="px-3 py-2.5 border-b border-border">
+                          <div className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-1.5">Projected Finish</div>
+                          <div className="space-y-0.5">
+                            {winWager && winWager.horses[0] && (
+                              <div className="flex items-baseline gap-2 text-xs">
+                                <span className="font-bold tabular-nums text-primary w-5">#{winWager.horses[0].pp}</span>
+                                <span className="text-gray-900 font-semibold flex-1 truncate">{winWager.horses[0].name}</span>
+                                <span className="text-muted tabular-nums">{winWager.horses[0].ml}</span>
+                              </div>
+                            )}
+                            {boxWager && boxWager.horses
+                              .filter((h) => !winWager?.horses[0] || h.pp !== winWager.horses[0].pp)
+                              .map((h) => (
+                              <div key={h.pp} className="flex items-baseline gap-2 text-xs">
+                                <span className="font-semibold tabular-nums text-gray-900 w-5">#{h.pp}</span>
+                                <span className="text-gray-700 flex-1 truncate">{h.name}</span>
+                                <span className="text-muted tabular-nums">{h.ml}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {/* Cost breakdown */}
+                    <div className="divide-y divide-border">
+                      {race.wagers.map((wager, idx) => (
+                        <div key={idx} className="px-3 py-1.5 flex justify-between items-baseline">
+                          <span className="text-xs text-gray-700">{wager.type}</span>
+                          <span className="text-xs font-semibold tabular-nums text-gray-900">${wager.cost}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-app border-t border-border px-3 py-2.5 flex justify-between items-baseline">
+                      <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">Total</span>
+                      <span className="font-bold tabular-nums text-gray-900">${race.totalStake}</span>
+                    </div>
                   </div>
                 </div> :
 

@@ -75,15 +75,15 @@ export function Reports() {
             <iframe
               width="100%"
               height="400"
-              src="https://www.youtube.com/embed/QyEzTFRMs5A?si=QCkfMsBohSVBNLlG"
-              title="Don't Stress the Stretch"
+              src="https://www.youtube.com/embed/6loOvE5t51Y"
+              title="Fade the Chalk — Today on the Board"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
             <p className="text-center text-gray-300 font-mono text-xs mt-2">
-              Don't Stress the Stretch — Wednesday's Card
+              Fade the Chalk — Friday's Card
             </p>
           </div>
         </div>

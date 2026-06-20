@@ -68,10 +68,12 @@ async function run() {
       const surface = race.course_type === 'D' ? 'Dirt' : race.course_type === 'T' ? 'Turf' : race.course_type || null;
       let postTime = race.post_time || null;
       if (!postTime && race.post_time_long) {
-        const d = new Date(race.post_time_long);
+        const d = new Date(parseInt(race.post_time_long, 10));
         if (!isNaN(d.getTime())) {
-          const et = new Date(d.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-          postTime = `${String(et.getHours()).padStart(2, '0')}:${String(et.getMinutes()).padStart(2, '0')}:00`;
+          const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(d);
+          const h = parts.find(p => p.type === 'hour')?.value || '0';
+          const m = parts.find(p => p.type === 'minute')?.value || '0';
+          postTime = `${h.padStart(2, '0')}:${m.padStart(2, '0')}:00`;
         }
       }
       if (postTime && postTime.includes('NaN')) postTime = null;
@@ -93,9 +95,9 @@ async function run() {
       );
       const raceId = raceRes.rows[0].id;
 
-      // Upsert runners
+      // Upsert runners (include scratches — they show as scratched in the field)
       for (const runner of (race.runners || [])) {
-        if (runner.scratch_indicator === 'Y') continue;
+        const isScratched = runner.scratch_indicator === 'Y';
 
         const horseName = runner.horse_name?.toUpperCase();
         if (!horseName) continue;
@@ -122,15 +124,16 @@ async function run() {
         const weight = isNaN(rawWeight) ? null : rawWeight;
 
         await pool.query(
-          `INSERT INTO entries (race_id, horse_id, post_position, morning_line_odds, live_odds, jockey, trainer, weight)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          `INSERT INTO entries (race_id, horse_id, post_position, morning_line_odds, live_odds, jockey, trainer, weight, scratched)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
            ON CONFLICT (race_id, horse_id) DO UPDATE SET
              morning_line_odds = COALESCE(EXCLUDED.morning_line_odds, entries.morning_line_odds),
              live_odds = COALESCE(EXCLUDED.live_odds, entries.live_odds),
              jockey = COALESCE(EXCLUDED.jockey, entries.jockey),
              trainer = COALESCE(EXCLUDED.trainer, entries.trainer),
-             post_position = COALESCE(EXCLUDED.post_position, entries.post_position)`,
-          [raceId, horseId, postPos, ml, liveOdds, jockey, trainer, weight]
+             post_position = COALESCE(EXCLUDED.post_position, entries.post_position),
+             scratched = EXCLUDED.scratched`,
+          [raceId, horseId, postPos, ml, liveOdds, jockey, trainer, weight, isScratched]
         );
       }
 

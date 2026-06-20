@@ -1,20 +1,36 @@
 export type RaceStatus = 'upcoming' | 'live' | 'hit' | 'miss' | 'dropped';
 
+export interface WagerHorse {
+  pp: number;
+  name: string;
+  ml: string;
+}
+
 export interface Wager {
   type: string;
   bet: string;
+  horses: WagerHorse[];
   cost: number;
   paid?: number;
   trackPays?: string;
 }
 
+export interface FieldEntry {
+  pp: number;
+  name: string;
+  ml: string;
+  live?: string;
+  scratched?: boolean;
+}
+
 export interface Race {
   id: string;
+  raceId: number;
   postTime: string;
   track: string;
   raceNumber: number;
   status: RaceStatus;
-  // A "double bet" is a doubled-down, high-conviction win bet on the pick — a big deal.
+  conviction: string;
   doubleBet?: boolean;
   winPick: {
     name: string;
@@ -31,6 +47,7 @@ export interface Race {
     strategies: string[];
   };
   wagers: Wager[];
+  field: FieldEntry[];
 }
 
 // An optional promo video pinned to the top of the Race Day card. Set to null
@@ -43,7 +60,7 @@ export interface FeaturedVideo {
 }
 
 export let featuredVideo: FeaturedVideo | null = {
-  youtubeId: 'QyEzTFRMs5A',
+  youtubeId: '6loOvE5t51Y',
   tag: 'Race Day',
   title: 'Fade the Chalk — Today on the Board',
   subtitle: "A quick look at the plays we're fading and why"
@@ -153,16 +170,32 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     picksByRace.set(pick.race_id, existing);
   }
 
-  // Get unique race IDs and fetch results for all
+  // Get unique race IDs and fetch results + entries for all
   const raceIds = Array.from(picksByRace.keys());
   const resultsMap = new Map<number, ApiResults>();
+  const entriesMap = new Map<number, FieldEntry[]>();
   await Promise.all(
     raceIds.map(async (raceId) => {
       try {
-        const res = await fetch(`/api/lab/results?race_id=${raceId}`, { headers: API_HEADERS });
-        if (res.ok) {
-          const data = await res.json();
+        const [resRes, entRes] = await Promise.all([
+          fetch(`/api/lab/results?race_id=${raceId}`, { headers: API_HEADERS }),
+          fetch(`/api/lab/entries?race_id=${raceId}`, { headers: API_HEADERS }),
+        ]);
+        if (resRes.ok) {
+          const data = await resRes.json();
           if (data.results) resultsMap.set(raceId, data.results);
+        }
+        if (entRes.ok) {
+          const data = await entRes.json();
+          if (data.entries) {
+            entriesMap.set(raceId, data.entries.map((e: any) => ({
+              pp: e.post_position,
+              name: e.horse_name,
+              ml: e.morning_line_odds || '',
+              live: e.live_odds || undefined,
+              scratched: e.scratched || false,
+            })));
+          }
         }
       } catch {}
     })
@@ -186,6 +219,12 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     let doubleBet = false;
     const allBoxPPs: number[] = [];
 
+    const fieldForRace = entriesMap.get(raceId) || [];
+    const lookupHorse = (pp: number): WagerHorse => {
+      const found = fieldForRace.find((f) => f.pp === pp);
+      return { pp, name: found?.name || '', ml: found?.ml || '' };
+    };
+
     for (const pick of racePicks) {
       const entries = parseEntries(pick.entries_used);
 
@@ -193,12 +232,14 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
 
       if (pick.bet_type === 'win') {
         if (entries.length > 0) {
-          winPick = { name: entries[0].name, pp: entries[0].pp, ml: '' };
+          const h = lookupHorse(entries[0].pp);
+          winPick = { name: h.name, pp: h.pp, ml: h.ml };
         }
         doubleBet = pick.doubled;
         wagers.push({
           type: 'Win',
           bet: entries.map((e) => `#${e.pp}`).join(','),
+          horses: entries.map((e) => lookupHorse(e.pp)),
           cost: pick.stake,
         });
       } else if (pick.bet_type === 'exacta') {
@@ -208,6 +249,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         wagers.push({
           type: 'Exacta Box',
           bet: entries.map((e) => e.pp).join(','),
+          horses: entries.map((e) => lookupHorse(e.pp)),
           cost: pick.stake,
         });
       } else if (pick.bet_type === 'trifecta') {
@@ -217,6 +259,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         wagers.push({
           type: 'Trifecta Box',
           bet: entries.map((e) => e.pp).join(','),
+          horses: entries.map((e) => lookupHorse(e.pp)),
           cost: pick.stake,
         });
       } else if (pick.bet_type === 'superfecta') {
@@ -226,6 +269,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         wagers.push({
           type: 'Superfecta Box',
           bet: entries.map((e) => e.pp).join(','),
+          horses: entries.map((e) => lookupHorse(e.pp)),
           cost: pick.stake,
         });
       }
@@ -239,34 +283,18 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         const n = entries.length;
         const pps = entries.map((e) => e.pp);
 
-        if (pick.bet_type === 'win' && results.win_payout > 0) {
-          if (pps.includes(results.win_pp)) {
-            collected += (results.win_payout / 2) * pick.stake;
-          }
-        } else if (pick.bet_type === 'exacta' && results.exacta_payout > 0) {
-          if (pps.includes(results.win_pp) && pps.includes(results.place_pp)) {
-            const combos = permutations(n, 2);
-            collected += results.exacta_payout * (pick.stake / combos);
-          }
-        } else if (pick.bet_type === 'trifecta' && results.trifecta_payout > 0) {
-          if (
-            pps.includes(results.win_pp) &&
-            pps.includes(results.place_pp) &&
-            pps.includes(results.show_pp)
-          ) {
-            const combos = permutations(n, 3);
-            collected += results.trifecta_payout * (pick.stake / combos);
-          }
-        } else if (pick.bet_type === 'superfecta' && results.superfecta_payout > 0) {
-          if (
-            pps.includes(results.win_pp) &&
-            pps.includes(results.place_pp) &&
-            pps.includes(results.show_pp) &&
-            pps.includes(results.fourth_pp)
-          ) {
-            const combos = permutations(n, 4);
-            collected += results.superfecta_payout * (pick.stake / combos);
-          }
+        if (pick.bet_type === 'win' && results.win_payout > 0 && pps.includes(results.win_pp)) {
+          collected += (results.win_payout / 2) * pick.stake;
+        } else if (pick.bet_type === 'exacta' && results.exacta_payout > 0 &&
+          pps.includes(results.win_pp) && pps.includes(results.place_pp)) {
+          collected += results.exacta_payout * (pick.stake / permutations(n, 2));
+        } else if (pick.bet_type === 'trifecta' && results.trifecta_payout > 0 &&
+          pps.includes(results.win_pp) && pps.includes(results.place_pp) && pps.includes(results.show_pp)) {
+          collected += results.trifecta_payout * (pick.stake / permutations(n, 3));
+        } else if (pick.bet_type === 'superfecta' && results.superfecta_payout > 0 &&
+          pps.includes(results.win_pp) && pps.includes(results.place_pp) &&
+          pps.includes(results.show_pp) && results.fourth_pp > 0 && pps.includes(results.fourth_pp)) {
+          collected += results.superfecta_payout * (pick.stake / permutations(n, 4));
         }
       }
     }
@@ -293,14 +321,6 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
 
     // Update wager paid amounts and track pays if settled
     if (results) {
-      for (const wager of wagers) {
-        wager.paid = 0;
-        if (wager.type === 'Win') wager.trackPays = results.win_payout > 0 ? `$${results.win_payout.toFixed(2)} on $2` : undefined;
-        if (wager.type === 'Exacta Box') wager.trackPays = results.exacta_payout > 0 ? `$${results.exacta_payout.toFixed(2)} on $1` : undefined;
-        if (wager.type === 'Trifecta Box') wager.trackPays = results.trifecta_payout > 0 ? `$${results.trifecta_payout.toFixed(2)} on $1` : undefined;
-        if (wager.type === 'Superfecta Box') wager.trackPays = results.superfecta_payout > 0 ? `$${results.superfecta_payout.toFixed(2)} on $0.10` : undefined;
-      }
-      // Distribute collected proportionally (simplified: assign to matching bet types)
       for (let i = 0; i < racePicks.length; i++) {
         const pick = racePicks[i];
         const entries = parseEntries(pick.entries_used);
@@ -308,35 +328,34 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         const pps = entries.map((e) => e.pp);
 
         let wagerPaid = 0;
-        if (pick.bet_type === 'win' && results.win_payout > 0 && pps.includes(results.win_pp)) {
-          wagerPaid = (results.win_payout / 2) * pick.stake;
-        } else if (
-          pick.bet_type === 'exacta' &&
-          results.exacta_payout > 0 &&
-          pps.includes(results.win_pp) &&
-          pps.includes(results.place_pp)
-        ) {
-          wagerPaid = results.exacta_payout * (pick.stake / permutations(n, 2));
-        } else if (
-          pick.bet_type === 'trifecta' &&
-          results.trifecta_payout > 0 &&
-          pps.includes(results.win_pp) &&
-          pps.includes(results.place_pp) &&
-          pps.includes(results.show_pp)
-        ) {
-          wagerPaid = results.trifecta_payout * (pick.stake / permutations(n, 3));
-        } else if (
-          pick.bet_type === 'superfecta' &&
-          results.superfecta_payout > 0 &&
-          pps.includes(results.win_pp) &&
-          pps.includes(results.place_pp) &&
-          pps.includes(results.show_pp) &&
-          pps.includes(results.fourth_pp)
-        ) {
-          wagerPaid = results.superfecta_payout * (pick.stake / permutations(n, 4));
+        let hit = false;
+
+        if (pick.bet_type === 'win') {
+          hit = pps.includes(results.win_pp);
+          if (hit && results.win_payout > 0) {
+            wagerPaid = (results.win_payout / 2) * pick.stake;
+          }
+        } else if (pick.bet_type === 'exacta') {
+          hit = pps.includes(results.win_pp) && pps.includes(results.place_pp);
+          if (hit && results.exacta_payout > 0) {
+            const perCombo = pick.stake / permutations(n, 2);
+            wagerPaid = results.exacta_payout * perCombo;
+          }
+        } else if (pick.bet_type === 'trifecta') {
+          hit = pps.includes(results.win_pp) && pps.includes(results.place_pp) && pps.includes(results.show_pp);
+          if (hit && results.trifecta_payout > 0) {
+            const perCombo = pick.stake / permutations(n, 3);
+            wagerPaid = results.trifecta_payout * perCombo;
+          }
+        } else if (pick.bet_type === 'superfecta') {
+          hit = pps.includes(results.win_pp) && pps.includes(results.place_pp) &&
+                pps.includes(results.show_pp) && results.fourth_pp > 0 && pps.includes(results.fourth_pp);
+          if (hit && results.superfecta_payout > 0) {
+            const perCombo = pick.stake / permutations(n, 4);
+            wagerPaid = results.superfecta_payout * perCombo;
+          }
         }
 
-        // Find matching wager in our wagers array
         const wagerIdx = wagers.findIndex((w) => {
           if (pick.bet_type === 'win') return w.type === 'Win';
           if (pick.bet_type === 'exacta') return w.type === 'Exacta Box';
@@ -346,16 +365,29 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         });
         if (wagerIdx >= 0) {
           wagers[wagerIdx].paid = wagerPaid;
+          if (pick.bet_type === 'win') {
+            wagers[wagerIdx].trackPays = hit && results.win_payout > 0 ? `$${results.win_payout.toFixed(2)} on $2` : undefined;
+          } else if (pick.bet_type === 'exacta') {
+            wagers[wagerIdx].trackPays = hit && results.exacta_payout > 0 ? `$${results.exacta_payout.toFixed(2)} on $1` : undefined;
+          } else if (pick.bet_type === 'trifecta') {
+            wagers[wagerIdx].trackPays = hit && results.trifecta_payout > 0 ? `$${results.trifecta_payout.toFixed(2)} on $1` : undefined;
+          } else if (pick.bet_type === 'superfecta') {
+            wagers[wagerIdx].trackPays = hit && results.superfecta_payout > 0 ? `$${results.superfecta_payout.toFixed(2)} on $0.10` : undefined;
+          }
         }
       }
     }
 
+    const conviction = firstPick.conviction || 'COMMISSION';
+
     return {
       id: String(raceId),
+      raceId,
       postTime: postTimeRaw ? formatPostTime(postTimeRaw) : '—',
       track,
       raceNumber: raceNumber,
       status,
+      conviction,
       doubleBet: doubleBet || undefined,
       winPick,
       exoticBox,
@@ -370,6 +402,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           .filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i),
       },
       wagers,
+      field: entriesMap.get(raceId) || [],
     };
   });
 

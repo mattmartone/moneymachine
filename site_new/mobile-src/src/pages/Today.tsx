@@ -73,6 +73,7 @@ function SectionTag({
 }
 export function Today({ selectedDate }: { selectedDate?: string }) {
   const [races, setRaces] = useState<Race[]>(mockRaces);
+  const [activeTab, setActiveTab] = useState<'commission' | 'capo'>('commission');
 
   useEffect(() => {
     fetchRaces(selectedDate).then((fetched) => {
@@ -80,11 +81,14 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
     });
   }, [selectedDate]);
 
-  const hourGroups = groupRacesByHour(races);
+  const filteredRaces = races.filter((r) =>
+    activeTab === 'commission' ? r.conviction === 'COMMISSION' : r.conviction !== 'COMMISSION'
+  );
+  const hourGroups = groupRacesByHour(filteredRaces);
   // Where the "now" line falls: the first race that hasn't been run yet.
-  const firstUpcoming = races.find((r) => !isConcluded(r));
+  const firstUpcoming = filteredRaces.find((r) => !isConcluded(r));
   const dividerBeforeId = firstUpcoming?.id;
-  const hasResults = races.some(isConcluded);
+  const hasResults = filteredRaces.some(isConcluded);
   const headerRef = useRef<HTMLDivElement>(null);
   const boundaryRef = useRef<HTMLDivElement>(null);
   const [section, setSection] = useState<'results' | 'upcoming'>(
@@ -152,11 +156,25 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
         <FeaturedVideo />
 
-        <div className="flex justify-between items-end mb-6">
+        <div className="flex justify-between items-end mb-4">
           <h2 className="text-xl font-bold tracking-tight">Today's Card</h2>
           <span className="text-xs text-muted font-medium">
             Updated: 1:45 PM
           </span>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
+          <button
+            onClick={() => setActiveTab('commission')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${activeTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Commission Picks
+          </button>
+          <button
+            onClick={() => setActiveTab('capo')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${activeTab === 'capo' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Capo Picks
+          </button>
         </div>
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
