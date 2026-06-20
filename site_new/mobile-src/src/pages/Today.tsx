@@ -86,9 +86,21 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
     r.conviction === 'COMMISSION' || r.conviction === 'DROPPED'
   );
 
+  const isPostTimePassed = (r: Race) => {
+    if (r.postTime === '—') return false;
+    const [time, period] = r.postTime.split(' ');
+    const [h, m] = time.split(':').map(Number);
+    let hours = h;
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return (hours * 60 + m) <= nowMinutes;
+  };
+
   const filteredRaces = viewTab === 'upcoming'
-    ? allRaces.filter((r) => r.status === 'upcoming' || r.status === 'live' || r.status === 'dropped')
-    : allRaces.filter((r) => r.status === 'hit' || r.status === 'miss');
+    ? allRaces.filter((r) => r.status === 'upcoming' || (r.status === 'dropped' && !isPostTimePassed(r)))
+    : [...allRaces.filter((r) => r.status === 'hit' || r.status === 'miss' || r.status === 'live' || (r.status === 'dropped' && isPostTimePassed(r)))].reverse();
 
   const hourGroups = groupRacesByHour(filteredRaces);
   const firstUpcoming = filteredRaces.find((r) => !isConcluded(r));
@@ -145,17 +157,9 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
   }, [dividerBeforeId, hasResults]);
   return (
     <div className="pb-24">
-      {/* Sticky header: summary + the section tag form the seam with the list */}
+      {/* Sticky header */}
       <div ref={headerRef} className="sticky top-0 z-20 shadow-sm">
         <SummaryBar compact={scrolled} races={races} />
-        {hasResults && firstUpcoming &&
-        <SectionTag
-          section={section}
-          date={today}
-          onUpcoming={scrollToUpcoming}
-          onResults={scrollToResults} />
-
-        }
       </div>
 
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">

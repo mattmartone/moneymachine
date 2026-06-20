@@ -302,14 +302,12 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     // Determine status
     let status: RaceStatus;
     const conviction = firstPick.conviction || 'COMMISSION';
-    if (conviction === 'DROPPED') {
-      status = 'dropped';
-    } else if (results) {
+    if (results) {
       status = collected > 0 ? 'hit' : 'miss';
     } else if (isPostTimePassed) {
-      status = 'live';
+      status = conviction === 'DROPPED' ? 'dropped' : 'live';
     } else {
-      status = 'upcoming';
+      status = conviction === 'DROPPED' ? 'dropped' : 'upcoming';
     }
 
     // Build exoticBox: for settled races show finish order, for unsettled show bet PPs

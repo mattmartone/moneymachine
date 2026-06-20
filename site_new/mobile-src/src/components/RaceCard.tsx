@@ -36,9 +36,9 @@ export function RaceCard({ race }: RaceCardProps) {
         return null;
       case 'live':
         return (
-          <span className="bg-success/10 border border-success/20 text-success px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
-            Live
+          <span className="bg-primary/10 border border-primary/20 text-primary px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            Results Pending
           </span>);
 
       case 'hit':
