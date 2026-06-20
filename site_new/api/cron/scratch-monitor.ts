@@ -6,11 +6,12 @@ const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
 const RESEND_KEY = 're_L3cnNm7K_6Fu7rVh8Num5gULJemTdoK9y';
 
 const MEET_IDS: Record<string, string> = {
-  BAQ: 'BAQ_1781395200000',
-  GP: 'GP_1781395200000',
-  LRL: 'LRL_1781395200000',
-  MTH: 'MTH_1781395200000',
-  SA: 'SA_1781395200000',
+  CD: 'CD_1781913600000',
+  GP: 'GP_1781913600000',
+  LRL: 'LRL_1781913600000',
+  LS: 'LS_1781913600000',
+  PRM: 'PRM_1781913600000',
+  // WO (Woodbine) not available in Racing API — no scratch monitoring for WO races
 };
 
 interface WatchedRace {
@@ -25,25 +26,17 @@ interface WatchedRace {
 }
 
 const WATCHED_RACES: WatchedRace[] = [
-  // Commission Picks (with estimated post times ET)
-  { track_api: 'LRL', track_name: 'Laurel', race_number: 3, product: 'Commission Pick 1', favorite: 'BIG TANKNESS', win_pick: 'BUSHIDO', box: ['BUSHIDO', 'TALENTED MAN', 'BIG TANKNESS', 'CACTUS'], post_time_et: '13:25' },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 7, product: 'Commission Pick 2', favorite: "MOMENT'S NOTICE", win_pick: 'MOMENTUM FILES', box: ['MOMENTUM FILES', 'SALMING', "TOGA D'ORO", "MOMENT'S NOTICE"], post_time_et: '15:56' },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 5, product: 'Commission Pick 3', favorite: 'HARD CIRCLE', win_pick: 'HONG KONG PHOOEY', box: ['HARD CIRCLE', 'HONG KONG PHOOEY', 'TAKE A STANCE', 'RAGING SEA CAPTAIN'], post_time_et: '14:52' },
-  { track_api: 'LRL', track_name: 'Laurel', race_number: 7, product: 'Commission Pick 4', favorite: 'ONLY FOR NOW', win_pick: 'NICHE', box: ['NICHE', 'JUST PHILTORED', 'GERRARDS CROSS', 'THE TOWN TEMPTER'], post_time_et: '15:25' },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 9, product: 'Commission Pick 5', favorite: 'OCEAN ATLANTIQUE', win_pick: 'FROSTED OVER', box: ['FROSTED OVER', 'DETERMINEDLY', 'PRESIDER', 'BRIGADIER GENERAL'], post_time_et: '16:56' },
-  { track_api: 'GP', track_name: 'Gulfstream', race_number: 8, product: 'Commission Pick 6', favorite: 'GREAT VENEZUELA', win_pick: 'VINDICATE CHA CHA', box: ['VINDICATE CHA CHA', 'TIFFANY GOLD', "TREE C'S KAI", 'JOKES UP'], post_time_et: '15:47' },
-  { track_api: 'BAQ', track_name: 'Belmont', race_number: 3, product: 'Commission Pick 7', favorite: 'EGYPTIAN', win_pick: 'DROP ME A DIME', box: ['DROP ME A DIME', 'EGYPTIAN', 'SOLO JIM', 'FIRST PITCH'], post_time_et: '13:56' },
-  // Monmouth Park Race Day
-  { track_api: 'MTH', track_name: 'Monmouth', race_number: 5, product: 'MTH Race Day', favorite: 'GROUCH', win_pick: 'LORD BERRIER', box: ['GROUCH', 'NATURAL HARBOR', 'LORD BERRIER', "CHARLIE'S EXPRESS"] },
-  { track_api: 'MTH', track_name: 'Monmouth', race_number: 6, product: 'MTH Race Day', favorite: 'SINGALONG KAYLA', win_pick: 'CELESTIAL EXPRESS', box: ['CELESTIAL EXPRESS', 'SINGALONG KAYLA', 'PRINCESS GLADYS', "POSTINO'S PROPHECY"] },
-  { track_api: 'MTH', track_name: 'Monmouth', race_number: 7, product: 'MTH Race Day', favorite: "ELSIE'S SMILE", win_pick: "CASSIE'S VAULT", box: ["CASSIE'S VAULT", 'TOASTTOTHESTONES', 'LADY KHOZ', "ELSIE'S SMILE"] },
-  { track_api: 'MTH', track_name: 'Monmouth', race_number: 8, product: 'MTH Race Day', favorite: 'MAGNETO', win_pick: 'FIRST NAVY JACK', box: ['FIRST NAVY JACK', 'CHAOS COMIN', 'REDEMPTION SPEIGHT', "JOEVIA'S FIRST", 'MAGNETO'] },
-  // Santa Anita Race Day Pass
-  { track_api: 'SA', track_name: 'Santa Anita', race_number: 4, product: 'SA Race Day', favorite: 'CLEVER CLOVER', win_pick: 'DES DOIGTS', box: ['CLEVER CLOVER', 'DES DOIGTS', 'ZOMBO BOMBO', 'ONE SMOKIN DUDE'] },
-  { track_api: 'SA', track_name: 'Santa Anita', race_number: 5, product: 'SA Race Day', favorite: "CAN'T SLEEP", win_pick: 'TAHINI', box: ['TAHINI', 'IMABOUTAGO', 'YOUNG LOVE', 'KUWAITYA', "CAN'T SLEEP"] },
-  { track_api: 'SA', track_name: 'Santa Anita', race_number: 9, product: 'SA Race Day', favorite: 'GOLD PHOENIX', win_pick: 'POOR CONNECTION', box: ['POOR CONNECTION', 'AMERICAN HOPE', 'LIVING LIFE', 'RIMPROTECTOR', 'GOLD PHOENIX'] },
-  { track_api: 'SA', track_name: 'Santa Anita', race_number: 11, product: 'SA Race Day', favorite: 'KIKURIDE', win_pick: 'MARS MAGIC', box: ['NO CAP', 'SHOCKING GREY', 'MARS MAGIC', 'CANTO DELLA TERRA', 'KIKURIDE'] },
-  { track_api: 'SA', track_name: 'Santa Anita', race_number: 12, product: 'SA Race Day', favorite: 'KING STEPHEN', win_pick: 'PRIVATE GEM', box: ['SHAMROCK GLITTER', 'PRIVATE GEM', 'THE OLD NINE', 'GOLDEN ALE', 'KING STEPHEN'] },
+  // Commission Card — June 20, 2026
+  { track_api: 'LS', track_name: 'Lone Star', race_number: 2, product: 'Commission Pick 1', favorite: 'EDGEMEISTER', win_pick: 'LOVEREIGNORME', box: ['LOVEREIGNORME', 'CITYCITYBLINGBLING', 'KNOTTY KITTY', "I'M ON EDGE", 'EDGEMEISTER'], post_time_et: '15:02' },
+  { track_api: 'LRL', track_name: 'Laurel', race_number: 7, product: 'Commission Pick 2', favorite: 'SPORTING LADY', win_pick: 'BIG EARN', box: ['BIG EARN', 'MOPO', 'BOUJEE BUBBLEZ', 'GIFT OF GAB'], post_time_et: '15:13' },
+  { track_api: 'GP', track_name: 'Gulfstream', race_number: 9, product: 'Commission Pick 3', favorite: 'K. C. CHIEF', win_pick: 'STEELIN BASES', box: ['STEELIN BASES', 'NAVY CROSS', 'CORTA FUEGO', 'K. C. CHIEF'], post_time_et: '16:54' },
+  { track_api: 'WO', track_name: 'Woodbine', race_number: 2, product: 'Commission Pick 4', favorite: 'INSTANT RESPONSE', win_pick: 'RUM TALK', box: ['INSTANT RESPONSE', 'FINE STYLE', 'HOWSITGOINOWEN', 'BORDER FOX', 'RUM TALK'], post_time_et: '17:00' },
+  { track_api: 'GP', track_name: 'Gulfstream', race_number: 11, product: 'Commission Pick 5', favorite: 'SOUFFLE ON FIRE', win_pick: 'SHEDOO KITTEN', box: ['SOUFFLE ON FIRE', 'LOOKIN TO ROCK', 'SHEDOO KITTEN', 'DEL ROSARIO'], post_time_et: '17:24' },
+  { track_api: 'CD', track_name: 'Churchill', race_number: 1, product: 'Commission Pick 6', favorite: 'OUR STARRY NIGHT', win_pick: 'MOON SNIPER', box: ['MOON SNIPER', 'ROSE RULER', 'OUR STARRY NIGHT', 'HOGIE THE PLAYER'], post_time_et: '18:00' },
+  { track_api: 'PRM', track_name: 'Prairie Meadows', race_number: 4, product: 'Commission Pick 7', favorite: 'VERY COSMOPOLITAN', win_pick: 'SECRET BEACH', box: ['VERY COSMOPOLITAN', 'LADY CAPTAIN', 'DIXIE SURPRISE', 'SECRET BEACH'], post_time_et: '20:00' },
+  { track_api: 'PRM', track_name: 'Prairie Meadows', race_number: 7, product: 'Commission Pick 8', favorite: "BANKER'S JET", win_pick: 'PALACE ROCK', box: ["BANKER'S JET", 'FIVE CHARLIE', 'HELLO FRANKIE', 'TOMS PROSPECTOR', 'PALACE ROCK'], post_time_et: '21:00' },
+  { track_api: 'WO', track_name: 'Woodbine', race_number: 7, product: 'Commission Pick 9', favorite: 'AWESOME BOURBON', win_pick: "PIPER'S FACTOR", box: ['AWESOME BOURBON', 'WAR BOMBER', 'TWIN CITY', 'LITTLE NI', 'RAPID TEST', "PIPER'S FACTOR"], post_time_et: '21:00' },
+  { track_api: 'CD', track_name: 'Churchill', race_number: 7, product: 'Commission Pick 10', favorite: 'MOONLIGHT DASH', win_pick: 'GOING STEADY', box: ['GOLDEN IRISH', 'GOING STEADY', 'SHARED VISION', 'MOONLIGHT DASH'], post_time_et: '21:44' },
 ];
 
 async function apiFetch(path: string) {

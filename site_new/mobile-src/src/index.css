@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/*
+  Palette themes — each block sets the CSS variables consumed by the Tailwind
+  tokens (see tailwind.config.js). Values are space-separated RGB channels so
+  Tailwind's <alpha-value> opacities (e.g. bg-primary/10) keep working.
+  The active theme is applied via data-theme on <html> by the ThemeProvider.
+  Light themes share the standard gray ramp; the dark theme inverts it.
+*/
+
+/* Shared light gray ramp */
+:root,
+[data-theme='ink'],
+[data-theme='turf'],
+[data-theme='emerald'],
+[data-theme='silks'],
+[data-theme='chalkboard'],
+[data-theme='parlor'] {
+  --c-gray-100: 243 244 246;
+  --c-gray-300: 209 213 219;
+  --c-gray-700: 55 65 81;
+  --c-gray-800: 31 41 55;
+  --c-gray-900: 17 24 39;
+}
+/* Ink — newsprint + cash green (default) */
+:root,
+[data-theme='ink'] {
+  --c-app: 250 249 246;
+  --c-surface: 255 255 255;
+  --c-border: 229 231 235;
+  --c-primary: 17 24 39;
+  --c-accent: 22 163 74;
+  --c-accent-dark: 21 128 61;
+  --c-warn: 245 158 11;
+  --c-success: 22 163 74;
+  --c-danger: 239 68 68;
+  --c-muted: 107 114 128;
+}
+/* Turf — green + brass gold */
+[data-theme='turf'] {
+  --c-app: 250 249 246;
+  --c-surface: 255 255 255;
+  --c-border: 231 227 216;
+  --c-primary: 22 101 52;
+  --c-accent: 200 162 75;
+  --c-accent-dark: 138 109 30;
+  --c-warn: 245 158 11;
+  --c-success: 16 185 129;
+  --c-danger: 239 68 68;
+  --c-muted: 107 114 128;
+}
+/* Emerald — emerald + amber */
+[data-theme='emerald'] {
+  --c-app: 250 249 246;
+  --c-surface: 255 255 255;
+  --c-border: 229 231 235;
+  --c-primary: 5 150 105;
+  --c-accent: 245 158 11;
+  --c-accent-dark: 180 83 9;
+  --c-warn: 245 158 11;
+  --c-success: 5 150 105;
+  --c-danger: 239 68 68;
+  --c-muted: 107 114 128;
+}
+/* Silks — oxblood + teal on cream */
+[data-theme='silks'] {
+  --c-app: 251 247 239;
+  --c-surface: 255 252 245;
+  --c-border: 236 229 216;
+  --c-primary: 139 30 63;
+  --c-accent: 13 148 136;
+  --c-accent-dark: 15 118 110;
+  --c-warn: 245 158 11;
+  --c-success: 13 148 136;
+  --c-danger: 239 68 68;
+  --c-muted: 120 113 108;
+}
+/* Chalkboard — slate brand, chalk-cyan accent, green reserved for money/wins */
+[data-theme='chalkboard'] {
+  --c-app: 248 250 252;
+  --c-surface: 255 255 255;
+  --c-border: 226 232 240;
+  --c-primary: 51 65 85;
+  --c-accent: 6 182 212;
+  --c-accent-dark: 21 128 61;
+  --c-warn: 245 158 11;
+  --c-success: 22 163 74;
+  --c-danger: 239 68 68;
+  --c-muted: 100 116 139;
+}
+/* Parlor — maroon + gold on parchment */
+[data-theme='parlor'] {
+  --c-app: 247 241 230;
+  --c-surface: 255 252 245;
+  --c-border: 230 220 200;
+  --c-primary: 122 22 38;
+  --c-accent: 200 162 75;
+  --c-accent-dark: 107 84 23;
+  --c-warn: 245 158 11;
+  --c-success: 138 109 30;
+  --c-danger: 185 28 28;
+  --c-muted: 107 99 88;
+}
+/* Ink Noir — dark newsprint with neon cash green (dark mode) */
+[data-theme='inknoir'] {
+  --c-app: 12 12 14;
+  --c-surface: 26 26 29;
+  --c-border: 42 42 46;
+  --c-primary: 82 82 91; /* graphite — works as fill (white text) and as text on dark */
+  --c-accent: 34 197 94; /* neon cash green */
+  --c-accent-dark: 74 222 128; /* lighter green for text on dark */
+  --c-warn: 251 191 36;
+  --c-success: 34 197 94; /* neon cash green — money/wins */
+  --c-danger: 248 113 113;
+  --c-muted: 161 161 170;
+  --c-gray-100: 39 39 42;
+  --c-gray-300: 63 63 70;
+  --c-gray-700: 212 212 216;
+  --c-gray-800: 244 244 245;
+  --c-gray-900: 250 250 250;
+}
+/* Speakeasy — dark maroon + gold (dark mode) */
+[data-theme='speakeasy'] {
+  --c-app: 20 16 14;
+  --c-surface: 33 26 22;
+  --c-border: 58 47 40;
+  --c-primary: 176 52 76;
+  --c-accent: 227 189 91;
+  --c-accent-dark: 233 201 110;
+  --c-warn: 251 191 36;
+  --c-success: 227 189 91;
+  --c-danger: 248 113 113;
+  --c-muted: 184 174 159;
+  --c-gray-100: 42 33 27;
+  --c-gray-300: 70 58 49;
+  --c-gray-700: 216 207 194;
+  --c-gray-800: 242 235 224;
+  --c-gray-900: 247 241 230;
+}
+body {
+  background-color: rgb(var(--c-app));
+  color: rgb(var(--c-gray-900));
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

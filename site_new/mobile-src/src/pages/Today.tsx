@@ -1,0 +1,240 @@
+import React, { useEffect, useState, useRef, Children, Fragment } from 'react';
+import { SummaryBar } from '../components/SummaryBar';
+import { RaceCard } from '../components/RaceCard';
+import { FeaturedVideo } from '../components/FeaturedVideo';
+import { mockRaces, Race, fetchRaces } from '../data';
+import { motion } from 'framer-motion';
+// A race is "run" once it's settled or dropped; live/upcoming are still ahead.
+const isConcluded = (race: Race) =>
+race.status === 'hit' || race.status === 'miss' || race.status === 'dropped';
+interface HourGroup {
+  hour: string; // numeric hour, e.g. "1"
+  period: string; // "AM" | "PM"
+  races: Race[];
+}
+// Group races into hour blocks based on their post time (e.g. "1:05 PM" -> "1 PM").
+// mockRaces is already ordered by post time, so groups stay chronological.
+function groupRacesByHour(races: Race[]): HourGroup[] {
+  const groups: HourGroup[] = [];
+  for (const race of races) {
+    const [time, period] = race.postTime.split(' ');
+    const hour = time.split(':')[0];
+    const last = groups[groups.length - 1];
+    if (last && last.hour === hour && last.period === period) {
+      last.races.push(race);
+    } else {
+      groups.push({
+        hour,
+        period,
+        races: [race]
+      });
+    }
+  }
+  return groups;
+}
+// Sticky tag on the header/content seam. Shows the date in the center and lets
+// you jump to Upcoming (left) or Results (right) by tapping either label.
+function SectionTag({
+  section,
+  date,
+  onUpcoming,
+  onResults
+
+
+
+
+
+}: {section: 'results' | 'upcoming';date: string;onUpcoming: () => void;onResults: () => void;}) {
+  const base =
+  'text-xs font-bold uppercase tracking-widest transition-colors rounded-md px-1 py-0.5 -mx-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40';
+  return (
+    <div className="bg-app/90 backdrop-blur-md border-b border-border">
+      <div className="max-w-md md:max-w-4xl mx-auto grid grid-cols-3 items-center py-2 px-4">
+        <button
+          type="button"
+          onClick={onUpcoming}
+          className={`${base} justify-self-start ${section === 'upcoming' ? 'text-gray-900' : 'text-muted/40 hover:text-muted'}`}>
+          
+          Upcoming
+        </button>
+        <span className="justify-self-center text-[11px] font-semibold uppercase tracking-wider text-muted tabular-nums">
+          {date}
+        </span>
+        <button
+          type="button"
+          onClick={onResults}
+          className={`${base} justify-self-end ${section === 'results' ? 'text-gray-900' : 'text-muted/40 hover:text-muted'}`}>
+          
+          Results
+        </button>
+      </div>
+    </div>);
+
+}
+export function Today({ selectedDate }: { selectedDate?: string }) {
+  const [races, setRaces] = useState<Race[]>(mockRaces);
+
+  useEffect(() => {
+    fetchRaces(selectedDate).then((fetched) => {
+      setRaces(fetched);
+    });
+  }, [selectedDate]);
+
+  const hourGroups = groupRacesByHour(races);
+  // Where the "now" line falls: the first race that hasn't been run yet.
+  const firstUpcoming = races.find((r) => !isConcluded(r));
+  const dividerBeforeId = firstUpcoming?.id;
+  const hasResults = races.some(isConcluded);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const boundaryRef = useRef<HTMLDivElement>(null);
+  const [section, setSection] = useState<'results' | 'upcoming'>(
+    hasResults ? 'results' : 'upcoming'
+  );
+  // Once the user scrolls past the top, condense the header to reclaim space.
+  const [scrolled, setScrolled] = useState(false);
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  });
+  const scrollToResults = () =>
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+  const scrollToUpcoming = () =>
+  boundaryRef.current?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener('scroll', onScroll, {
+      passive: true
+    });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  useEffect(() => {
+    // No boundary (all run, or all upcoming) -> section is fixed.
+    if (!dividerBeforeId || !hasResults) return;
+    const update = () => {
+      if (!boundaryRef.current || !headerRef.current) return;
+      const threshold = headerRef.current.offsetHeight;
+      const top = boundaryRef.current.getBoundingClientRect().top;
+      setSection(top <= threshold + 4 ? 'upcoming' : 'results');
+    };
+    update();
+    window.addEventListener('scroll', update, {
+      passive: true
+    });
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [dividerBeforeId, hasResults]);
+  return (
+    <div className="pb-24">
+      {/* Sticky header: summary + the section tag form the seam with the list */}
+      <div ref={headerRef} className="sticky top-0 z-20 shadow-sm">
+        <SummaryBar compact={scrolled} races={races} />
+        {hasResults && firstUpcoming &&
+        <SectionTag
+          section={section}
+          date={today}
+          onUpcoming={scrollToUpcoming}
+          onResults={scrollToResults} />
+
+        }
+      </div>
+
+      <main className="p-4 max-w-md md:max-w-4xl mx-auto">
+        <FeaturedVideo />
+
+        <div className="flex justify-between items-end mb-6">
+          <h2 className="text-xl font-bold tracking-tight">Today's Card</h2>
+          <span className="text-xs text-muted font-medium">
+            Updated: 1:45 PM
+          </span>
+        </div>
+
+        {/* Timeline: hour markers sit on a background rail, races sit on top */}
+        <div className="relative">
+          {/* Continuous vertical rail behind the hour nodes */}
+          <div
+            className="absolute top-2 bottom-2 w-px bg-border"
+            style={{
+              left: '23px'
+            }}
+            aria-hidden="true" />
+          
+
+          <motion.div
+            className="space-y-8"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {
+                opacity: 0
+              },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.08
+                }
+              }
+            }}>
+            
+            {hourGroups.map((group) =>
+            <section
+              key={`${group.hour}-${group.period}`}
+              className="relative pl-16">
+              
+                {/* Background hour marker (timeline layer) */}
+                <div className="absolute left-0 top-0 flex flex-col items-center w-12 select-none">
+                  <span className="text-3xl font-bold leading-none text-slate-300 tabular-nums">
+                    {group.hour}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-300 mt-0.5">
+                    {group.period}
+                  </span>
+                </div>
+
+                {/* Races sitting on top of the timeline for this hour block */}
+                <div className="space-y-3">
+                  {group.races.map((race) =>
+                <Fragment key={race.id}>
+                      {race.id === dividerBeforeId &&
+                  // Invisible seam used to flip the sticky section tag.
+                  <div
+                    ref={boundaryRef}
+                    className="scroll-mt-32"
+                    aria-hidden="true" />
+
+                  }
+                      <motion.div
+                    variants={{
+                      hidden: {
+                        opacity: 0,
+                        y: 16
+                      },
+                      visible: {
+                        opacity: 1,
+                        y: 0
+                      }
+                    }}>
+                    
+                        <RaceCard race={race} />
+                      </motion.div>
+                    </Fragment>
+                )}
+                </div>
+              </section>
+            )}
+          </motion.div>
+        </div>
+      </main>
+    </div>);
+
+}
