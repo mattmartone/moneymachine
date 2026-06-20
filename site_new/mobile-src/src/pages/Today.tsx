@@ -73,7 +73,6 @@ function SectionTag({
 }
 export function Today({ selectedDate }: { selectedDate?: string }) {
   const [races, setRaces] = useState<Race[]>(mockRaces);
-  const [activeTab, setActiveTab] = useState<'commission' | 'capo'>('commission');
 
   useEffect(() => {
     fetchRaces(selectedDate).then((fetched) => {
@@ -81,14 +80,20 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
     });
   }, [selectedDate]);
 
-  const filteredRaces = races.filter((r) =>
-    activeTab === 'commission' ? (r.conviction === 'COMMISSION' || r.conviction === 'DROPPED') : (r.conviction !== 'COMMISSION' && r.conviction !== 'DROPPED')
+  const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
+
+  const allRaces = races.filter((r) =>
+    r.conviction === 'COMMISSION' || r.conviction === 'DROPPED'
   );
+
+  const filteredRaces = viewTab === 'upcoming'
+    ? allRaces.filter((r) => r.status === 'upcoming' || r.status === 'live' || r.status === 'dropped')
+    : allRaces.filter((r) => r.status === 'hit' || r.status === 'miss');
+
   const hourGroups = groupRacesByHour(filteredRaces);
-  // Where the "now" line falls: the first race that hasn't been run yet.
   const firstUpcoming = filteredRaces.find((r) => !isConcluded(r));
   const dividerBeforeId = firstUpcoming?.id;
-  const hasResults = filteredRaces.some(isConcluded);
+  const hasResults = allRaces.some(isConcluded);
   const headerRef = useRef<HTMLDivElement>(null);
   const boundaryRef = useRef<HTMLDivElement>(null);
   const [section, setSection] = useState<'results' | 'upcoming'>(
@@ -163,19 +168,20 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
           </span>
         </div>
 
-        {/* Tab bar */}
+        {/* Upcoming / Settled tabs */}
         <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
           <button
-            onClick={() => setActiveTab('commission')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${activeTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Commission Picks
+            onClick={() => setViewTab('upcoming')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'upcoming' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Upcoming
           </button>
           <button
-            onClick={() => setActiveTab('capo')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${activeTab === 'capo' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Capo Picks
+            onClick={() => setViewTab('settled')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'settled' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Results
           </button>
         </div>
+
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
         <div className="relative">
