@@ -57,6 +57,16 @@ async function apiFetch(path: string) {
   return res.json();
 }
 
+async function postToSlack(text: string) {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+  if (!webhookUrl) return;
+  await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+}
+
 async function sendEmailToAll(subject: string, html: string) {
   const users = await query(`SELECT email FROM users WHERE email IS NOT NULL`);
   const emails = users.rows.map((r: any) => r.email);
@@ -135,13 +145,25 @@ export default async function handler(req: any, res: any) {
       );
 
       let impact = '';
+      let verdict = '';
       if (isWinPick) {
         impact = '🚨 OUR WIN PICK IS SCRATCHED — NO WIN BET THIS RACE';
+        verdict = '🛑 DROP RACE — win pick scratched';
       } else if (isFave) {
         impact = '⚠️ FAVORITE SCRATCHED — vulnerability thesis changes, pace map shifts';
+        verdict = '⚠️ REVIEW — favorite scratched, thesis may change';
       } else if (isInBox) {
         impact = '⚠️ BOX HORSE SCRATCHED — exotic box reduced, consider adjustment';
+        verdict = '🔄 REBUILD BOX — box horse scratched';
       }
+
+      await postToSlack(
+        `❌ *SCRATCH: ${scratchName}*\n` +
+        `${race.track_name} R${race.race_number} — ${race.product}\n` +
+        `*Verdict: ${verdict}*\n` +
+        `Win pick: ${race.win_pick} | Fave: ${race.favorite}\n` +
+        `Box: ${race.box.join(', ')}`
+      );
 
       alerts.push(
         `<div style="border: 2px solid #c00; padding: 12px; margin-bottom: 12px; font-family: monospace;">
@@ -442,6 +464,22 @@ export default async function handler(req: any, res: any) {
             <a href="https://fadethechalk.vercel.app/mobile" style="color: #000080;">View on site →</a>
           </p>
         </div>`
+      );
+
+      // Post to Slack
+      const slackBetLines = betResults.map(b => {
+        const net = b.collected - b.stake;
+        const emoji = b.hit ? '✅' : '❌';
+        return `${emoji} ${b.type}: $${b.stake} → ${b.hit ? '$' + b.collected.toFixed(2) : '—'} (${net >= 0 ? '+' : '-'}$${Math.abs(net).toFixed(2)})`;
+      }).join('\n');
+
+      await postToSlack(
+        `🏁 *${race.track_name} R${race.race_number} — ${race.product}*\n` +
+        `Finish: #${winPP} ${winHorse} — #${placePP} ${placeHorse} — #${showPP} ${showHorse}${fourthPP ? ' — #' + fourthPP + ' ' + fourthHorse : ''}\n` +
+        `Our pick: ${race.win_pick} ${betResults.find(b => b.type === 'win')?.hit ? '✅ WON' : '❌ missed'}\n\n` +
+        `${slackBetLines}\n` +
+        `─────────────\n` +
+        `*Net: ${raceNet >= 0 ? '+' : '-'}$${Math.abs(raceNet).toFixed(2)}*`
       );
     }
   }
