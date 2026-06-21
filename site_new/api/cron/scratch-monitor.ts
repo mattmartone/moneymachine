@@ -342,28 +342,66 @@ export default async function handler(req: any, res: any) {
       const winHorse = runners[0]?.horse_name || '?';
       const placeHorse = runners[1]?.horse_name || '?';
       const showHorse = runners[2]?.horse_name || '?';
+      const fourthHorse = runners[3]?.horse_name || '';
 
-      // Check if our bets hit
-      const boxUpper = race.box.map(h => h.toUpperCase());
-      const top3 = [winHorse, placeHorse, showHorse].map(h => h.toUpperCase());
-      const winPickHit = race.win_pick.toUpperCase() === top3[0];
-      const exactaHit = boxUpper.includes(top3[0]) && boxUpper.includes(top3[1]);
-      const trifectaHit = exactaHit && boxUpper.includes(top3[2]);
+      // Pull our bets for this race to calculate net
+      const { rows: raceBets } = await query(
+        `SELECT bet_type, stake, doubled, entries_used FROM bets WHERE race_id = $1 AND conviction = 'COMMISSION' ORDER BY bet_type`,
+        [dbRaceId]
+      );
 
-      let performanceLine = '';
-      if (winPickHit) {
-        performanceLine = `✅ WIN BET HIT — ${race.win_pick} won!`;
-      } else if (trifectaHit) {
-        performanceLine = `✅ TRIFECTA HIT — all 3 finishers were in our box`;
-      } else if (exactaHit) {
-        performanceLine = `✅ EXACTA HIT — top 2 were in our box`;
-      } else {
-        const inBox = top3.filter(h => boxUpper.includes(h)).length;
-        performanceLine = `❌ ${inBox}/3 finishers were in our box`;
+      const parseBetPP = (entry: string) => entry.replace(/^#/, '').split(' ')[0];
+
+      // Calculate per-bet results
+      const betResults: { type: string; stake: number; collected: number; hit: boolean }[] = [];
+      let totalCollected = 0;
+      let totalWagered = 0;
+
+      for (const bet of raceBets) {
+        const pps = (bet.entries_used || []).map(parseBetPP);
+        const n = pps.length;
+        let collected = 0;
+        let hit = false;
+
+        if (bet.bet_type === 'win') {
+          hit = pps.includes(String(winPP));
+          if (hit && winPayoff) collected = (winPayoff / 2) * bet.stake;
+        } else if (bet.bet_type === 'exacta') {
+          hit = pps.includes(String(winPP)) && pps.includes(String(placePP));
+          if (hit && exactaPayout) collected = exactaPayout * (bet.stake / (n * (n - 1)));
+        } else if (bet.bet_type === 'trifecta') {
+          hit = pps.includes(String(winPP)) && pps.includes(String(placePP)) && pps.includes(String(showPP));
+          if (hit && trifectaPayout) collected = trifectaPayout * (bet.stake / (n * (n - 1) * (n - 2)));
+        } else if (bet.bet_type === 'superfecta') {
+          hit = pps.includes(String(winPP)) && pps.includes(String(placePP)) && pps.includes(String(showPP)) && fourthPP != null && pps.includes(String(fourthPP));
+          if (hit && superfectaPayout) collected = superfectaPayout * (bet.stake / (n * (n - 1) * (n - 2) * (n - 3)));
+        }
+
+        betResults.push({ type: bet.bet_type, stake: bet.stake, collected, hit });
+        totalCollected += collected;
+        totalWagered += bet.stake;
       }
 
+      const raceNet = totalCollected - totalWagered;
+      const netColor = raceNet >= 0 ? 'green' : 'red';
+
+      // Build bet breakdown rows
+      const betRows = betResults.map(b => {
+        const net = b.collected - b.stake;
+        const netStr = net >= 0 ? `+$${net.toFixed(2)}` : `-$${Math.abs(net).toFixed(2)}`;
+        const color = net >= 0 ? 'green' : 'red';
+        const hitStr = b.hit ? '✅ HIT' : '❌ miss';
+        return `<tr style="border-bottom: 1px solid #eee;">
+          <td style="padding: 4px 8px; text-transform: capitalize;">${b.type}</td>
+          <td style="padding: 4px 8px;">$${b.stake}</td>
+          <td style="padding: 4px 8px;">${b.hit ? '$' + b.collected.toFixed(2) : '—'}</td>
+          <td style="padding: 4px 8px; color: ${color}; font-weight: bold;">${netStr}</td>
+          <td style="padding: 4px 8px;">${hitStr}</td>
+        </tr>`;
+      }).join('');
+
       await sendEmailToAll(
-        `🏁 ${race.track_name} R${race.race_number} — ${winHorse} wins`,
+        `🏁 ${race.track_name} R${race.race_number} — ${winHorse} wins | ${raceNet >= 0 ? '+' : '-'}$${Math.abs(raceNet).toFixed(2)}`,
         `<div style="font-family: monospace; padding: 16px; max-width: 600px;">
           <h2 style="color: #000080; margin-bottom: 4px;">🏁 RACE RESULT</h2>
           <p style="font-size: 16px; font-weight: bold; margin: 4px 0;">${race.track_name} R${race.race_number} — ${race.product}</p>
@@ -371,28 +409,37 @@ export default async function handler(req: any, res: any) {
             <tr style="border-bottom: 1px solid #ccc;">
               <td style="padding: 6px 8px; font-weight: bold; color: #d4af37;">1st</td>
               <td style="padding: 6px 8px; font-weight: bold;">#${winPP} ${winHorse}</td>
-              <td style="padding: 6px 8px; color: green;">${winPayoff ? '$' + winPayoff.toFixed(2) : ''}</td>
             </tr>
             <tr style="border-bottom: 1px solid #ccc;">
               <td style="padding: 6px 8px; font-weight: bold; color: #888;">2nd</td>
               <td style="padding: 6px 8px; font-weight: bold;">#${placePP} ${placeHorse}</td>
-              <td style="padding: 6px 8px;"></td>
             </tr>
             <tr style="border-bottom: 1px solid #ccc;">
               <td style="padding: 6px 8px; font-weight: bold; color: #cd7f32;">3rd</td>
               <td style="padding: 6px 8px; font-weight: bold;">#${showPP} ${showHorse}</td>
-              <td style="padding: 6px 8px;"></td>
+            </tr>
+            ${fourthHorse ? `<tr style="border-bottom: 1px solid #ccc;"><td style="padding: 6px 8px; color: #aaa;">4th</td><td style="padding: 6px 8px;">#${fourthPP} ${fourthHorse}</td></tr>` : ''}
+          </table>
+          <h3 style="margin: 16px 0 8px; font-size: 13px; text-transform: uppercase; color: #666;">Bet Breakdown</h3>
+          <table style="border-collapse: collapse; width: 100%; font-size: 13px;">
+            <tr style="border-bottom: 2px solid #ccc;">
+              <th style="padding: 4px 8px; text-align: left;">Bet</th>
+              <th style="padding: 4px 8px; text-align: left;">Wagered</th>
+              <th style="padding: 4px 8px; text-align: left;">Collected</th>
+              <th style="padding: 4px 8px; text-align: left;">Net</th>
+              <th style="padding: 4px 8px; text-align: left;">Result</th>
+            </tr>
+            ${betRows}
+            <tr style="border-top: 2px solid #000;">
+              <td style="padding: 6px 8px; font-weight: bold;">TOTAL</td>
+              <td style="padding: 6px 8px; font-weight: bold;">$${totalWagered.toFixed(2)}</td>
+              <td style="padding: 6px 8px; font-weight: bold;">$${totalCollected.toFixed(2)}</td>
+              <td style="padding: 6px 8px; font-weight: bold; color: ${netColor};">${raceNet >= 0 ? '+' : '-'}$${Math.abs(raceNet).toFixed(2)}</td>
+              <td></td>
             </tr>
           </table>
-          ${exactaPayout ? `<p style="margin: 4px 0;">Exacta (${winPP}-${placePP}): <strong>$${exactaPayout.toFixed(2)}</strong></p>` : ''}
-          ${trifectaPayout ? `<p style="margin: 4px 0;">Trifecta (${winPP}-${placePP}-${showPP}): <strong>$${trifectaPayout.toFixed(2)}</strong></p>` : ''}
-          ${superfectaPayout ? `<p style="margin: 4px 0;">Superfecta: <strong>$${superfectaPayout.toFixed(2)}</strong></p>` : ''}
-          <div style="background: ${winPickHit || trifectaHit || exactaHit ? '#e8f5e9' : '#fff3e0'}; border: 2px solid ${winPickHit || trifectaHit || exactaHit ? '#4caf50' : '#ff9800'}; padding: 12px; margin: 16px 0;">
-            <p style="margin: 0; font-weight: bold; font-size: 14px;">${performanceLine}</p>
-            <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Our box: ${race.box.join(', ')}</p>
-          </div>
           <p style="font-size: 12px; color: #666; margin-top: 12px;">
-            <a href="https://fadethechalk.vercel.app/today/${dbRaceId}" style="color: #000080;">View full results →</a>
+            <a href="https://fadethechalk.vercel.app/mobile" style="color: #000080;">View on site →</a>
           </p>
         </div>`
       );
