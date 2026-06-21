@@ -57,6 +57,75 @@ git push origin main
 - `/api/cron/race-day-pipeline` — every 5 min (live odds, scratches, results, alerts)
 - `/api/cron/scratch-monitor` — every 10 min (scratch detection, pre-race alerts, result emails)
 
+## Race Day Pipeline (execution order)
+
+1. **Brisnet parse** (night before, once) — loads PPs, Beyers, running styles. NEVER re-run with `--force` after Racing API loads.
+2. **Racing API pull** (morning-of, safe to re-run) — loads ML odds, post times, jockeys, trainers. Uses COALESCE, never overwrites Brisnet data.
+3. **Pull scratches** (before ML check) — Racing API `scratch_indicator=Y`. Remove from entries table. Most "ML gaps" are actually scratches.
+4. **Cross-reference ML by post position** — API rows may use different track names than Brisnet rows. Match by post position.
+5. **Run `get_ml_gaps()`** — if any qualified races still missing ML, ask Matt for NJ4Bets screenshot.
+6. **Tag `races.qualified` and `skip_reason`** — as gates run, mark each race.
+7. **Phase 2-3 scoring** — tag styles, map pace, assess vulnerability, score signals.
+8. **Present HIGH candidates ranked by composite** — Matt picks ~10 for Commission.
+9. **Tag approved as COMMISSION** — only Matt-approved picks. Delete non-Commission bets.
+
+## Hard Rules (Track Exclusions)
+
+| Rule | Tracks | Reason |
+|------|--------|--------|
+| No Bullring Tracks | CT, BTP, DED, EVD, FMT, MNR, TDN, FL | ≤1mi circumference, model edge neutralized |
+| No Texas Tracks | LS (Lone Star), HOU (Sam Houston), Retama | Not legal to bet from NJ |
+| No Wyoming Downs | WYO | No Racing API coverage, no ML, no scratches |
+| No Woodbine (current) | WO | No Racing API coverage = no autonomous execution. May revisit if secondary data source found. |
+
+## Race Day Hard Rules (Live)
+
+| Rule | Action |
+|------|--------|
+| Pick becomes chalk (below 5/2 live) | Kill win bet, play exotics only. Value is gone. Do NOT invoke Cosa Nostra. |
+| Thesis-critical scratch | DROP race entirely. Set conviction=COMMISSION, stake=$0, skip_reason='thesis_critical_scratch'. |
+| Dropped race in DB | Keep as COMMISSION with $0 stakes + skip_reason. Shows on card, doesn't affect math. |
+| Commission requires Matt approval | NEVER auto-tag races as COMMISSION. Model proposes, Matt approves. |
+
+## Payout Storage Rules
+
+DB stores all payouts **normalized to $1 base**. Conversion happens at ingestion:
+
+| Track | Exacta Base | Trifecta Base | Superfecta Base | Conversion |
+|-------|-------------|---------------|-----------------|-----------|
+| Churchill Downs | $2 | $0.50 | $0.10 | ex/2, tri/0.50, sup/0.10 |
+| Prairie Meadows | $2 | $0.50 | $0.10 | ex/2, tri/0.50, sup/0.10 |
+| Gulfstream Park | $1 | $0.50 | $0.10 | ex as-is, tri/0.50, sup/0.10 |
+| Laurel Park | $1 | $1 | $1 | all as-is |
+| Woodbine | $1 | $0.20 | $0.20 | ex as-is, tri/0.20, sup/0.20 |
+
+When Matt gives payouts from NJ4Bets, he'll state the base (e.g. "$2 exacta paid $24.40"). Divide by base before storing.
+When API gives payouts, use the `base_amount` field (but verify — sometimes returns $0, fall back to track table above).
+
+## Postmortem Standards
+
+After every race day, Phase 7 includes:
+- **Model vs Random** — run 1000 random simulations on same races/structure. Track "% random beats model." Target: <30%. Store in `postmortem_metrics` table.
+- **Strategy performance update** — for each Commission bet, check strategy_activations, determine hit/miss, update strategy_performance table.
+- **Verify strategy_activations tagging** — must be accurate and complete. Powers pattern recognition over time.
+
+## Commission Selection Formula (Phase 4, Step 16)
+
+When selecting ~10 Commission picks from the HIGH conviction candidates, rank by composite score:
+
+```
+composite = (signal_score × 2) + (win_pick_beyer / 10) + odds_value_bonus
+```
+
+Where:
+- `signal_score` = sum of signals fired on the win pick (S1=3, S4=2, S5=2, S6=1, S9=1-2, S11=2)
+- `win_pick_beyer` = career-best Beyer of our win pick (higher = more likely to cash)
+- `odds_value_bonus` = +2 if ML ≥ 10/1, +1 if ML ≥ 6/1, 0 if below 6/1
+
+Sort descending. Present ranked list to Matt. He selects ~10 for Commission.
+
+**Validated 6/20:** Top 10 by composite returned +$284 (+18% ROI). Bottom 11 would have returned -$849 (-57% ROI). The formula is selecting the right races.
+
 ## Settlement Display Rules
 
 When showing race results on the site:
@@ -168,6 +237,22 @@ DB stores RAW track payouts (what the track pays per base unit), not pre-calcula
 - From: `noreply@org64.com`
 - Rate limit: 5/sec — add delay between sends or retry 429s
 - NEVER send without Matt's approval
+
+## Build Backlog
+
+1. **Fix entries_used type mismatch** — box stores strings ["8","2","6","4"], finish positions are integers. `box.includes(2)` fails. Cast with `box.map(Number).includes(pos)` everywhere hit/miss is checked. Verified broken: LRL R7 6/20 shows trifecta as miss when it hit.
+2. **Fix results display calculations** — exacta collected is multiplied extra times, superfecta incorrectly marked as miss. See settlement math in Key Patterns above.
+3. **Calendar date change doesn't update net value** — top-right P/L badge stays stale when switching dates
+4. **URL doesn't change on date selection** — should update to `/mobile?date=YYYY-MM-DD` for bookmarkability
+5. **Performance trend chart** — plot model vs random (% days model beats random) over time from `postmortem_metrics` table
+6. **Clean historical bets** — tag COMMISSION vs CANDIDATE for all dates. Match site truth (40 lifetime races through 6/14).
+7. **Backfill results** — pull results for 5/24, 6/6, 6/7, 6/11, 6/13 from Racing API or session files
+8. **6-horse box pricing formula** — compute combos dynamically: n*(n-1) for exacta, n*(n-1)*(n-2) for tri, etc. Don't hardcode $60/$100.
+9. **Store conviction on all scored races** — not just Commission. Add `conviction` column to races table or separate scored_races table.
+10. **Live odds from horse_data_pools** — API `live_odds` field is always null, but `horse_data_pools[].fractional_odds` has real-time tote. Parse that in the cron.
+11. **Auto-update strategy performance after settlement** — once type mismatch (#1) is fixed, after results are logged: query strategy_activations for each settled bet, determine hit/miss, update strategy_performance table (fires, W/P/S/L, win_rate, itm_rate, trend). Should run automatically as part of the settlement flow.
+12. **Payout base normalization at ingestion** — DB stores all payouts normalized to $1 base. When ingesting from API (which reports various bases: $2 ex, $0.50 tri, $0.10 super), divide by base before storing. Track-specific bases: Churchill/PRM = $2 ex/$0.50 tri/$0.10 super; Gulfstream/Laurel = $1 ex; Woodbine = $1 ex/$0.20 tri/$0.20 super. See session 6/20 for full table.
+13. **Faster results service** — Racing API takes 15-30 min to post finals. Find a faster source (direct track feeds, Equibase, scraper) so settlement can happen automatically within minutes.
 
 ## Principles
 
