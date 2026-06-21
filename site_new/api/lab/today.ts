@@ -44,7 +44,13 @@ export default async function handler(req: any, res: any) {
       [today]
     );
 
-    return res.status(200).json({ picks: rows });
+    const { rows: videoRows } = await query(
+      `SELECT youtube_id, title FROM videos WHERE date <= $1 ORDER BY date DESC LIMIT 1`,
+      [today]
+    );
+    const video = videoRows.length ? videoRows[0] : null;
+
+    return res.status(200).json({ picks: rows, video });
   } catch (err: any) {
     console.error('today picks error:', err);
     return res.status(500).json({ error: err.message || 'Internal error' });

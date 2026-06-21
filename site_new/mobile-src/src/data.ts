@@ -162,6 +162,16 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
   const picksData = await picksRes.json();
   const picks: any[] = picksData.picks ?? [];
 
+  // Update featured video from API
+  if (picksData.video) {
+    featuredVideo = {
+      youtubeId: picksData.video.youtube_id,
+      tag: 'Race Day',
+      title: picksData.video.title || 'Fade the Chalk — Today on the Board',
+      subtitle: "A quick look at the plays we're fading and why"
+    };
+  }
+
   // Build a lookup of race_id -> picks for that race
   // Group picks by race_id
   const picksByRace = new Map<number, any[]>();
