@@ -81,10 +81,12 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
   }, [selectedDate]);
 
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
+  const [pickType, setPickType] = useState<'commission' | 'capo'>('commission');
 
-  const allRaces = races.filter((r) =>
-    r.conviction === 'COMMISSION' || r.conviction === 'DROPPED'
-  );
+  const allRaces = races.filter((r) => {
+    if (pickType === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
+    return r.conviction === 'HIGH';
+  });
 
   const isPostTimePassed = (r: Race) => {
     if (r.postTime === '—') return false;
@@ -170,6 +172,20 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
           <span className="text-xs text-muted font-medium">
             Updated: 1:45 PM
           </span>
+        </div>
+
+        {/* Pick type toggle */}
+        <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-3">
+          <button
+            onClick={() => setPickType('commission')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Commission Picks
+          </button>
+          <button
+            onClick={() => setPickType('capo')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'capo' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Capo Picks
+          </button>
         </div>
 
         {/* Upcoming / Settled tabs */}
