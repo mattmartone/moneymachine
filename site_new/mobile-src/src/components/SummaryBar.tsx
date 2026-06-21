@@ -13,18 +13,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { NavLink } from 'react-router-dom';
 export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; races?: Race[];}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [perfNet, setPerfNet] = useState<number>(0);
 
-  useEffect(() => {
-    fetch('/api/lab/performance', { headers: { Authorization: 'Bearer public' } })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.performance) setPerfNet(data.performance.net || 0);
-      })
-      .catch(() => {});
-  }, [races]);
-
-  const net = perfNet;
+  const settledRaces = races.filter((r) => r.status === 'hit' || r.status === 'miss');
+  const net = settledRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
   const isPositive = net > 0;
   const isNegative = net < 0;
   // Next post countdown — lives in the header so it doesn't compete with the nav.
