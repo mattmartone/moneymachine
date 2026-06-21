@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/mobile", "permanent": false },
+    { "source": "/reports", "destination": "/mobile", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/execution", "destination": "/api/execution" },
@@ -6,7 +10,7 @@
     { "source": "/mobile", "destination": "/mobile/index.html" },
     { "source": "/mobile/assets/(.*)", "destination": "/mobile/assets/$1" },
     { "source": "/mobile/(.*)", "destination": "/mobile/index.html" },
-    { "source": "/((?!mobile|execution).*)", "destination": "/index.html" }
+    { "source": "/((?!mobile|execution).*)", "destination": "/mobile/index.html" }
   ],
   "crons": [
     {
