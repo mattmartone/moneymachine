@@ -81,9 +81,10 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
   }, [selectedDate]);
 
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
-  const [pickType, setPickType] = useState<'commission' | 'capo'>('commission');
+  const [pickType, setPickType] = useState<'all' | 'commission' | 'capo'>('all');
 
   const allRaces = races.filter((r) => {
+    if (pickType === 'all') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED' || r.conviction === 'HIGH';
     if (pickType === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
     return r.conviction === 'HIGH';
   });
@@ -161,7 +162,7 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
     <div className="pb-24">
       {/* Sticky header */}
       <div ref={headerRef} className="sticky top-0 z-20 shadow-sm">
-        <SummaryBar compact={scrolled} races={races} />
+        <SummaryBar compact={scrolled} races={allRaces} />
       </div>
 
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
@@ -179,12 +180,17 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
           <button
             onClick={() => setPickType('commission')}
             className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Commission Picks
+            Commission
           </button>
           <button
             onClick={() => setPickType('capo')}
             className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'capo' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Capo Picks
+            Capo
+          </button>
+          <button
+            onClick={() => setPickType('all')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'all' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            All
           </button>
         </div>
 
