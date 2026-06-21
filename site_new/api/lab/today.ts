@@ -35,7 +35,7 @@ export default async function handler(req: any, res: any) {
     const { rows } = await query(
       `SELECT b.id, b.race_id, b.bet_type, b.stake, b.doubled, b.conviction, b.entries_used,
               r.track, r.race_number, r.conditions, r.distance, r.surface, r.field_size, r.post_time,
-              r.race_theory,
+              r.race_theory, r.skip_reason,
               (SELECT array_agg(s.name) FROM strategy_activations sa JOIN strategies s ON s.id = sa.strategy_id WHERE sa.bet_id = b.id) as strategies_fired
        FROM bets b
        JOIN races r ON r.id = b.race_id

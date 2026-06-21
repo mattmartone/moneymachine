@@ -31,6 +31,7 @@ export interface Race {
   raceNumber: number;
   status: RaceStatus;
   conviction: string;
+  skipReason?: string;
   doubleBet?: boolean;
   winPick: {
     name: string;
@@ -387,6 +388,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
       raceNumber: raceNumber,
       status,
       conviction,
+      skipReason: firstPick.skip_reason || undefined,
       doubleBet: doubleBet || undefined,
       winPick,
       exoticBox,

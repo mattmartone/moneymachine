@@ -87,7 +87,12 @@ export function RaceCard({ race }: RaceCardProps) {
               <div className="flex items-center">{renderRightMeta()}</div>
               }
 
-              {isSettled ? (
+              {race.skipReason ? (
+                <div className="flex flex-col items-end max-w-[60%]">
+                  <span className="text-[10px] uppercase tracking-wider text-danger font-semibold mb-0.5">Skipped</span>
+                  <span className="text-xs text-muted text-right leading-tight">{race.skipReason.replace(/_/g, ' ')}</span>
+                </div>
+              ) : isSettled ? (
                 <div className="flex flex-col items-end">
                   <span className={`text-lg font-bold tabular-nums ${net >= 0 ? 'text-success' : 'text-danger'}`}>
                     {net >= 0 ? '+' : '-'}${Math.abs(net).toFixed(2)}

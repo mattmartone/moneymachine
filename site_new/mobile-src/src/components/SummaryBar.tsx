@@ -176,16 +176,6 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                     More
                   </p>
                   <NavLink
-                  to="/history"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
-                  }>
-                  
-                    <Activity size={18} />
-                    Activity
-                  </NavLink>
-                  <NavLink
                   to="/settings"
                   onClick={() => setIsMenuOpen(false)}
                   className={({ isActive }) =>

@@ -79,21 +79,48 @@ export function PerformanceProof() {
               <td className="py-3 text-web-green font-bold">+$915</td>
               <td className="py-3 text-web-green font-bold">+65%</td>
             </tr>
+            <tr>
+              <td className="py-3 font-bold">June 18</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">4</td>
+              <td className="py-3">$852</td>
+              <td className="py-3">$1,386</td>
+              <td className="py-3 text-web-green font-bold">+$534</td>
+              <td className="py-3 text-web-green font-bold">+63%</td>
+            </tr>
+            <tr>
+              <td className="py-3 font-bold">June 19</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">10</td>
+              <td className="py-3">$1,514</td>
+              <td className="py-3">$1,530</td>
+              <td className="py-3 text-web-green font-bold">+$16</td>
+              <td className="py-3 text-web-green font-bold">+1%</td>
+            </tr>
+            <tr>
+              <td className="py-3 font-bold">June 20</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">8</td>
+              <td className="py-3">$1,543</td>
+              <td className="py-3">$1,827</td>
+              <td className="py-3 text-web-green font-bold">+$284</td>
+              <td className="py-3 text-web-green font-bold">+18%</td>
+            </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
-              <td className="py-4 text-lg font-bold">40</td>
-              <td className="py-4 text-lg font-bold">$5,568</td>
-              <td className="py-4 text-lg font-bold">$7,117</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$1,549</td>
-              <td className="py-4 text-lg text-web-green font-bold">+28%</td>
+              <td className="py-4 text-lg font-bold">62</td>
+              <td className="py-4 text-lg font-bold">$9,477</td>
+              <td className="py-4 text-lg font-bold">$11,860</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$2,383</td>
+              <td className="py-4 text-lg text-web-green font-bold">+25%</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
-        <div className="font-bold text-web-green">June 14: Commission Card +65% ROI. Four winners the public missed. Back in business.</div>
-        <div className="font-bold">6 race days. +$1,549 lifetime. +28% ROI. The model finds winners — we just learned to back them.</div>
+        <div className="font-bold text-web-green">9 consecutive profitable days. The model doesn't guess — it executes.</div>
+        <div className="font-bold">9 race days. +$2,383 lifetime. +25% ROI. 62 races. Never bet the favorite.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
