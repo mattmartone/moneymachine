@@ -128,7 +128,6 @@ export function PerformanceProof() {
       </div>
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
-        <div className="font-bold">10 race days. +$2,545 lifetime. +23% ROI. 73 races. Never bet the favorite.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
