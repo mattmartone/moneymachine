@@ -223,6 +223,62 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ data: result });
     }
 
+    if (filter === 'trainers' || filter === 'jockeys' || filter === 'barns') {
+      const personCol = filter === 'jockeys' ? 'e.jockey' : 'e.trainer';
+      const groupCol = filter === 'barns' ? `e.trainer || ' (' || r.track || ')'` : personCol;
+
+      const { rows: personBets } = await query(`
+        SELECT ${groupCol} as person, b.bet_type, b.stake, b.entries_used,
+               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               ew.post_position as win_pp, ep.post_position as place_pp,
+               es.post_position as show_pp, ef.post_position as fourth_pp
+        FROM bets b
+        JOIN races r ON r.id = b.race_id
+        JOIN results res ON res.race_id = r.id
+        JOIN entries e ON e.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id
+        LEFT JOIN entries es ON es.id = res.show_entry_id
+        LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
+        WHERE b.conviction IN ('COMMISSION', 'HIGH')
+          AND b.bet_type = 'win'
+          AND ${personCol} IS NOT NULL
+          AND e.post_position = (
+            SELECT CAST(REPLACE(entries_used[1], '#', '') AS int)
+            FROM bets b2 WHERE b2.id = b.id
+          )
+      `);
+
+      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
+
+      const personMap: Record<string, { fires: number; wins: number; wagered: number; collected: number }> = {};
+
+      for (const row of personBets) {
+        if (!row.person || !row.entries_used?.length) continue;
+        const name = row.person.trim();
+        if (!personMap[name]) personMap[name] = { fires: 0, wins: 0, wagered: 0, collected: 0 };
+        const p = personMap[name];
+        p.fires++;
+        p.wagered += row.stake;
+
+        const pickPP = parsePP(row.entries_used[0]);
+        if (pickPP === row.win_pp && row.win_payout > 0) {
+          p.wins++;
+          p.collected += (row.win_payout / 2) * row.stake;
+        }
+      }
+
+      const result = Object.entries(personMap)
+        .map(([name, p]) => {
+          const net = p.collected - p.wagered;
+          const roi = p.wagered > 0 ? Math.round((net / p.wagered) * 100) : 0;
+          return { name, fires: p.fires, wins: p.wins, roi, net: Math.round(net * 100) / 100 };
+        })
+        .sort((a, b) => b.net - a.net);
+
+      return res.status(200).json({ data: result });
+    }
+
     return res.status(200).json({ data: [] });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
