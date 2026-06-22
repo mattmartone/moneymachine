@@ -54,11 +54,15 @@ const FILTER_LABELS: Record<FilterType, string> = {
   bet_types: 'Bet Types',
 };
 
+type SortKey = 'name' | 'fires' | 'wins' | 'roi' | 'net';
+
 export function Performance() {
   const [filter, setFilter] = useState<FilterType>('model');
   const [useSample, setUseSample] = useState(true);
   const [liveData, setLiveData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<SortKey>('net');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const fetchLiveData = async (f: FilterType) => {
     if (liveData[f]) return;
@@ -73,7 +77,18 @@ export function Performance() {
     setLoading(false);
   };
 
-  const data = useSample ? SAMPLE_DATA[filter] : (liveData[filter] || []);
+  const rawData = useSample ? SAMPLE_DATA[filter] : (liveData[filter] || []);
+  const data = [...rawData].sort((a, b) => {
+    const aVal = a[sortBy];
+    const bVal = b[sortBy];
+    if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+  });
+
+  const toggleSort = (key: SortKey) => {
+    if (sortBy === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(key); setSortDir('desc'); }
+  };
 
   return (
     <div className="pb-24 min-h-screen bg-app">
@@ -138,11 +153,14 @@ export function Performance() {
           <table className="w-full text-left text-sm">
             <thead className="bg-app border-b border-border">
               <tr>
-                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold">Name</th>
-                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Fires</th>
-                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Wins</th>
-                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">ROI</th>
-                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Net</th>
+                {([['name', 'Name', ''], ['fires', 'Fires', 'text-right'], ['wins', 'Wins', 'text-right'], ['roi', 'ROI', 'text-right'], ['net', 'Net', 'text-right']] as [SortKey, string, string][]).map(([key, label, align]) => (
+                  <th
+                    key={key}
+                    onClick={() => toggleSort(key)}
+                    className={`py-2.5 px-3 text-[10px] uppercase tracking-wider font-semibold cursor-pointer select-none hover:text-gray-900 transition-colors ${align} ${sortBy === key ? 'text-gray-900' : 'text-muted'}`}>
+                    {label} {sortBy === key && (sortDir === 'desc' ? '↓' : '↑')}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
