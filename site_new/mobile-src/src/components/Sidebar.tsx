@@ -105,13 +105,14 @@ export function Sidebar({
           <CalendarDays size={18} />
           Race Day
         </NavLink>
-        <button
-          onClick={onOpenBetBuilder}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors text-gray-700 hover:bg-app">
-          
+        <NavLink
+          to="/bet-builder"
+          className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+          }>
           <Sparkles size={18} />
           AI Bet Builder
-        </button>
+        </NavLink>
 
         <NavLink
           to="/performance"
@@ -149,13 +150,12 @@ export function Sidebar({
       </nav>
 
       <div className="p-4 border-t border-border">
-        <button
-          onClick={onOpenBetBuilder}
+        <NavLink
+          to="/bet-builder"
           className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm">
-          
           <Sparkles size={18} />
           AI Bet Builder
-        </button>
+        </NavLink>
       </div>
     </div>);
 
