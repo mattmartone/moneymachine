@@ -4,6 +4,7 @@ import { Today } from './pages/Today';
 import { History } from './pages/History';
 import { Settings } from './pages/Settings';
 import { Performance } from './pages/Performance';
+import { Research } from './pages/Research';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { BetBuilderOverlay } from './components/BetBuilderOverlay';
@@ -23,6 +24,7 @@ export function App() {
             <Route path="/" element={<Today selectedDate={selectedDate} />} />
             <Route path="/history" element={<History />} />
             <Route path="/performance" element={<Performance />} />
+            <Route path="/research" element={<Research />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>

@@ -5,6 +5,7 @@ import {
   Sparkles,
   Activity,
   TrendingUp,
+  Search,
   Settings as SettingsIcon,
   ChevronLeft,
   ChevronRight } from
@@ -120,6 +121,15 @@ export function Sidebar({
 
           <TrendingUp size={18} />
           Performance
+        </NavLink>
+        <NavLink
+          to="/research"
+          className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+          }>
+
+          <Search size={18} />
+          Research
         </NavLink>
 
         <div className="my-4 border-t border-border pt-4 space-y-2">
