@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Today } from './pages/Today';
 import { History } from './pages/History';
 import { Settings } from './pages/Settings';
+import { Performance } from './pages/Performance';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { BetBuilderOverlay } from './components/BetBuilderOverlay';
@@ -21,6 +22,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Today selectedDate={selectedDate} />} />
             <Route path="/history" element={<History />} />
+            <Route path="/performance" element={<Performance />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>

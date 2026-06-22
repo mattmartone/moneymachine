@@ -5,6 +5,7 @@ import {
   X,
   CalendarDays,
   Activity,
+  TrendingUp,
   Settings as SettingsIcon,
   LogOut,
   Timer } from
@@ -171,6 +172,16 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                   Race Day
                 </NavLink>
 
+                <NavLink
+                  to="/performance"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+                  }>
+                    <TrendingUp size={18} />
+                    Performance
+                  </NavLink>
+
                 <div className="my-4 border-t border-border pt-4 space-y-2">
                   <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
                     More
@@ -181,7 +192,7 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                   className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
                   }>
-                  
+
                     <SettingsIcon size={18} />
                     Account
                   </NavLink>
