@@ -57,6 +57,24 @@ async function apiFetch(path: string) {
   return res.json();
 }
 
+const TRACK_NAME_TO_DB: Record<string, string[]> = {
+  'Emerald Downs': ['EMD', 'Emerald Downs'],
+  'Prairie Meadows': ['PRM', 'Prairie Meadows'],
+  'Churchill': ['Churchill Downs', 'CD'],
+  'Gulfstream': ['Gulfstream Park', 'GP'],
+  'Monmouth': ['Monmouth Park', 'MTH'],
+  'Albuquerque': ['ALB', 'Albuquerque'],
+  'Arapahoe': ['ARP', 'Arapahoe Park'],
+  'Belmont': ['Belmont at the Big A', 'BAQ'],
+  'Lone Star': ['Lone Star Park', 'LS'],
+  'Laurel': ['Laurel Park', 'LRL'],
+  'Woodbine': ['Woodbine', 'WO'],
+};
+
+function getDbTrackNames(trackName: string): string[] {
+  return TRACK_NAME_TO_DB[trackName] || [trackName];
+}
+
 async function postToSlack(text: string) {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
   if (!webhookUrl) return;
@@ -268,9 +286,10 @@ export default async function handler(req: any, res: any) {
     if (finishedWatched.length === 0) continue;
 
     // Check which ones we already have results for
+    const dbTrackNames = getDbTrackNames(finishedWatched[0].track_name);
     const raceIds = await query(
-      `SELECT id, race_number FROM races WHERE track = $1 AND date = CURRENT_DATE AND race_number = ANY($2)`,
-      [finishedWatched[0].track_name, finishedWatched.map(r => r.race_number)]
+      `SELECT id, race_number FROM races WHERE track = ANY($1) AND date = CURRENT_DATE AND race_number = ANY($2)`,
+      [dbTrackNames, finishedWatched.map(r => r.race_number)]
     );
 
     const raceIdMap: Record<number, number> = {};
