@@ -237,10 +237,11 @@ export default async function handler(req: any, res: any) {
       }
 
       const result = Object.entries(horseMap)
+        .filter(([name]) => name && !/^\d+$/.test(name) && name !== 'Unknown')
         .map(([name, h]) => {
           const net = h.collected - h.wagered;
           const roi = h.wagered > 0 ? Math.round((net / h.wagered) * 100) : 0;
-          return { name: name || 'Unknown', fires: h.fires, wins: h.wins, roi, net: Math.round(net * 100) / 100 };
+          return { name, fires: h.fires, wins: h.wins, roi, net: Math.round(net * 100) / 100 };
         })
         .sort((a, b) => b.net - a.net);
 
