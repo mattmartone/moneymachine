@@ -106,21 +106,30 @@ export function PerformanceProof() {
               <td className="py-3 text-web-green font-bold">+$284</td>
               <td className="py-3 text-web-green font-bold">+18%</td>
             </tr>
+            <tr>
+              <td className="py-3 font-bold">June 21</td>
+              <td className="py-3">Multi-Track</td>
+              <td className="py-3">9</td>
+              <td className="py-3">$1,260</td>
+              <td className="py-3">$963</td>
+              <td className="py-3 text-web-red font-bold">-$297</td>
+              <td className="py-3 text-web-red font-bold">-24%</td>
+            </tr>
             <tr className="border-t-4 border-black bg-[#e6ffe6]">
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
-              <td className="py-4 text-lg font-bold">62</td>
-              <td className="py-4 text-lg font-bold">$9,477</td>
-              <td className="py-4 text-lg font-bold">$11,860</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$2,383</td>
-              <td className="py-4 text-lg text-web-green font-bold">+25%</td>
+              <td className="py-4 text-lg font-bold">71</td>
+              <td className="py-4 text-lg font-bold">$10,737</td>
+              <td className="py-4 text-lg font-bold">$12,823</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$2,086</td>
+              <td className="py-4 text-lg text-web-green font-bold">+19%</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
-        <div className="font-bold text-web-green">9 consecutive profitable days. The model doesn't guess — it executes.</div>
-        <div className="font-bold">9 race days. +$2,383 lifetime. +25% ROI. 62 races. Never bet the favorite.</div>
+        <div className="font-bold text-web-green">10 race days. First loss day (June 21) — model still beats random.</div>
+        <div className="font-bold">10 race days. +$2,086 lifetime. +19% ROI. 71 races. Never bet the favorite.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
