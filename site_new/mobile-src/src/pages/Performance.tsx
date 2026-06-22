@@ -155,19 +155,18 @@ export function Performance() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {data.map((row: any, idx: number) => {
-                    const modelBetter = row.model_net > row.random_net;
                     return (
-                      <tr key={idx} className={modelBetter ? 'bg-success/5' : ''}>
-                        <td className="py-2.5 px-2 text-gray-900 font-medium text-xs whitespace-nowrap">{row.date}</td>
-                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.model_net >= 0 ? 'text-success' : 'text-gray-700'}`}>
+                      <tr key={idx}>
+                        <td className="py-2.5 px-2 text-gray-900 text-xs whitespace-nowrap">{row.date}</td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
                           {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
                         </td>
-                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.random_net >= 0 ? 'text-success' : 'text-gray-700'}`}>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
                           {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
                         </td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_win_rate != null ? row.random_win_rate + '%' : '—'}</td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs font-semibold text-primary">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_exacta_rate != null ? row.random_exacta_rate + '%' : '—'}</td>
                       </tr>
                     );
