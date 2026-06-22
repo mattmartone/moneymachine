@@ -14,6 +14,30 @@ export default async function handler(req: any, res: any) {
   const { filter } = req.query;
 
   try {
+    if (filter === 'model') {
+      const { rows } = await query(`
+        SELECT date, model_net, random_avg_net, model_win_rate, random_win_rate,
+               model_exacta_rate, random_exacta_rate, races_played, random_pct_beats
+        FROM postmortem_metrics
+        WHERE model_win_rate IS NOT NULL OR model_net IS NOT NULL
+        ORDER BY date DESC
+      `);
+
+      const data = rows.map((r: any) => ({
+        date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        model_net: r.model_net ? Math.round(r.model_net * 100) / 100 : 0,
+        random_net: r.random_avg_net ? Math.round(r.random_avg_net * 100) / 100 : 0,
+        model_win_rate: r.model_win_rate ? Math.round(r.model_win_rate * 100) : null,
+        random_win_rate: r.random_win_rate ? Math.round(r.random_win_rate * 100) : null,
+        model_exacta_rate: r.model_exacta_rate ? Math.round(r.model_exacta_rate * 100) : null,
+        random_exacta_rate: r.random_exacta_rate ? Math.round(r.random_exacta_rate * 100) : null,
+        races: r.races_played,
+        model_beats: r.random_pct_beats ? (100 - r.random_pct_beats) : null,
+      }));
+
+      return res.status(200).json({ data, type: 'model' });
+    }
+
     if (filter === 'bet_types') {
       const { rows } = await query(`
         SELECT b.bet_type,

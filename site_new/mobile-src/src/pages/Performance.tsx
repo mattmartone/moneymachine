@@ -148,8 +148,52 @@ export function Performance() {
           </div>
         )}
 
-        {/* Results table */}
-        {data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+        {/* Model vs Random table */}
+        {filter === 'model' && !useSample && data.length > 0 && (
+          <div>
+            <p className="text-xs text-muted mb-4 leading-relaxed italic">
+              Can an AI beat random chance at picking horses? We test every race day. Same races, same bets, same stakes — just random picks vs our model. The exacta rate tells the story.
+            </p>
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-app border-b border-border">
+                  <tr>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold">Date</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model P/L</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Random P/L</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model Win</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Rand Win</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model EX</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Rand EX</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {data.map((row: any, idx: number) => {
+                    const modelBetter = row.model_net > row.random_net;
+                    return (
+                      <tr key={idx} className={modelBetter ? 'bg-success/5' : ''}>
+                        <td className="py-2.5 px-2 text-gray-900 font-medium text-xs whitespace-nowrap">{row.date}</td>
+                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.model_net >= 0 ? 'text-success' : 'text-danger'}`}>
+                          {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
+                        </td>
+                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.random_net >= 0 ? 'text-success' : 'text-danger'}`}>
+                          {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
+                        </td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_win_rate != null ? row.random_win_rate + '%' : '—'}</td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs font-semibold text-primary">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
+                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_exacta_rate != null ? row.random_exacta_rate + '%' : '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Standard results table */}
+        {filter !== 'model' && data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-app border-b border-border">
               <tr>
@@ -164,7 +208,40 @@ export function Performance() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {data.map((row, idx) => (
+              {data.map((row: any, idx: number) => (
+                <tr key={idx}>
+                  <td className="py-2.5 px-3 text-gray-900 font-medium text-xs">{row.name}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.fires}</td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.wins}</td>
+                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.roi >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {row.roi >= 0 ? '+' : ''}{row.roi}%
+                  </td>
+                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.net >= 0 ? 'text-success' : 'text-danger'}`}>
+                    {row.net >= 0 ? '+' : '-'}${Math.abs(row.net)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>}
+
+        {/* Sample model table */}
+        {filter === 'model' && useSample && data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-app border-b border-border">
+              <tr>
+                {([['name', 'Name', ''], ['fires', 'Fires', 'text-right'], ['wins', 'Wins', 'text-right'], ['roi', 'ROI', 'text-right'], ['net', 'Net', 'text-right']] as [SortKey, string, string][]).map(([key, label, align]) => (
+                  <th
+                    key={key}
+                    onClick={() => toggleSort(key)}
+                    className={`py-2.5 px-3 text-[10px] uppercase tracking-wider font-semibold cursor-pointer select-none hover:text-gray-900 transition-colors ${align} ${sortBy === key ? 'text-gray-900' : 'text-muted'}`}>
+                    {label} {sortBy === key && (sortDir === 'desc' ? '↓' : '↑')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {data.map((row: any, idx: number) => (
                 <tr key={idx}>
                   <td className="py-2.5 px-3 text-gray-900 font-medium text-xs">{row.name}</td>
                   <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.fires}</td>
