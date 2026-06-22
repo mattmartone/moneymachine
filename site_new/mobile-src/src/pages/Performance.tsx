@@ -56,6 +56,7 @@ const FILTER_LABELS: Record<FilterType, string> = {
 
 export function Performance() {
   const [filter, setFilter] = useState<FilterType>('model');
+  const [useSample, setUseSample] = useState(true);
   const data = SAMPLE_DATA[filter];
 
   return (
@@ -88,14 +89,27 @@ export function Performance() {
           ))}
         </div>
 
-        {/* Sample data indicator */}
-        <div className="bg-primary/5 border border-primary/20 rounded-xl px-3 py-2 mb-4 flex items-center gap-2">
-          <TrendingUp size={14} className="text-primary" />
-          <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Sample Data</span>
+        {/* Data source toggle */}
+        <div className="flex items-center justify-between bg-surface border border-border rounded-xl px-3 py-2.5 mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={14} className={useSample ? 'text-primary' : 'text-success'} />
+            <span className="text-xs font-semibold text-gray-900">{useSample ? 'Sample Data' : 'Live Data'}</span>
+          </div>
+          <button
+            onClick={() => setUseSample(!useSample)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${useSample ? 'bg-primary/30' : 'bg-success/30'}`}>
+            <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${useSample ? 'left-0.5 bg-primary' : 'left-[22px] bg-success'}`} />
+          </button>
         </div>
 
+        {!useSample && (
+          <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
+            <p className="text-xs text-muted">Live data connection in progress. Results will populate as the model matures.</p>
+          </div>
+        )}
+
         {/* Results table */}
-        <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+        {useSample && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-app border-b border-border">
               <tr>
@@ -122,7 +136,7 @@ export function Performance() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
       </main>
     </div>
   );
