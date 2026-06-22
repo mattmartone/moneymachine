@@ -86,6 +86,8 @@ async function postToSlack(text: string) {
 }
 
 async function sendEmailToAll(subject: string, html: string) {
+  // EMAILS DISABLED — store #2
+  return;
   const users = await query(`SELECT email FROM users WHERE email IS NOT NULL`);
   const emails = users.rows.map((r: any) => r.email);
 
@@ -285,10 +287,13 @@ export default async function handler(req: any, res: any) {
     const finishedWatched = trackRaces.filter(r => finishedRaceNumbers.includes(r.race_number));
     if (finishedWatched.length === 0) continue;
 
-    // Check which ones we already have results for
+    // Find race IDs by looking at which races have bets (same as the site)
     const dbTrackNames = getDbTrackNames(finishedWatched[0].track_name);
     const raceIds = await query(
-      `SELECT id, race_number FROM races WHERE track = ANY($1) AND date = CURRENT_DATE AND race_number = ANY($2)`,
+      `SELECT DISTINCT r.id, r.race_number FROM races r
+       JOIN bets b ON b.race_id = r.id
+       WHERE r.track = ANY($1) AND r.date = CURRENT_DATE AND r.race_number = ANY($2)
+       AND b.conviction IN ('COMMISSION', 'HIGH')`,
       [dbTrackNames, finishedWatched.map(r => r.race_number)]
     );
 
