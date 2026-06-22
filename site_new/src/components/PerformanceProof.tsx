@@ -93,18 +93,18 @@ export function PerformanceProof() {
               <td className="py-3">Multi-Track</td>
               <td className="py-3">10</td>
               <td className="py-3">$1,514</td>
-              <td className="py-3">$1,530</td>
-              <td className="py-3 text-web-green font-bold">+$16</td>
-              <td className="py-3 text-web-green font-bold">+1%</td>
+              <td className="py-3">$1,480</td>
+              <td className="py-3 text-web-red font-bold">-$34</td>
+              <td className="py-3 text-web-red font-bold">-2%</td>
             </tr>
             <tr>
               <td className="py-3 font-bold">June 20</td>
               <td className="py-3">Multi-Track</td>
               <td className="py-3">8</td>
               <td className="py-3">$1,543</td>
-              <td className="py-3">$1,827</td>
-              <td className="py-3 text-web-green font-bold">+$284</td>
-              <td className="py-3 text-web-green font-bold">+18%</td>
+              <td className="py-3">$1,888</td>
+              <td className="py-3 text-web-green font-bold">+$345</td>
+              <td className="py-3 text-web-green font-bold">+22%</td>
             </tr>
             <tr>
               <td className="py-3 font-bold">June 21</td>
@@ -119,17 +119,16 @@ export function PerformanceProof() {
               <td className="py-4 font-bold text-lg" colSpan={2}>LIFETIME</td>
               <td className="py-4 text-lg font-bold">73</td>
               <td className="py-4 text-lg font-bold">$11,011</td>
-              <td className="py-4 text-lg font-bold">$13,344</td>
-              <td className="py-4 text-lg text-web-green font-bold">+$2,333</td>
-              <td className="py-4 text-lg text-web-green font-bold">+21%</td>
+              <td className="py-4 text-lg font-bold">$13,556</td>
+              <td className="py-4 text-lg text-web-green font-bold">+$2,545</td>
+              <td className="py-4 text-lg text-web-green font-bold">+23%</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="bg-white border-2 border-black p-4 mt-4 font-mono text-sm text-center space-y-1">
-        <div className="font-bold text-web-green">10 race days. 10 straight profitable. The model doesn't guess — it executes.</div>
-        <div className="font-bold">10 race days. +$2,333 lifetime. +21% ROI. 73 races. Never bet the favorite.</div>
+        <div className="font-bold">10 race days. +$2,545 lifetime. +23% ROI. 73 races. Never bet the favorite.</div>
       </div>
 
       <p className="text-center font-sans text-sm mt-4 text-gray-600 italic">
