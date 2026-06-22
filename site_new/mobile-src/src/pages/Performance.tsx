@@ -58,7 +58,6 @@ type SortKey = 'name' | 'fires' | 'wins' | 'roi' | 'net';
 
 export function Performance() {
   const [filter, setFilter] = useState<FilterType>('model');
-  const [useSample, setUseSample] = useState(true);
   const [liveData, setLiveData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('net');
@@ -77,7 +76,10 @@ export function Performance() {
     setLoading(false);
   };
 
-  const rawData = useSample ? SAMPLE_DATA[filter] : (liveData[filter] || []);
+  // Auto-fetch on mount and filter change
+  if (!liveData[filter] && !loading) fetchLiveData(filter);
+
+  const rawData = liveData[filter] || [];
   const data = [...rawData].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
@@ -109,7 +111,7 @@ export function Performance() {
           {(Object.keys(FILTER_LABELS) as FilterType[]).map((key) => (
             <button
               key={key}
-              onClick={() => { setFilter(key); if (!useSample) fetchLiveData(key); }}
+              onClick={() => setFilter(key)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
                 filter === key
                   ? 'bg-primary text-white'
@@ -120,36 +122,20 @@ export function Performance() {
           ))}
         </div>
 
-        {/* Data source toggle */}
-        <div className="flex items-center justify-between bg-surface border border-border rounded-xl px-3 py-2.5 mb-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={14} className={useSample ? 'text-primary' : 'text-success'} />
-            <span className="text-xs font-semibold text-gray-900">{useSample ? 'Sample Data' : 'Live Data'}</span>
-          </div>
-          <button
-            onClick={() => {
-              const next = !useSample;
-              setUseSample(next);
-              if (!next) fetchLiveData(filter);
-            }}
-            className={`relative w-10 h-5 rounded-full transition-colors ${useSample ? 'bg-primary/30' : 'bg-success/30'}`}>
-            <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${useSample ? 'left-0.5 bg-primary' : 'left-[22px] bg-success'}`} />
-          </button>
-        </div>
-
-        {!useSample && !liveData[filter] && !loading && (
-          <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
-            <p className="text-xs text-muted">No live data available for this filter yet.</p>
-          </div>
-        )}
         {loading && (
           <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
             <p className="text-xs text-muted">Loading...</p>
           </div>
         )}
 
+        {!loading && !liveData[filter] && (
+          <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
+            <p className="text-xs text-muted">No data available for this filter yet.</p>
+          </div>
+        )}
+
         {/* Model vs Random table */}
-        {filter === 'model' && !useSample && data.length > 0 && (
+        {filter === 'model' && data.length > 0 && (
           <div>
             <p className="text-xs text-muted mb-4 leading-relaxed italic">
               Can an AI beat random chance at picking horses? We test every race day. Same races, same bets, same stakes — just random picks vs our model. The exacta rate tells the story.
@@ -173,10 +159,10 @@ export function Performance() {
                     return (
                       <tr key={idx} className={modelBetter ? 'bg-success/5' : ''}>
                         <td className="py-2.5 px-2 text-gray-900 font-medium text-xs whitespace-nowrap">{row.date}</td>
-                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.model_net >= 0 ? 'text-success' : 'text-danger'}`}>
+                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.model_net >= 0 ? 'text-success' : 'text-gray-700'}`}>
                           {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
                         </td>
-                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.random_net >= 0 ? 'text-success' : 'text-danger'}`}>
+                        <td className={`py-2.5 px-2 text-right tabular-nums font-semibold text-xs ${row.random_net >= 0 ? 'text-success' : 'text-gray-700'}`}>
                           {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
                         </td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
@@ -213,10 +199,10 @@ export function Performance() {
                   <td className="py-2.5 px-3 text-gray-900 font-medium text-xs">{row.name}</td>
                   <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.fires}</td>
                   <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.wins}</td>
-                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.roi >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.roi >= 0 ? 'text-success' : 'text-gray-700'}`}>
                     {row.roi >= 0 ? '+' : ''}{row.roi}%
                   </td>
-                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.net >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.net >= 0 ? 'text-success' : 'text-gray-700'}`}>
                     {row.net >= 0 ? '+' : '-'}${Math.abs(row.net)}
                   </td>
                 </tr>
@@ -225,38 +211,6 @@ export function Performance() {
           </table>
         </div>}
 
-        {/* Sample model table */}
-        {filter === 'model' && useSample && data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-app border-b border-border">
-              <tr>
-                {([['name', 'Name', ''], ['fires', 'Fires', 'text-right'], ['wins', 'Wins', 'text-right'], ['roi', 'ROI', 'text-right'], ['net', 'Net', 'text-right']] as [SortKey, string, string][]).map(([key, label, align]) => (
-                  <th
-                    key={key}
-                    onClick={() => toggleSort(key)}
-                    className={`py-2.5 px-3 text-[10px] uppercase tracking-wider font-semibold cursor-pointer select-none hover:text-gray-900 transition-colors ${align} ${sortBy === key ? 'text-gray-900' : 'text-muted'}`}>
-                    {label} {sortBy === key && (sortDir === 'desc' ? '↓' : '↑')}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {data.map((row: any, idx: number) => (
-                <tr key={idx}>
-                  <td className="py-2.5 px-3 text-gray-900 font-medium text-xs">{row.name}</td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.fires}</td>
-                  <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">{row.wins}</td>
-                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.roi >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {row.roi >= 0 ? '+' : ''}{row.roi}%
-                  </td>
-                  <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.net >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {row.net >= 0 ? '+' : '-'}${Math.abs(row.net)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>}
       </main>
     </div>
   );
