@@ -5,6 +5,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
 
 export default async function handler(req: any, res: any) {
   const authHeader = req.headers.authorization;
+  const isPublic = authHeader === 'Bearer public';
+
+  if (isPublic && req.method === 'GET') {
+    const { rows } = await query(`SELECT id, name FROM strategies WHERE type != 'hard_rule' ORDER BY name`);
+    return res.status(200).json({ strategies: rows });
+  }
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Not authenticated' });
   }

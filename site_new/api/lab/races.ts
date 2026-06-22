@@ -22,6 +22,38 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    const { today, track } = req.query || {};
+
+    // Track list for today
+    if (today) {
+      const now = new Date();
+      const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const dateStr = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
+      const { rows } = await query(
+        `SELECT track as name, COUNT(*) as races FROM races
+         WHERE date = $1 AND field_size >= 6
+         AND track NOT IN (SELECT track FROM races WHERE date = $1 AND track = ANY(ARRAY['ALB','ARP','BTP','CT','DED','EMD','EVD','FMT','FL','MNR','TDN','PRM','LS','CBY']))
+         GROUP BY track ORDER BY track`,
+        [dateStr]
+      );
+      return res.status(200).json({ tracks: rows.map((r: any) => ({ name: r.name, races: parseInt(r.races) })) });
+    }
+
+    // Races for a specific track today
+    if (track) {
+      const now = new Date();
+      const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const dateStr = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
+      const { rows } = await query(
+        `SELECT id, race_number as number, conditions, distance, surface, field_size
+         FROM races WHERE track = $1 AND date = $2 AND field_size >= 6
+         ORDER BY race_number`,
+        [track, dateStr]
+      );
+      return res.status(200).json({ races: rows });
+    }
+
+    // Default: all qualified races grouped
     const { rows } = await query(
       `SELECT r.id, r.track, r.date, r.race_number, r.conditions, r.class,
               r.distance, r.surface, r.field_size, r.qualified, r.post_time,

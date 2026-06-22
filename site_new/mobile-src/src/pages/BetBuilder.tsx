@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { Send, MessageSquare, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, MessageSquare, MapPin, ChevronRight, Check } from 'lucide-react';
 
-type Mode = 'choose' | 'chat' | 'tracks';
+type Mode = 'choose' | 'chat' | 'tracks' | 'races' | 'strategies' | 'results';
+
+interface Track { name: string; races: number }
+interface RaceOption { id: number; number: number; conditions: string; distance: string; surface: string; field_size: number }
+interface Strategy { id: number; name: string }
 
 export function BetBuilder() {
   const [mode, setMode] = useState<Mode>('choose');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
+
+  // Track-first flow state
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<string>('');
+  const [races, setRaces] = useState<RaceOption[]>([]);
+  const [selectedRaces, setSelectedRaces] = useState<number[]>([]);
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [selectedStrategies, setSelectedStrategies] = useState<number[]>([]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -72,26 +84,186 @@ export function BetBuilder() {
     );
   }
 
+  // Fetch tracks when entering track mode
+  useEffect(() => {
+    if (mode === 'tracks' && tracks.length === 0) {
+      fetch('/api/lab/races?today=true', { headers: { Authorization: 'Bearer public' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.tracks) setTracks(data.tracks);
+        })
+        .catch(() => {});
+    }
+  }, [mode]);
+
+  // Fetch races when track is selected
+  useEffect(() => {
+    if (mode === 'races' && selectedTrack) {
+      fetch(`/api/lab/races?track=${encodeURIComponent(selectedTrack)}`, { headers: { Authorization: 'Bearer public' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.races) setRaces(data.races);
+        })
+        .catch(() => {});
+    }
+  }, [mode, selectedTrack]);
+
+  // Fetch strategies
+  useEffect(() => {
+    if (mode === 'strategies' && strategies.length === 0) {
+      fetch('/api/lab/strategies', { headers: { Authorization: 'Bearer public' } })
+        .then(r => r.json())
+        .then(data => {
+          if (data.strategies) setStrategies(data.strategies);
+        })
+        .catch(() => {});
+    }
+  }, [mode]);
+
   if (mode === 'tracks') {
     return (
       <div className="pb-24 min-h-screen bg-app">
         <div className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border shadow-sm">
           <div className="max-w-md md:max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
             <button onClick={() => setMode('choose')} className="text-muted hover:text-gray-900 text-sm font-semibold">← Back</button>
-            <h1 className="text-lg font-bold tracking-tight text-gray-900 leading-tight">
-              Today's Tracks
-            </h1>
+            <h1 className="text-lg font-bold tracking-tight text-gray-900 leading-tight">Select a Track</h1>
           </div>
         </div>
+        <main className="max-w-md md:max-w-3xl mx-auto px-4 pt-4">
+          <div className="space-y-2">
+            {tracks.map((track) => (
+              <button
+                key={track.name}
+                onClick={() => { setSelectedTrack(track.name); setMode('races'); }}
+                className="w-full bg-surface border border-border rounded-xl px-4 py-3 flex items-center justify-between hover:border-primary/30 transition-colors">
+                <span className="text-sm font-semibold text-gray-900">{track.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted">{track.races} races</span>
+                  <ChevronRight size={16} className="text-muted" />
+                </div>
+              </button>
+            ))}
+            {tracks.length === 0 && <p className="text-xs text-muted text-center py-8">Loading tracks...</p>}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
+  if (mode === 'races') {
+    const allSelected = selectedRaces.length === races.length;
+    return (
+      <div className="pb-24 min-h-screen bg-app">
+        <div className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border shadow-sm">
+          <div className="max-w-md md:max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
+            <button onClick={() => { setMode('tracks'); setSelectedRaces([]); }} className="text-muted hover:text-gray-900 text-sm font-semibold">← Back</button>
+            <h1 className="text-lg font-bold tracking-tight text-gray-900 leading-tight">{selectedTrack}</h1>
+          </div>
+        </div>
+        <main className="max-w-md md:max-w-3xl mx-auto px-4 pt-4">
+          <p className="text-xs text-muted mb-3">Select races to analyze</p>
+          <button
+            onClick={() => setSelectedRaces(allSelected ? [] : races.map(r => r.id))}
+            className="text-xs font-semibold text-primary mb-3">
+            {allSelected ? 'Deselect all' : 'Select all races'}
+          </button>
+          <div className="space-y-2">
+            {races.map((race) => {
+              const selected = selectedRaces.includes(race.id);
+              return (
+                <button
+                  key={race.id}
+                  onClick={() => setSelectedRaces(prev => selected ? prev.filter(id => id !== race.id) : [...prev, race.id])}
+                  className={`w-full border rounded-xl px-4 py-3 flex items-center justify-between transition-colors ${selected ? 'bg-primary/5 border-primary/30' : 'bg-surface border-border'}`}>
+                  <div className="text-left">
+                    <span className="text-sm font-semibold text-gray-900">R{race.number}</span>
+                    <span className="text-xs text-muted ml-2">{race.conditions}</span>
+                    <div className="text-[10px] text-muted mt-0.5">{race.distance} · {race.surface} · {race.field_size} horses</div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
+                    {selected && <Check size={12} className="text-white" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {selectedRaces.length > 0 && (
+            <button
+              onClick={() => setMode('strategies')}
+              className="w-full mt-4 bg-primary text-white py-3 rounded-xl font-semibold text-sm">
+              Next: Select Strategies ({selectedRaces.length} race{selectedRaces.length > 1 ? 's' : ''})
+            </button>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  if (mode === 'strategies') {
+    return (
+      <div className="pb-24 min-h-screen bg-app">
+        <div className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border shadow-sm">
+          <div className="max-w-md md:max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
+            <button onClick={() => setMode('races')} className="text-muted hover:text-gray-900 text-sm font-semibold">← Back</button>
+            <h1 className="text-lg font-bold tracking-tight text-gray-900 leading-tight">Select Strategies</h1>
+          </div>
+        </div>
+        <main className="max-w-md md:max-w-3xl mx-auto px-4 pt-4">
+          <p className="text-xs text-muted mb-3">Choose strategies to execute against your selected races</p>
+          <div className="space-y-2">
+            {strategies.map((strat) => {
+              const selected = selectedStrategies.includes(strat.id);
+              return (
+                <button
+                  key={strat.id}
+                  onClick={() => setSelectedStrategies(prev => selected ? prev.filter(id => id !== strat.id) : [...prev, strat.id])}
+                  className={`w-full border rounded-xl px-4 py-3 flex items-center justify-between transition-colors ${selected ? 'bg-primary/5 border-primary/30' : 'bg-surface border-border'}`}>
+                  <span className="text-sm font-medium text-gray-900">{strat.name}</span>
+                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
+                    {selected && <Check size={12} className="text-white" />}
+                  </div>
+                </button>
+              );
+            })}
+            {strategies.length === 0 && <p className="text-xs text-muted text-center py-8">Loading strategies...</p>}
+          </div>
+          {selectedStrategies.length > 0 && (
+            <button
+              onClick={() => setMode('results')}
+              className="w-full mt-4 bg-primary text-white py-3 rounded-xl font-semibold text-sm">
+              Execute ({selectedStrategies.length} strateg{selectedStrategies.length > 1 ? 'ies' : 'y'} × {selectedRaces.length} race{selectedRaces.length > 1 ? 's' : ''})
+            </button>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  if (mode === 'results') {
+    return (
+      <div className="pb-24 min-h-screen bg-app">
+        <div className="sticky top-0 z-20 bg-surface/90 backdrop-blur-md border-b border-border shadow-sm">
+          <div className="max-w-md md:max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
+            <button onClick={() => setMode('strategies')} className="text-muted hover:text-gray-900 text-sm font-semibold">← Back</button>
+            <h1 className="text-lg font-bold tracking-tight text-gray-900 leading-tight">Wagering Plan</h1>
+          </div>
+        </div>
         <main className="max-w-md md:max-w-3xl mx-auto px-4 pt-6">
           <div className="bg-surface border border-border rounded-2xl p-6 text-center">
-            <MapPin size={24} className="text-primary mx-auto mb-3" />
-            <h2 className="text-sm font-bold text-gray-900 mb-1">Track browser coming soon</h2>
-            <p className="text-xs text-muted">
-              Browse all tracks running today, view fields, and select races for AI analysis.
+            <p className="text-sm font-bold text-gray-900 mb-2">Executing...</p>
+            <p className="text-xs text-muted mb-4">
+              {selectedStrategies.length} strateg{selectedStrategies.length > 1 ? 'ies' : 'y'} × {selectedRaces.length} race{selectedRaces.length > 1 ? 's' : ''} at {selectedTrack}
             </p>
+            <div className="bg-app border border-border rounded-xl px-3 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted font-semibold">Coming Soon</p>
+              <p className="text-xs text-muted mt-1">The AI will analyze each race against your selected strategies and return a full wagering plan with conviction levels.</p>
+            </div>
           </div>
+          <button
+            onClick={() => { setMode('choose'); setSelectedRaces([]); setSelectedStrategies([]); setSelectedTrack(''); }}
+            className="w-full mt-4 border border-border bg-surface py-3 rounded-xl font-semibold text-sm text-gray-700">
+            Start Over
+          </button>
         </main>
       </div>
     );
