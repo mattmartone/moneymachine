@@ -57,7 +57,23 @@ const FILTER_LABELS: Record<FilterType, string> = {
 export function Performance() {
   const [filter, setFilter] = useState<FilterType>('model');
   const [useSample, setUseSample] = useState(true);
-  const data = SAMPLE_DATA[filter];
+  const [liveData, setLiveData] = useState<Record<string, any[]>>({});
+  const [loading, setLoading] = useState(false);
+
+  const fetchLiveData = async (f: FilterType) => {
+    if (liveData[f]) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/lab/performance-detail?filter=${f}`, {
+        headers: { Authorization: 'Bearer public' }
+      });
+      const json = await res.json();
+      if (json.data) setLiveData(prev => ({ ...prev, [f]: json.data }));
+    } catch {}
+    setLoading(false);
+  };
+
+  const data = useSample ? SAMPLE_DATA[filter] : (liveData[filter] || []);
 
   return (
     <div className="pb-24 min-h-screen bg-app">
@@ -78,7 +94,7 @@ export function Performance() {
           {(Object.keys(FILTER_LABELS) as FilterType[]).map((key) => (
             <button
               key={key}
-              onClick={() => setFilter(key)}
+              onClick={() => { setFilter(key); if (!useSample) fetchLiveData(key); }}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
                 filter === key
                   ? 'bg-primary text-white'
@@ -96,20 +112,29 @@ export function Performance() {
             <span className="text-xs font-semibold text-gray-900">{useSample ? 'Sample Data' : 'Live Data'}</span>
           </div>
           <button
-            onClick={() => setUseSample(!useSample)}
+            onClick={() => {
+              const next = !useSample;
+              setUseSample(next);
+              if (!next) fetchLiveData(filter);
+            }}
             className={`relative w-10 h-5 rounded-full transition-colors ${useSample ? 'bg-primary/30' : 'bg-success/30'}`}>
             <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${useSample ? 'left-0.5 bg-primary' : 'left-[22px] bg-success'}`} />
           </button>
         </div>
 
-        {!useSample && (
+        {!useSample && !liveData[filter] && !loading && (
           <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
-            <p className="text-xs text-muted">Live data connection in progress. Results will populate as the model matures.</p>
+            <p className="text-xs text-muted">No live data available for this filter yet.</p>
+          </div>
+        )}
+        {loading && (
+          <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
+            <p className="text-xs text-muted">Loading...</p>
           </div>
         )}
 
         {/* Results table */}
-        {useSample && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+        {data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-app border-b border-border">
               <tr>
