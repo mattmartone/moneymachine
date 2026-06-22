@@ -116,6 +116,113 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ data: result });
     }
 
+    if (filter === 'strategies') {
+      const { rows: stratBets } = await query(`
+        SELECT s.name as strategy_name, b.race_id, b.bet_type, b.stake, b.entries_used,
+               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               ew.post_position as win_pp, ep.post_position as place_pp,
+               es.post_position as show_pp, ef.post_position as fourth_pp
+        FROM strategy_activations sa
+        JOIN strategies s ON s.id = sa.strategy_id
+        JOIN bets b ON b.id = sa.bet_id
+        JOIN races r ON r.id = b.race_id
+        JOIN results res ON res.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id
+        LEFT JOIN entries es ON es.id = res.show_entry_id
+        LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
+        WHERE b.conviction IN ('COMMISSION', 'HIGH')
+      `);
+
+      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
+      function factorial(n: number): number { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+      function permutations(n: number, k: number): number { return factorial(n) / factorial(n - k); }
+
+      // Group by strategy, then by race to get per-race net
+      const stratMap: Record<string, { races: Set<number>; wagered: number; collected: number; wins: number }> = {};
+
+      for (const row of stratBets) {
+        if (!stratMap[row.strategy_name]) {
+          stratMap[row.strategy_name] = { races: new Set(), wagered: 0, collected: 0, wins: 0 };
+        }
+        const s = stratMap[row.strategy_name];
+        s.races.add(row.race_id);
+        s.wagered += row.stake;
+
+        if (!row.entries_used?.length) continue;
+        const pps = row.entries_used.map(parsePP);
+        const n = pps.length;
+
+        let collected = 0;
+        if (row.bet_type === 'win' && pps.includes(row.win_pp) && row.win_payout > 0) {
+          collected = (row.win_payout / 2) * row.stake;
+          s.wins++;
+        } else if (row.bet_type === 'exacta' && pps.includes(row.win_pp) && pps.includes(row.place_pp) && row.exacta_payout > 0) {
+          collected = row.exacta_payout * (row.stake / permutations(n, 2));
+        } else if (row.bet_type === 'trifecta' && pps.includes(row.win_pp) && pps.includes(row.place_pp) && pps.includes(row.show_pp) && row.trifecta_payout > 0) {
+          collected = row.trifecta_payout * (row.stake / permutations(n, 3));
+        } else if (row.bet_type === 'superfecta' && pps.includes(row.win_pp) && pps.includes(row.place_pp) && pps.includes(row.show_pp) && row.fourth_pp && pps.includes(row.fourth_pp) && row.superfecta_payout > 0) {
+          collected = row.superfecta_payout * (row.stake / permutations(n, 4));
+        }
+        s.collected += collected;
+      }
+
+      const result = Object.entries(stratMap)
+        .map(([name, s]) => {
+          const net = s.collected - s.wagered;
+          const roi = s.wagered > 0 ? Math.round((net / s.wagered) * 100) : 0;
+          return { name, fires: s.races.size, wins: s.wins, roi, net: Math.round(net * 100) / 100 };
+        })
+        .sort((a, b) => b.net - a.net);
+
+      return res.status(200).json({ data: result });
+    }
+
+    if (filter === 'horses') {
+      const { rows: horseBets } = await query(`
+        SELECT h.name as horse_name, b.race_id, b.bet_type, b.stake, b.entries_used,
+               res.win_payout, ew.post_position as win_pp
+        FROM bets b
+        JOIN races r ON r.id = b.race_id
+        JOIN results res ON res.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN horses h ON h.id = ew.horse_id
+        WHERE b.conviction IN ('COMMISSION', 'HIGH') AND b.bet_type = 'win'
+      `);
+
+      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
+
+      // For each win bet, check if our pick won — group by winning horse
+      const horseMap: Record<string, { fires: number; wins: number; wagered: number; collected: number }> = {};
+
+      for (const row of horseBets) {
+        if (!row.entries_used?.length) continue;
+        const pickPP = parsePP(row.entries_used[0]);
+        const won = pickPP === row.win_pp;
+
+        // Group by our pick horse (from entries_used, not the winner)
+        const pickName = row.entries_used[0].replace(/^#\d+\s*/, '').trim() || `#${pickPP}`;
+        if (!horseMap[pickName]) horseMap[pickName] = { fires: 0, wins: 0, wagered: 0, collected: 0 };
+        const h = horseMap[pickName];
+        h.fires++;
+        h.wagered += row.stake;
+        if (won && row.win_payout > 0) {
+          h.wins++;
+          h.collected += (row.win_payout / 2) * row.stake;
+        }
+      }
+
+      const result = Object.entries(horseMap)
+        .map(([name, h]) => {
+          const net = h.collected - h.wagered;
+          const roi = h.wagered > 0 ? Math.round((net / h.wagered) * 100) : 0;
+          return { name: name || 'Unknown', fires: h.fires, wins: h.wins, roi, net: Math.round(net * 100) / 100 };
+        })
+        .sort((a, b) => b.net - a.net);
+
+      return res.status(200).json({ data: result });
+    }
+
     return res.status(200).json({ data: [] });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
