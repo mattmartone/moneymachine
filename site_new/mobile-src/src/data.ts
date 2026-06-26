@@ -213,7 +213,9 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
   );
 
   const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const isFutureDate = date ? date > todayStr : false;
+  const currentTime = isFutureDate ? '23:59' : `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const races: Race[] = Array.from(picksByRace.entries()).map(([raceId, racePicks]) => {
     const results = resultsMap.get(raceId);
