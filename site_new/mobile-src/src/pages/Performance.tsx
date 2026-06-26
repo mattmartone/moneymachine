@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Zap } from 'lucide-react';
 
 type FilterType = 'model' | 'strategies' | 'horses' | 'trainers' | 'jockeys' | 'barns' | 'bet_types';
 
@@ -62,6 +62,18 @@ export function Performance() {
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('net');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [insights, setInsights] = useState<string[]>([]);
+  const [insightsLoaded, setInsightsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!insightsLoaded) {
+      fetch('/api/lab/insights', { headers: { Authorization: 'Bearer public' } })
+        .then(r => r.json())
+        .then(json => { if (json.insights) setInsights(json.insights); })
+        .catch(() => {})
+        .finally(() => setInsightsLoaded(true));
+    }
+  }, [insightsLoaded]);
 
   const fetchLiveData = async (f: FilterType) => {
     if (liveData[f]) return;
@@ -174,6 +186,24 @@ export function Performance() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Insights callouts */}
+        {filter === 'model' && insights.length > 0 && (
+          <div className="mt-6 bg-surface border border-border rounded-2xl px-4 py-4 shadow-sm">
+            <div className="flex items-center gap-1.5 mb-3">
+              <Zap className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">Insights</span>
+            </div>
+            <ul className="space-y-2">
+              {insights.map((insight, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-primary flex-shrink-0" />
+                  <span className="text-xs text-gray-700 leading-relaxed">{insight}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
