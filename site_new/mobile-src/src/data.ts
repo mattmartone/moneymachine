@@ -294,7 +294,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         const n = entries.length;
         const pps = entries.map((e) => e.pp);
 
-        if (pick.bet_type === 'win' && results.win_payout > 0 && pps.includes(results.win_pp)) {
+        if (pick.bet_type === 'win' && results.win_payout > 0 && pps[0] === results.win_pp) {
           collected += (results.win_payout / 2) * pick.stake;
         } else if (pick.bet_type === 'exacta' && results.exacta_payout > 0 &&
           pps.includes(results.win_pp) && pps.includes(results.place_pp)) {

@@ -84,9 +84,9 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
   const [pickType, setPickType] = useState<'all' | 'commission' | 'capo'>('all');
 
   const allRaces = races.filter((r) => {
-    if (pickType === 'all') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED' || r.conviction === 'HIGH';
+    if (pickType === 'all') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED' || r.conviction === 'HIGH' || r.conviction === 'CAPO';
     if (pickType === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
-    return r.conviction === 'HIGH';
+    return r.conviction === 'HIGH' || r.conviction === 'CAPO';
   });
 
   const isPostTimePassed = (r: Race) => {
