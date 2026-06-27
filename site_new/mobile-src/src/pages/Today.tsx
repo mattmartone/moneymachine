@@ -216,17 +216,17 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
         <div className="relative">
-          {/* Continuous vertical rail behind the hour nodes */}
+          {/* Continuous vertical rail behind the hour nodes — hidden on mobile */}
           <div
-            className="absolute top-2 bottom-2 w-px bg-border"
+            className="absolute top-2 bottom-2 w-px bg-border hidden md:block"
             style={{
               left: '23px'
             }}
             aria-hidden="true" />
-          
+
 
           <motion.div
-            className="space-y-8"
+            className="space-y-8 md:space-y-8"
             initial="hidden"
             animate="visible"
             variants={{
@@ -240,20 +240,21 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
                 }
               }
             }}>
-            
+
             {hourGroups.map((group) =>
             <section
               key={`${group.hour}-${group.period}`}
-              className="relative pl-16">
-              
-                {/* Background hour marker (timeline layer) */}
-                <div className="absolute left-0 top-0 flex flex-col items-center w-12 select-none">
-                  <span className="text-3xl font-bold leading-none text-slate-300 tabular-nums">
+              className="relative md:pl-16">
+
+                {/* Hour marker: separator row on mobile, absolute left column on desktop */}
+                <div className="flex items-center gap-3 mb-3 select-none md:absolute md:left-0 md:top-0 md:flex-col md:items-center md:w-12 md:mb-0 md:gap-0">
+                  <span className="text-xl font-bold leading-none text-slate-300 tabular-nums md:text-3xl">
                     {group.hour}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-300 mt-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-300 md:mt-0.5">
                     {group.period}
                   </span>
+                  <span className="flex-1 h-px bg-border md:hidden" />
                 </div>
 
                 {/* Races sitting on top of the timeline for this hour block */}
@@ -279,7 +280,7 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
                         y: 0
                       }
                     }}>
-                    
+
                         <RaceCard race={race} />
                       </motion.div>
                     </Fragment>
