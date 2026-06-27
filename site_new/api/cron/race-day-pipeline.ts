@@ -367,20 +367,27 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
 
   if (!winEntryId || !placeEntryId || !showEntryId) return;
 
-  const winPayout = runners[0].win_payoff ? parseFloat(runners[0].win_payoff) : null;
+  // Win payoff from API is per $2 — normalize to per-$1
+  const winPayoffPer1 = runners[0].win_payoff ? parseFloat(runners[0].win_payoff) / 2 : null;
 
   const payoffs = apiRace.payoffs || [];
-  let exactaPayout = null, trifectaPayout = null, superfectaPayout = null;
+  let exactaPayoffPer1 = null, trifectaPayoffPer1 = null, superfectaPayoffPer10c = null;
   for (const p of payoffs) {
     const wager = (p.wager_name || '').toLowerCase();
-    const tickets = parseInt(p.number_of_tickets_bet) || 0;
     const amount = parseFloat(p.payoff_amount);
     if (!amount) continue;
-    const baseDollars = tickets > 0 ? tickets / 100 : 1;
-    if (wager.includes('exacta')) exactaPayout = (amount / baseDollars) * 1;
-    else if (wager.includes('trifecta')) trifectaPayout = (amount / baseDollars) * 1;
-    else if (wager.includes('superfecta')) superfectaPayout = (amount / baseDollars) * 0.10;
+    // API reports payoff per base unit (usually $2 for exacta, $1 for tri, $0.10 for super)
+    if (wager.includes('superfecta')) superfectaPayoffPer10c = amount;
+    else if (wager.includes('trifecta')) trifectaPayoffPer1 = amount;
+    else if (wager.includes('exacta')) exactaPayoffPer1 = amount / 2;
   }
+
+  // Calculate actual collected amounts based on real stakes
+  const winStake = race.doubled ? 100 : 50;
+  const winPayout = winPayoffPer1 ? winPayoffPer1 * winStake : null;
+  const exactaPayout = exactaPayoffPer1 ? exactaPayoffPer1 * 5 : null; // $5/combo
+  const trifectaPayout = trifectaPayoffPer1 ? trifectaPayoffPer1 * 1 : null; // $1/combo
+  const superfectaPayout = superfectaPayoffPer10c ? superfectaPayoffPer10c * 1 : null; // $0.10/combo reported per $0.10
 
   await query(
     `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
@@ -394,24 +401,220 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
     [race.id, winEntryId, placeEntryId, showEntryId, fourthEntryId, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
   );
 
-  // Check our bets
+  // Check our bets and settle each one
   const boxPPs = race.box.map(parsePP);
   const winPickPP = parsePP(race.win_pick);
   const wpp = String(winPP), ppp = String(placePP), spp = String(showPP);
+  const fourthStr = fourthPP ? String(fourthPP) : null;
 
   const winHit = winPickPP === wpp;
   const exHit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
   const triHit = exHit && boxPPs.includes(spp);
+  const superHit = triHit && fourthStr && boxPPs.includes(fourthStr);
+
+  // Settle individual bets in the bets table
+  const betSettlements = [
+    { type: 'win', hit: winHit, collected: winHit ? winPayout : 0 },
+    { type: 'exacta', hit: exHit, collected: exHit ? exactaPayout : 0 },
+    { type: 'trifecta', hit: triHit, collected: triHit ? trifectaPayout : 0 },
+    { type: 'superfecta', hit: superHit, collected: superHit ? superfectaPayout : 0 },
+  ];
+
+  for (const bet of betSettlements) {
+    await query(
+      `UPDATE bets SET hit = $1, collected = $2, net = $3, settled_at = NOW()
+       WHERE race_id = $4 AND bet_type = $5`,
+      [bet.hit, bet.collected || 0, (bet.collected || 0) - (await query(`SELECT stake FROM bets WHERE race_id = $1 AND bet_type = $2`, [race.id, bet.type])).rows[0]?.stake || 0, race.id, bet.type]
+    );
+  }
 
   const results: string[] = [];
-  if (winHit) results.push(`WIN HIT ($${(winPayout! * (race.doubled ? 50 : 25)).toFixed(2)})`);
-  if (exHit) results.push('EXACTA HIT');
-  if (triHit) results.push('TRIFECTA HIT');
-  if (!winHit && !exHit && !triHit) results.push('All bets MISS');
+  if (winHit) results.push(`WIN HIT ($${winPayout?.toFixed(2)})`);
+  if (exHit) results.push(`EXACTA HIT ($${exactaPayout?.toFixed(2)})`);
+  if (triHit) results.push(`TRIFECTA HIT ($${trifectaPayout?.toFixed(2)})`);
+  if (superHit) results.push(`SUPERFECTA HIT ($${superfectaPayout?.toFixed(2)})`);
+  if (!winHit && !exHit && !triHit && !superHit) results.push('All bets MISS');
 
   const msg = `Results: PP${winPP}-PP${placePP}-PP${showPP}. ${results.join('. ')}.`;
   await logEvent(race.id, 'results_settled', msg, { finish: [winPP, placePP, showPP, fourthPP], hits: results });
   await postSlack(`${winHit || exHit || triHit ? '✅' : '❌'} ${race.track} R${race.race_number}: ${msg}`);
+
+  // Send winner alert email to members — only when we hit
+  if (winHit || exHit || triHit || superHit) {
+    const hitTypes: string[] = [];
+    if (winHit) hitTypes.push('WIN');
+    if (exHit) hitTypes.push('EXACTA');
+    if (triHit) hitTypes.push('TRIFECTA');
+
+    const winnerHtml = `
+<div style="font-family:'Courier New',monospace;max-width:600px;margin:0 auto;padding:20px;background:#fffff0;border:3px solid black;">
+  <h1 style="font-family:Georgia,serif;font-size:24px;margin:0;text-align:center;color:#1a5c1a;">💰 WINNER</h1>
+  <p style="font-family:Georgia;font-size:16px;text-align:center;margin:8px 0 16px;">${race.track} Race ${race.race_number}</p>
+  <div style="background:#e8f5e9;border:2px solid #1a5c1a;padding:12px;text-align:center;margin-bottom:16px;">
+    <div style="font-size:18px;font-weight:bold;">${hitTypes.join(' + ')} HIT</div>
+    <div style="font-size:13px;margin-top:4px;">Finish: PP${winPP} – PP${placePP} – PP${showPP}</div>
+  </div>
+  <div style="text-align:center;margin:20px 0;">
+    <a href="https://www.fadethechalk.bet/mobile" style="background:#000;color:#fffff0;padding:12px 24px;text-decoration:none;font-family:Georgia;font-size:14px;border:2px solid #000;">View Full Results →</a>
+  </div>
+  <div style="border-top:2px solid black;margin-top:20px;padding-top:12px;text-align:center;">
+    <p style="font-family:Georgia;font-style:italic;font-size:12px;">Never bet the favorite.</p>
+  </div>
+</div>`;
+
+    await sendEmail(`💰 ${hitTypes.join(' + ')} HIT — ${race.track} R${race.race_number}`, winnerHtml);
+    await logEvent(race.id, 'winner_alert_sent', `Winner email sent: ${hitTypes.join(' + ')}`);
+  }
+}
+
+async function ensureStrategyTags() {
+  // Find all actionable bets today that have NO strategy_activations
+  const { rows: untaggedBets } = await query(`
+    SELECT b.id as bet_id, b.race_id, b.entries_used, b.doubled, b.bet_type,
+           r.track, r.race_number, r.field_size, r.distance, r.surface
+    FROM bets b
+    JOIN races r ON r.id = b.race_id
+    WHERE r.date = CURRENT_DATE
+      AND UPPER(b.conviction) IN ('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')
+      AND b.bet_type = 'win'
+      AND NOT EXISTS (SELECT 1 FROM strategy_activations sa WHERE sa.bet_id = b.id)
+  `);
+
+  if (untaggedBets.length === 0) return;
+
+  for (const bet of untaggedBets) {
+    if (!bet.entries_used?.length) continue;
+
+    const winPickPP = parseInt(bet.entries_used[0].replace(/^#/, '').split(' ')[0], 10);
+
+    // Load entries for signal evaluation
+    const { rows: entries } = await query(`
+      SELECT e.*, h.name as horse_name
+      FROM entries e JOIN horses h ON h.id = e.horse_id
+      WHERE e.race_id = $1 AND (e.scratched IS NULL OR e.scratched = false)
+      ORDER BY e.post_position
+    `, [bet.race_id]);
+
+    if (entries.length === 0) continue;
+
+    const winPick = entries.find((e: any) => e.post_position === winPickPP);
+    if (!winPick) continue;
+
+    // Identify favorite
+    let fave: any = null, lowestOdds = Infinity;
+    for (const e of entries) {
+      const odds = parseOddsForStrat(e.morning_line_odds);
+      if (odds !== null && odds < lowestOdds) { lowestOdds = odds; fave = e; }
+    }
+
+    // Vulnerability check
+    const eHorses = entries.filter((e: any) => e.running_style === 'E');
+    const paceScenario = eHorses.length === 0 ? 'no_speed' : eHorses.length === 1 ? 'lone_speed' : 'pace_duel';
+    let vulnerable = false, vulnReason = '';
+    if (fave) {
+      if (fave.post_position <= 3 && ['P', 'S', 'E/P'].includes(fave.running_style) && entries.length >= 8) {
+        vulnerable = true;
+        vulnReason = `${fave.running_style} fave drawn PP${fave.post_position} inside in ${entries.length}-horse field`;
+      }
+      if (fave.running_style === 'E' && paceScenario === 'pace_duel') {
+        vulnerable = true;
+        vulnReason = `E fave in pace duel`;
+      }
+      if (['S', 'P'].includes(fave.running_style) && paceScenario === 'lone_speed') {
+        vulnerable = true;
+        vulnReason = `${fave.running_style} fave in lone-speed race`;
+      }
+    }
+
+    // Tag strategies
+    const activations: string[] = [];
+
+    if (bet.doubled && vulnerable) {
+      await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 38, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+        [bet.bet_id, `Vulnerable fave (${vulnReason}) + ${entries.length} horses`]);
+      activations.push('Doubled');
+    }
+
+    if (vulnerable) {
+      await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 1, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+        [bet.bet_id, vulnReason]);
+      activations.push('Vulnerable Fave');
+    }
+
+    // S1: Elite jockey on bomb
+    const ml = parseOddsForStrat(winPick.morning_line_odds);
+    if (ml && ml >= 12) {
+      const jockey = winPick.jockey || '';
+      const topJockeys = ['Prat', 'Ortiz', 'Saez', 'Velazquez', 'Gaffalione', 'Rosario', 'Castellano', 'Franco'];
+      if (topJockeys.some((j: string) => jockey.includes(j))) {
+        await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 6, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+          [bet.bet_id, `Elite jockey ${jockey} on ${ml.toFixed(1)}/1 shot`]);
+        activations.push('S1');
+      }
+    }
+
+    // S4: Hot barn at a price (trainer angle)
+    if (ml && ml >= 6 && winPick.trainer) {
+      const stats = typeof winPick.stats === 'string' ? JSON.parse(winPick.stats) : winPick.stats;
+      const trainerStats = stats?.trainer;
+      if (trainerStats && trainerStats.starts >= 5 && (trainerStats.wins / trainerStats.starts) >= 0.15) {
+        await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 3, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+          [bet.bet_id, `${winPick.trainer} ${trainerStats.wins}/${trainerStats.starts} (${Math.round(trainerStats.wins/trainerStats.starts*100)}%) at ${ml.toFixed(1)}/1`]);
+        activations.push('S4');
+      }
+    }
+
+    // S5: Distance stretch-out
+    const pps = typeof winPick.past_performances === 'string' ? JSON.parse(winPick.past_performances) : (winPick.past_performances || []);
+    const raceDistance = winPick.race_distance || bet.distance;
+    if (pps.length > 0 && raceDistance) {
+      const maxPPDist = Math.max(...pps.map((p: any) => p.distance_yards || 0));
+      if (maxPPDist > 0 && raceDistance > maxPPDist) {
+        await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 10, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+          [bet.bet_id, 'First time at this distance']);
+        activations.push('S5');
+      }
+    }
+
+    // S6: Best last Beyer in field
+    const lastBeyers = entries.filter((e: any) => e.last_beyer).map((e: any) => e.last_beyer);
+    if (winPick.last_beyer && lastBeyers.length > 0 && winPick.last_beyer === Math.max(...lastBeyers)) {
+      await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 7, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+        [bet.bet_id, `Best last Beyer in field: ${winPick.last_beyer}`]);
+      activations.push('S6');
+    }
+
+    // S9: Distance ceiling leader
+    if (winPick.best_beyer && entries.length > 0) {
+      const fieldBeyers = entries.filter((e: any) => e.best_beyer).map((e: any) => e.best_beyer);
+      if (fieldBeyers.length > 0 && winPick.best_beyer === Math.max(...fieldBeyers)) {
+        await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 4, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+          [bet.bet_id, `Distance ceiling leader: ${winPick.best_beyer}`]);
+        activations.push('S9');
+      }
+    }
+
+    // Always tag Beyer Ceiling Box (default construction method)
+    await query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 33, $2) ON CONFLICT (bet_id, strategy_id) DO NOTHING`,
+      [bet.bet_id, `Box built by distance-Beyer sort (${entries.length} field)`]);
+    activations.push('Beyer Ceiling Box');
+
+    if (activations.length > 0) {
+      await logEvent(bet.race_id, 'strategies_tagged', `Auto-tagged: ${activations.join(', ')}`);
+    }
+  }
+
+  if (untaggedBets.length > 0) {
+    await logEvent(null, 'strategy_tagging', `Tagged ${untaggedBets.length} untagged Commission bets with strategies.`);
+  }
+}
+
+function parseOddsForStrat(ml: any): number | null {
+  if (!ml) return null;
+  const s = String(ml);
+  if (s.includes('/')) { const [n, d] = s.split('/').map(Number); return d ? n / d : null; }
+  if (s.includes('-')) { const [n, d] = s.split('-').map(Number); return d ? n / d : parseFloat(s); }
+  return parseFloat(s);
 }
 
 // --- MAIN HANDLER ---
@@ -487,6 +690,9 @@ export default async function handler(req: any, res: any) {
       doubled: winBet.doubled,
     });
   }
+
+  // Ensure all Commission bets have strategy tags (runs every cycle, idempotent)
+  await ensureStrategyTags();
 
   // Per-race pipeline
   const actions: string[] = [];

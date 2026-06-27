@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, Zap } from 'lucide-react';
+import { TrendingUp, Zap, Clock, CheckCircle, XCircle } from 'lucide-react';
 
-type FilterType = 'model' | 'strategies' | 'horses' | 'trainers' | 'jockeys' | 'barns' | 'bet_types';
+type FilterType = 'today' | 'model' | 'strategies' | 'horses' | 'trainers' | 'jockeys' | 'barns' | 'bet_types';
 
-const SAMPLE_DATA: Record<FilterType, { name: string; fires: number; wins: number; roi: number; net: number }[]> = {
+const SAMPLE_DATA: Record<FilterType, any[]> = {
+  today: [],
   model: [
     { name: 'Commission Model', fires: 62, wins: 18, roi: 25, net: 2383 },
     { name: 'Random Baseline', fires: 62, wins: 6, roi: -34, net: -1892 },
@@ -45,6 +46,7 @@ const SAMPLE_DATA: Record<FilterType, { name: string; fires: number; wins: numbe
 };
 
 const FILTER_LABELS: Record<FilterType, string> = {
+  today: 'Today',
   model: 'Model vs Random',
   strategies: 'Strategies',
   horses: 'Horses',
@@ -57,7 +59,7 @@ const FILTER_LABELS: Record<FilterType, string> = {
 type SortKey = 'name' | 'fires' | 'wins' | 'roi' | 'net';
 
 export function Performance() {
-  const [filter, setFilter] = useState<FilterType>('model');
+  const [filter, setFilter] = useState<FilterType>('today');
   const [liveData, setLiveData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('net');
@@ -84,7 +86,11 @@ export function Performance() {
         headers: { Authorization: 'Bearer public' }
       });
       const json = await res.json();
-      if (json.data) setLiveData(prev => ({ ...prev, [f]: json.data }));
+      if (f === 'today') {
+        setLiveData(prev => ({ ...prev, [f]: json }));
+      } else if (json.data) {
+        setLiveData(prev => ({ ...prev, [f]: json.data }));
+      }
     } catch {}
     setLoading(false);
   };
@@ -93,7 +99,7 @@ export function Performance() {
   if (!liveData[filter] && !loading) fetchLiveData(filter);
 
   const rawData = liveData[filter] || [];
-  const data = filter === 'model' ? rawData : [...rawData].sort((a, b) => {
+  const data = (filter === 'model' || filter === 'today') ? rawData : [...rawData].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
     if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
@@ -113,7 +119,7 @@ export function Performance() {
             Performance
           </h1>
           <p className="text-xs text-muted font-medium leading-tight mt-0.5">
-            Lifetime results and model accuracy
+            {filter === 'today' ? "Today's strategies in play" : 'Lifetime results and model accuracy'}
           </p>
         </div>
       </div>
@@ -145,6 +151,135 @@ export function Performance() {
           <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">
             <p className="text-xs text-muted">No data available for this filter yet.</p>
           </div>
+        )}
+
+        {/* Today — Strategies in Play (Commission + Capo tiers) */}
+        {filter === 'today' && liveData['today'] && (
+          (() => {
+            const todayData = liveData['today'] as any;
+            const commissionStrats = todayData.commission || todayData.data || [];
+            const capoStrats = todayData.capo || [];
+            const allStrats = [...commissionStrats, ...capoStrats];
+            const hasData = allStrats.length > 0;
+
+            if (!hasData) return (
+              <div className="bg-surface border border-border rounded-2xl px-4 py-8 text-center shadow-sm">
+                <Clock className="w-6 h-6 text-muted mx-auto mb-2" />
+                <p className="text-xs text-muted">No races in play today.</p>
+              </div>
+            );
+
+            const totalNet = allStrats.reduce((sum: number, s: any) => sum + (s.net || 0), 0);
+            const totalWagered = allStrats.reduce((sum: number, s: any) => sum + (s.wagered || 0), 0);
+            const totalFires = allStrats.reduce((sum: number, s: any) => sum + (s.fires || 0), 0);
+            const totalSettled = allStrats.reduce((sum: number, s: any) => sum + (s.settled || 0), 0);
+
+            const renderStratGroup = (strat: any, idx: number) => (
+              <div key={idx} className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-4 py-3 border-b border-border bg-app">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-900">{strat.name}</span>
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full font-medium">
+                        {strat.fires} {strat.fires === 1 ? 'race' : 'races'}
+                      </span>
+                    </div>
+                    <span className={`text-sm font-bold tabular-nums ${strat.net >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {strat.net >= 0 ? '+' : '-'}${Math.abs(Math.round(strat.net))}
+                    </span>
+                  </div>
+                </div>
+                <div className="divide-y divide-border">
+                  {strat.races?.map((race: any, rIdx: number) => {
+                    const raceNet = race.bets.reduce((s: number, b: any) => s + b.net, 0);
+                    const anyHit = race.bets.some((b: any) => b.hit);
+                    const isSettled = race.status === 'settled';
+                    return (
+                      <div key={rIdx} className="px-4 py-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {isSettled ? (
+                              anyHit ? <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> : <XCircle className="w-3.5 h-3.5 text-red-400" />
+                            ) : (
+                              <Clock className="w-3.5 h-3.5 text-amber-500" />
+                            )}
+                            <div>
+                              <span className="text-xs font-semibold text-gray-900">{race.track} R{race.race_number}</span>
+                              {race.post_time && <span className="text-[10px] text-muted ml-1.5">{race.post_time}</span>}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {isSettled ? (
+                              <span className={`text-xs font-bold tabular-nums ${raceNet >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                                {raceNet >= 0 ? '+' : '-'}${Math.abs(Math.round(raceNet))}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-medium text-amber-600">Pending</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-1 ml-5">
+                          {race.bets.map((b: any, bIdx: number) => (
+                            <span key={bIdx} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                              !isSettled ? 'bg-amber-50 text-amber-700' :
+                              b.hit ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {b.bet_type}{b.doubled ? ' 2x' : ''} ${b.stake}
+                            </span>
+                          ))}
+                        </div>
+                        {race.rationale && (
+                          <p className="text-[10px] text-muted mt-1 ml-5 italic">{race.rationale}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+
+            return (
+              <div className="space-y-4">
+                {/* Summary bar */}
+                <div className="bg-surface border border-border rounded-2xl px-4 py-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted">Today's Strategies</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{totalFires} races &middot; {totalSettled} settled</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-lg font-bold tabular-nums ${totalNet >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {totalNet >= 0 ? '+' : '-'}${Math.abs(Math.round(totalNet))}
+                      </p>
+                      <p className="text-[10px] text-muted">${Math.round(totalWagered)} wagered</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Commission section */}
+                {commissionStrats.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-gray-900">Commission</span>
+                      <span className="flex-1 h-px bg-border" />
+                    </div>
+                    {commissionStrats.map(renderStratGroup)}
+                  </>
+                )}
+
+                {/* Capo section */}
+                {capoStrats.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 mt-4">
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Capo</span>
+                      <span className="flex-1 h-px bg-border" />
+                    </div>
+                    {capoStrats.map(renderStratGroup)}
+                  </>
+                )}
+              </div>
+            );
+          })()
         )}
 
         {/* Model vs Random chart + table */}
@@ -401,7 +536,7 @@ export function Performance() {
         )}
 
         {/* Standard results table */}
-        {filter !== 'model' && data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
+        {filter !== 'model' && filter !== 'today' && data.length > 0 && <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-app border-b border-border">
               <tr>

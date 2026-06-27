@@ -14,6 +14,144 @@ export default async function handler(req: any, res: any) {
   const { filter } = req.query;
 
   try {
+    if (filter === 'today') {
+      const now = new Date();
+      const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      const today = `${et.getFullYear()}-${String(et.getMonth() + 1).padStart(2, '0')}-${String(et.getDate()).padStart(2, '0')}`;
+
+      const { rows: todayBets } = await query(`
+        SELECT b.id as bet_id, b.bet_type, b.stake, b.entries_used, b.doubled, b.conviction,
+               r.id as race_id, r.track, r.race_number, r.post_time,
+               s.name as strategy_name, sa.rationale,
+               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               res.settled_at,
+               ew.post_position as win_pp, ep.post_position as place_pp,
+               es.post_position as show_pp, ef.post_position as fourth_pp
+        FROM bets b
+        JOIN races r ON r.id = b.race_id
+        LEFT JOIN strategy_activations sa ON sa.bet_id = b.id
+        LEFT JOIN strategies s ON s.id = sa.strategy_id
+        LEFT JOIN results res ON res.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id
+        LEFT JOIN entries es ON es.id = res.show_entry_id
+        LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
+        WHERE r.date = $1 AND UPPER(b.conviction) IN ('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')
+        ORDER BY r.post_time, r.race_number
+      `, [today]);
+
+      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
+      function factorial(n: number): number { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+      function permutations(n: number, k: number): number { return factorial(n) / factorial(n - k); }
+
+      function calcCollected(bet: any): { collected: number; hit: boolean } {
+        if (!bet.entries_used?.length || !bet.settled_at) return { collected: 0, hit: false };
+        const pps = bet.entries_used.map(parsePP);
+        const n = pps.length;
+        const winPP = bet.win_pp;
+        const placePP = bet.place_pp;
+        const showPP = bet.show_pp;
+        const fourthPP = bet.fourth_pp;
+
+        if (bet.bet_type === 'win' && pps.includes(winPP) && bet.win_payout > 0) {
+          return { collected: (bet.win_payout / 2) * bet.stake, hit: true };
+        } else if (bet.bet_type === 'exacta' && pps.includes(winPP) && pps.includes(placePP) && bet.exacta_payout > 0) {
+          return { collected: bet.exacta_payout * (bet.stake / permutations(n, 2)), hit: true };
+        } else if (bet.bet_type === 'trifecta' && pps.includes(winPP) && pps.includes(placePP) && pps.includes(showPP) && bet.trifecta_payout > 0) {
+          return { collected: bet.trifecta_payout * (bet.stake / permutations(n, 3)), hit: true };
+        } else if (bet.bet_type === 'superfecta' && pps.includes(winPP) && pps.includes(placePP) && pps.includes(showPP) && fourthPP && pps.includes(fourthPP) && bet.superfecta_payout > 0) {
+          return { collected: bet.superfecta_payout * (bet.stake / permutations(n, 4)), hit: true };
+        }
+        return { collected: 0, hit: false };
+      }
+
+      // Determine tier per race (a race's tier = highest conviction among its bets)
+      // Commission tier: COMMISSION or HIGH
+      // Capo tier: MEDIUM or CAPO
+      const raceTier: Record<string, string> = {};
+      for (const row of todayBets) {
+        const raceKey = `${row.track}-R${row.race_number}`;
+        const conv = row.conviction?.toUpperCase() || 'CAPO';
+        const priority = conv === 'COMMISSION' ? 3 : conv === 'HIGH' ? 2 : 1;
+        const existing = raceTier[raceKey];
+        const existingPriority = existing === 'COMMISSION' ? 3 : existing === 'HIGH' ? 2 : 1;
+        if (!existing || priority > existingPriority) raceTier[raceKey] = conv;
+      }
+
+      // Group by strategy, track races within each
+      function buildStrategyGroups(bets: any[], tierFilter: (raceKey: string) => boolean) {
+        const stratMap: Record<string, {
+          races: Record<string, { track: string; race_number: number; post_time: string; status: string; bets: { bet_type: string; stake: number; hit: boolean; net: number; doubled: boolean }[]; pick: string; rationale: string | null }>;
+          totalWagered: number;
+          totalCollected: number;
+          wins: number;
+          settled: number;
+        }> = {};
+
+        for (const row of bets) {
+          const raceKey = `${row.track}-R${row.race_number}`;
+          if (!tierFilter(raceKey)) continue;
+
+          const stratName = row.strategy_name || '__untagged__';
+          if (!stratMap[stratName]) {
+            stratMap[stratName] = { races: {}, totalWagered: 0, totalCollected: 0, wins: 0, settled: 0 };
+          }
+          const strat = stratMap[stratName];
+
+          if (!strat.races[raceKey]) {
+            const isSettled = !!row.settled_at;
+            const postTimeStr = row.post_time ? row.post_time.slice(0, 5) : '';
+            let hour = parseInt(postTimeStr.split(':')[0] || '0');
+            const min = postTimeStr.split(':')[1] || '00';
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            if (hour > 12) hour -= 12;
+            if (hour === 0) hour = 12;
+
+            strat.races[raceKey] = {
+              track: row.track,
+              race_number: row.race_number,
+              post_time: postTimeStr ? `${hour}:${min} ${ampm}` : '',
+              status: isSettled ? 'settled' : 'pending',
+              bets: [],
+              pick: row.entries_used?.[0]?.replace(/^#\d+\s*/, '') || '',
+              rationale: row.rationale,
+            };
+          }
+
+          const { collected, hit } = calcCollected(row);
+          strat.races[raceKey].bets.push({
+            bet_type: row.bet_type,
+            stake: row.stake,
+            hit,
+            net: collected - row.stake,
+            doubled: row.doubled || false,
+          });
+          strat.totalWagered += row.stake;
+          strat.totalCollected += collected;
+          if (hit) strat.wins++;
+          if (row.settled_at) strat.settled++;
+        }
+
+        return Object.entries(stratMap)
+          .filter(([name]) => name !== '__untagged__')
+          .map(([name, s]) => ({
+            name,
+            fires: Object.keys(s.races).length,
+            settled: Math.floor(s.settled / Math.max(Object.values(s.races)[0]?.bets.length || 1, 1)),
+            wins: s.wins,
+            net: Math.round((s.totalCollected - s.totalWagered) * 100) / 100,
+            wagered: Math.round(s.totalWagered * 100) / 100,
+            races: Object.values(s.races),
+          }))
+          .sort((a, b) => b.net - a.net);
+      }
+
+      const commission = buildStrategyGroups(todayBets, (rk) => raceTier[rk] === 'COMMISSION' || raceTier[rk] === 'HIGH');
+      const capo = buildStrategyGroups(todayBets, (rk) => raceTier[rk] === 'MEDIUM' || raceTier[rk] === 'CAPO');
+
+      return res.status(200).json({ commission, capo, type: 'today' });
+    }
+
     if (filter === 'model') {
       const { rows } = await query(`
         SELECT date, model_net, random_avg_net, model_win_rate, random_win_rate,
