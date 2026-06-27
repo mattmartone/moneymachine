@@ -179,17 +179,58 @@ async function checkScratches(race: CommissionRace, meetIds: Record<string, stri
   }
 
   const winPickPP = parsePP(race.win_pick);
-  const isConsequential = newScratches.some(s => s.startsWith(`PP${winPickPP} `));
+  const winPickScratched = newScratches.some(s => s.startsWith(`PP${winPickPP} `));
 
-  if (isConsequential) {
+  if (winPickScratched) {
     const msg = `RACE DROPPED. Win pick ${race.win_pick} scratched. CONSEQUENTIAL — thesis dead.`;
     await logEvent(race.id, 'race_dropped', msg, { scratched: newScratches });
     await postSlack(`🚫 ${race.track} R${race.race_number}: ${msg}`);
   } else {
-    const msg = `Scratch: ${newScratches.join(', ')}. NON-CONSEQUENTIAL. Win pick ${race.win_pick} unaffected.`;
-    await logEvent(race.id, 'scratch_detected', msg, { scratched: newScratches });
+    // Check if scratch changes the race shape enough to reconsider
+    const reconsiderReasons: string[] = [];
+
+    // Was a box horse scratched?
+    const boxPPs = race.box.map(parsePP);
+    const scratchedPPs = newScratches.map(s => s.match(/PP(\d+)/)?.[1] || '');
+    const boxScratch = scratchedPPs.filter(pp => boxPPs.includes(pp));
+    if (boxScratch.length > 0) {
+      reconsiderReasons.push(`Box horse scratched (PP${boxScratch.join(', PP')})`);
+    }
+
+    // Did field size drop below 6? (exotics less meaningful)
+    const { rows: liveEntries } = await query(
+      `SELECT COUNT(*) as cnt FROM entries WHERE race_id = $1 AND (scratched IS NULL OR scratched = false)`,
+      [race.id]
+    );
+    const liveCount = parseInt(liveEntries[0]?.cnt || '0');
+    if (liveCount < 6) {
+      reconsiderReasons.push(`Field now only ${liveCount} horses — thin for exotics`);
+    }
+
+    // Did the scratch change the pace scenario?
+    // Check if a speed horse (E) was scratched
+    const { rows: scratchedEntries } = await query(
+      `SELECT e.post_position, e.running_style, h.name
+       FROM entries e JOIN horses h ON h.id = e.horse_id
+       WHERE e.race_id = $1 AND e.scratched = true AND e.running_style = 'E'
+       AND e.post_position = ANY($2::int[])`,
+      [race.id, scratchedPPs.map(Number).filter(n => n > 0)]
+    );
+    if (scratchedEntries.length > 0) {
+      reconsiderReasons.push(`Speed horse scratched (${scratchedEntries.map((e: any) => e.name).join(', ')}) — pace shape changed`);
+    }
+
+    if (reconsiderReasons.length > 0) {
+      const msg = `RECONSIDER. Scratch: ${newScratches.join(', ')}. ${reconsiderReasons.join('. ')}. Win pick ${race.win_pick} still live but thesis may be weakened.`;
+      await logEvent(race.id, 'scratch_reconsider', msg, { scratched: newScratches, reasons: reconsiderReasons });
+      await postSlack(`🔄 ${race.track} R${race.race_number}: ${msg}`);
+    } else {
+      const msg = `Scratch: ${newScratches.join(', ')}. Win pick ${race.win_pick} unaffected. Race shape intact.`;
+      await logEvent(race.id, 'scratch_detected', msg, { scratched: newScratches });
+      await postSlack(`⚠️ ${race.track} R${race.race_number}: ${msg}`);
+    }
+
     await rebuildBox(race);
-    await postSlack(`⚠️ ${race.track} R${race.race_number}: ${msg}`);
   }
 
   await logEvent(race.id, 'scratches_checked', `Scratches checked. ${newScratches.length} new.`);
