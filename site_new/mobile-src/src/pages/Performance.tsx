@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, Zap } from 'lucide-react';
 
 type FilterType = 'model' | 'strategies' | 'horses' | 'trainers' | 'jockeys' | 'barns' | 'bet_types';
@@ -146,17 +146,106 @@ export function Performance() {
           </div>
         )}
 
-        {/* Model vs Random table */}
+        {/* Model vs Random chart + table */}
         {filter === 'model' && data.length > 0 && (
           <div>
             <p className="text-xs text-muted mb-4 leading-relaxed italic">
               Can an AI beat random chance at picking horses? We test every race day. Same races, same bets, same stakes — just random picks vs our model. The exacta rate tells the story.
             </p>
+
+            {/* Cumulative P/L divergence chart */}
+            {(() => {
+              const monthMap: Record<string, number> = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+              const sorted = [...data].sort((a: any, b: any) => {
+                const [aMonth, aDay] = a.date.split(' ');
+                const [bMonth, bDay] = b.date.split(' ');
+                const da = new Date(2026, monthMap[aMonth] || 0, parseInt(aDay));
+                const db = new Date(2026, monthMap[bMonth] || 0, parseInt(bDay));
+                return da.getTime() - db.getTime();
+              });
+
+              // Two cumulative lines: model and random, with spread shown as green fill between them
+              let modelCum = 0, randomCum = 0;
+              const points = sorted.map((row: any) => {
+                modelCum += row.model_net || 0;
+                randomCum += row.random_net || 0;
+                return { date: row.date, model: modelCum, random: randomCum };
+              });
+
+              const allVals = points.flatMap(p => [p.model, p.random]);
+              const minVal = Math.min(...allVals);
+              const maxVal = Math.max(...allVals);
+              const range = maxVal - minVal || 1;
+              const chartH = 140;
+              const chartW = 100;
+              const pad = 14;
+
+              const toY = (val: number) => pad + ((maxVal - val) / range) * (chartH - pad * 2);
+              const toX = (idx: number) => points.length > 1 ? (idx / (points.length - 1)) * chartW : 50;
+
+              const modelPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(p.model)}`).join(' ');
+              const randomPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(p.random)}`).join(' ');
+
+              // Fill between model (top) and random (bottom) = the spread
+              const spreadFill = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(p.model)}`).join(' ')
+                + ' ' + [...points].reverse().map((p, i) => `L ${toX(points.length - 1 - i)} ${toY(p.random)}`).join(' ') + ' Z';
+
+              // Grey fill under random line to bottom of chart
+              const randomFill = randomPath + ` L ${toX(points.length - 1)} ${chartH - pad} L ${toX(0)} ${chartH - pad} Z`;
+
+              const totalEdge = points.length > 0 ? (points[points.length - 1].model - points[points.length - 1].random) : 0;
+              const trending = points.length >= 3 && (points[points.length - 1].model - points[points.length - 1].random) > (points[points.length - 2].model - points[points.length - 2].random);
+
+              return (
+                <div className="bg-surface border border-border rounded-2xl p-4 mb-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">Model vs Random</span>
+                    <span className={`text-sm font-bold ${totalEdge >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                      Edge: {totalEdge >= 0 ? '+' : '-'}${Math.abs(Math.round(totalEdge))}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted mb-2">Green area = how much the model is beating random. Wider = bigger edge.</p>
+                  <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ height: '150px' }} preserveAspectRatio="none">
+                    {/* Grey fill under random */}
+                    <path d={randomFill} fill="#9ca3af" opacity="0.08" />
+                    {/* Green spread fill between model and random */}
+                    <path d={spreadFill} fill="#10b981" opacity="0.2" />
+                    {/* Random line (grey) */}
+                    <path d={randomPath} fill="none" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                    {/* Model line (green) */}
+                    <path d={modelPath} fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* End dots */}
+                    {points.length > 0 && (
+                      <>
+                        <circle cx={toX(points.length - 1)} cy={toY(points[points.length - 1].model)} r="2.5" fill="#10b981" />
+                        <circle cx={toX(points.length - 1)} cy={toY(points[points.length - 1].random)} r="2" fill="#9ca3af" />
+                      </>
+                    )}
+                    {/* Date labels */}
+                    {points.map((p, i) => (
+                      <text key={`l${i}`} x={toX(i)} y={chartH - 2} textAnchor="middle" fontSize="3.5" fill="#9ca3af">{p.date.split(' ')[1]}</text>
+                    ))}
+                  </svg>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1.5 text-[10px] text-gray-600">
+                        <span className="w-3 h-0.5 bg-emerald-500 rounded inline-block" /> Model
+                      </span>
+                      <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                        <span className="w-3 h-0.5 bg-gray-400 rounded inline-block" /> Random
+                      </span>
+                    </div>
+                    {trending && <span className="text-[10px] text-emerald-600 font-semibold">Widening ↑</span>}
+                  </div>
+                </div>
+              );
+            })()}
             <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-app border-b border-border">
                   <tr>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold">Date</th>
+                    <th className="py-2.5 px-1 text-[10px] uppercase tracking-wider text-muted font-semibold text-center" title="Model beat random">W</th>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model P/L</th>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Random P/L</th>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model Win</th>
@@ -170,6 +259,9 @@ export function Performance() {
                     return (
                       <tr key={idx}>
                         <td className="py-2.5 px-2 text-gray-900 text-xs whitespace-nowrap">{row.date}</td>
+                        <td className="py-2.5 px-1 text-center">
+                          {row.model_net > row.random_net && <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />}
+                        </td>
                         <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
                           {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
                         </td>

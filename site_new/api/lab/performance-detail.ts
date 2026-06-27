@@ -19,9 +19,8 @@ export default async function handler(req: any, res: any) {
         SELECT date, model_net, random_avg_net, model_win_rate, random_win_rate,
                model_exacta_rate, random_exacta_rate, races_played, random_pct_beats
         FROM postmortem_metrics
-        WHERE (model_win_rate IS NOT NULL OR model_net IS NOT NULL)
-          AND date >= '2026-06-21'
-        ORDER BY date DESC
+        WHERE model_net IS NOT NULL
+        ORDER BY date ASC
       `);
 
       const data = rows.map((r: any) => ({
