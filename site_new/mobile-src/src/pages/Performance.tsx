@@ -64,6 +64,7 @@ export function Performance() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [insights, setInsights] = useState<string[]>([]);
   const [insightsLoaded, setInsightsLoaded] = useState(false);
+  const [chartView, setChartView] = useState<'earnings' | 'hitrate'>('earnings');
 
   useEffect(() => {
     if (!insightsLoaded) {
@@ -92,7 +93,7 @@ export function Performance() {
   if (!liveData[filter] && !loading) fetchLiveData(filter);
 
   const rawData = liveData[filter] || [];
-  const data = [...rawData].sort((a, b) => {
+  const data = filter === 'model' ? rawData : [...rawData].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
     if (typeof aVal === 'string') return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
@@ -153,8 +154,107 @@ export function Performance() {
               Can an AI beat random chance at picking horses? We test every race day. Same races, same bets, same stakes — just random picks vs our model. The exacta rate tells the story.
             </p>
 
+            {/* Chart view toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setChartView('earnings')}
+                className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                  chartView === 'earnings' ? 'bg-gray-900 text-white' : 'bg-surface border border-border text-gray-600'
+                }`}>
+                Earnings
+              </button>
+              <button
+                onClick={() => setChartView('hitrate')}
+                className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                  chartView === 'hitrate' ? 'bg-gray-900 text-white' : 'bg-surface border border-border text-gray-600'
+                }`}>
+                Hit Rate
+              </button>
+            </div>
+
+            {/* Hit Rate chart */}
+            {chartView === 'hitrate' && (() => {
+              const monthMap: Record<string, number> = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+              const sorted = [...data].filter((r: any) => r.model_exacta_rate != null).sort((a: any, b: any) => {
+                const [aMonth, aDay] = a.date.split(' ');
+                const [bMonth, bDay] = b.date.split(' ');
+                const da = new Date(2026, monthMap[aMonth] || 0, parseInt(aDay));
+                const db = new Date(2026, monthMap[bMonth] || 0, parseInt(bDay));
+                return da.getTime() - db.getTime();
+              });
+
+              if (sorted.length === 0) return <div className="text-xs text-muted text-center py-8">No hit rate data yet.</div>;
+
+              const chartH = 150;
+              const chartW = 100;
+              const pad = 14;
+
+              const allRates = sorted.flatMap((r: any) => [r.model_win_rate, r.random_win_rate]).filter(Boolean);
+              const maxPct = Math.ceil((Math.max(...allRates) + 5) / 5) * 5;
+              const minPct = 0;
+
+              const toY = (pct: number) => pad + ((maxPct - pct) / (maxPct - minPct)) * (chartH - pad * 2);
+              const xPad = 8;
+              const toX = (idx: number) => sorted.length > 1 ? xPad + (idx / (sorted.length - 1)) * (chartW - xPad * 2) : 50;
+
+              const modelWinPath = sorted.map((r: any, i: number) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(r.model_win_rate)}`).join(' ');
+              const randomWinPath = sorted.map((r: any, i: number) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(r.random_win_rate)}`).join(' ');
+
+              // Fill between model and random win
+              const spreadFill = sorted.map((r: any, i: number) => `${i === 0 ? 'M' : 'L'} ${toX(i)} ${toY(r.model_win_rate)}`).join(' ')
+                + ' ' + [...sorted].reverse().map((r: any, i: number) => `L ${toX(sorted.length - 1 - i)} ${toY(r.random_win_rate)}`).join(' ') + ' Z';
+
+              const lastModel = sorted[sorted.length - 1];
+
+              return (
+                <div className="bg-surface border border-border rounded-2xl p-4 mb-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">Win Rate</span>
+                    <span className="text-xs font-bold text-emerald-600">
+                      Model: {lastModel.model_win_rate}%
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted mb-2">Model win rate vs random. Green area = model's edge. Random stays flat, model should climb.</p>
+                  <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ height: '150px' }} preserveAspectRatio="none">
+                    {/* Grid lines */}
+                    {[10, 20, 30, 40].filter(pct => pct <= maxPct).map(pct => (
+                      <g key={pct}>
+                        <line x1="0" y1={toY(pct)} x2={chartW} y2={toY(pct)} stroke="#e5e7eb" strokeWidth="0.2" />
+                        <text x="1" y={toY(pct) - 1.5} fontSize="3" fill="#9ca3af">{pct}%</text>
+                      </g>
+                    ))}
+                    {/* Green spread fill between model and random */}
+                    <path d={spreadFill} fill="#10b981" opacity="0.15" />
+                    {/* Random win (grey) */}
+                    <path d={randomWinPath} fill="none" stroke="#9ca3af" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                    {/* Model win (green, bold) */}
+                    <path d={modelWinPath} fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Data points */}
+                    {sorted.map((r: any, i: number) => (
+                      <circle key={i} cx={toX(i)} cy={toY(r.model_win_rate)} r="1.5" fill="#10b981" />
+                    ))}
+                    {sorted.map((r: any, i: number) => (
+                      <circle key={`r${i}`} cx={toX(i)} cy={toY(r.random_win_rate)} r="1.2" fill="#9ca3af" />
+                    ))}
+                    {/* Date labels */}
+                    {sorted.map((r: any, i: number) => (
+                      <text key={`d${i}`} x={toX(i)} y={chartH - 3} textAnchor="middle" style={{ fontSize: '4px' }} fill="#9ca3af">{r.date}</text>
+                    ))}
+                  </svg>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="flex items-center gap-1.5 text-[10px] text-gray-600">
+                      <span className="w-3 h-0.5 bg-emerald-500 rounded inline-block" /> Model
+                    </span>
+                    <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                      <span className="w-3 h-0.5 bg-gray-400 rounded inline-block" /> Random
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Cumulative P/L divergence chart */}
-            {(() => {
+            {chartView === 'earnings' && (() => {
               const monthMap: Record<string, number> = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
               const sorted = [...data].sort((a: any, b: any) => {
                 const [aMonth, aDay] = a.date.split(' ');

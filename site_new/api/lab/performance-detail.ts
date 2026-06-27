@@ -20,7 +20,7 @@ export default async function handler(req: any, res: any) {
                model_exacta_rate, random_exacta_rate, races_played, random_pct_beats
         FROM postmortem_metrics
         WHERE model_net IS NOT NULL
-        ORDER BY date ASC
+        ORDER BY date DESC
       `);
 
       const data = rows.map((r: any) => ({
