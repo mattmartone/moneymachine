@@ -469,16 +469,51 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
     );
   }
 
-  const results: string[] = [];
-  if (winHit) results.push(`WIN HIT ($${winPayout?.toFixed(2)})`);
-  if (exHit) results.push(`EXACTA HIT ($${exactaPayout?.toFixed(2)})`);
-  if (triHit) results.push(`TRIFECTA HIT ($${trifectaPayout?.toFixed(2)})`);
-  if (superHit) results.push(`SUPERFECTA HIT ($${superfectaPayout?.toFixed(2)})`);
-  if (!winHit && !exHit && !triHit && !superHit) results.push('All bets MISS');
+  // Get horse names for the finish
+  const { rows: finishHorses } = await query(
+    `SELECT e.post_position, h.name FROM entries e JOIN horses h ON h.id = e.horse_id
+     WHERE e.race_id = $1 AND e.post_position = ANY($2::int[])`,
+    [race.id, [winPP, placePP, showPP, ...(fourthPP ? [fourthPP] : [])]]
+  );
+  const ppToName: Record<number, string> = {};
+  for (const h of finishHorses) ppToName[h.post_position] = h.name;
 
-  const msg = `Results: PP${winPP}-PP${placePP}-PP${showPP}. ${results.join('. ')}.`;
-  await logEvent(race.id, 'results_settled', msg, { finish: [winPP, placePP, showPP, fourthPP], hits: results });
-  await postSlack(`${winHit || exHit || triHit ? '✅' : '❌'} ${race.track} R${race.race_number}: ${msg}`);
+  const finishLine = `${ppToName[winPP] || `PP${winPP}`} / ${ppToName[placePP] || `PP${placePP}`} / ${ppToName[showPP] || `PP${showPP}`}`;
+
+  // Build per-bet results
+  const betLines: string[] = [];
+  const raceWagered = race.total_stake;
+  let raceCollected = 0;
+  if (winHit) { betLines.push(`Win: +$${winPayout?.toFixed(0)}`); raceCollected += winPayout || 0; }
+  else betLines.push(`Win: miss`);
+  if (exHit) { betLines.push(`Exacta: +$${exactaPayout?.toFixed(0)}`); raceCollected += exactaPayout || 0; }
+  else betLines.push(`Exacta: miss`);
+  if (triHit) { betLines.push(`Tri: +$${trifectaPayout?.toFixed(0)}`); raceCollected += trifectaPayout || 0; }
+  if (superHit) { betLines.push(`Super: +$${superfectaPayout?.toFixed(0)}`); raceCollected += superfectaPayout || 0; }
+
+  const raceNet = raceCollected - raceWagered;
+
+  // Calculate day net so far
+  const { rows: dayBets } = await query(
+    `SELECT COALESCE(SUM(b.stake), 0) as wagered, COALESCE(SUM(b.collected), 0) as collected
+     FROM bets b JOIN races r ON r.id = b.race_id
+     WHERE r.date = CURRENT_DATE AND b.conviction IS NOT NULL AND b.settled_at IS NOT NULL`,
+  );
+  const dayWagered = parseFloat(dayBets[0]?.wagered || '0') + raceWagered;
+  const dayCollected = parseFloat(dayBets[0]?.collected || '0') + raceCollected;
+  const dayNet = dayCollected - dayWagered;
+
+  const icon = raceNet > 0 ? '✅' : '❌';
+  const slackMsg = [
+    `${icon} *${race.track} R${race.race_number}* finished`,
+    `Finish: ${finishLine}`,
+    betLines.join(' | '),
+    `Race: ${raceNet >= 0 ? '+' : '-'}$${Math.abs(Math.round(raceNet))} | Day: ${dayNet >= 0 ? '+' : '-'}$${Math.abs(Math.round(dayNet))}`,
+  ].join('\n');
+
+  const logMsg = `Results: ${finishLine}. ${betLines.join('. ')}. Race net: $${raceNet.toFixed(0)}. Day net: $${dayNet.toFixed(0)}.`;
+  await logEvent(race.id, 'results_settled', logMsg, { finish: [winPP, placePP, showPP, fourthPP], race_net: raceNet, day_net: dayNet });
+  await postSlack(slackMsg);
 
   // Send winner alert email to members — only when we hit
   if (winHit || exHit || triHit || superHit) {
