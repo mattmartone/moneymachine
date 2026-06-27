@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-const CALENDAR_PIN = '7413';
 
 interface DateNavProps {
   selectedDate: string; // YYYY-MM-DD
@@ -9,8 +7,6 @@ interface DateNavProps {
 }
 
 export function DateNav({ selectedDate, onDateChange }: DateNavProps) {
-  const [pinUnlocked, setPinUnlocked] = useState(false);
-
   const formatDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     const date = new Date(y, m - 1, d);
@@ -22,11 +18,6 @@ export function DateNav({ selectedDate, onDateChange }: DateNavProps) {
   };
 
   const shiftDate = (days: number) => {
-    if (!pinUnlocked) {
-      const entered = window.prompt('Enter PIN to change date');
-      if (entered !== CALENDAR_PIN) return;
-      setPinUnlocked(true);
-    }
     const [y, m, d] = selectedDate.split('-').map(Number);
     const date = new Date(y, m - 1, d);
     date.setDate(date.getDate() + days);

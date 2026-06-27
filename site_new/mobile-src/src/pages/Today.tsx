@@ -180,6 +180,21 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
           </span>
         </div>
 
+
+        {/* Upcoming / Settled tabs */}
+        <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
+          <button
+            onClick={() => setViewTab('upcoming')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'upcoming' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Upcoming
+          </button>
+          <button
+            onClick={() => setViewTab('settled')}
+            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'settled' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+            Results
+          </button>
+        </div>
+
         {/* Pick type toggle */}
         <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-3">
           <button
@@ -198,21 +213,6 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
             All
           </button>
         </div>
-
-        {/* Upcoming / Settled tabs */}
-        <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
-          <button
-            onClick={() => setViewTab('upcoming')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'upcoming' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Upcoming
-          </button>
-          <button
-            onClick={() => setViewTab('settled')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'settled' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Results
-          </button>
-        </div>
-
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
         <div className="relative">

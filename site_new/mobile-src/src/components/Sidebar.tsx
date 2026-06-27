@@ -10,13 +10,10 @@ import {
   ChevronLeft,
   ChevronRight } from
 'lucide-react';
-const CALENDAR_PIN = '7413';
-
 function MiniCalendar({ selectedDate, onDateChange }: { selectedDate: string; onDateChange: (d: string) => void }) {
   const [year, month] = selectedDate.split('-').map(Number);
   const [viewYear, setViewYear] = useState(year);
   const [viewMonth, setViewMonth] = useState(month);
-  const [pinUnlocked, setPinUnlocked] = useState(false);
 
   const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
   const firstDayOfWeek = new Date(viewYear, viewMonth - 1, 1).getDay();
@@ -37,11 +34,6 @@ function MiniCalendar({ selectedDate, onDateChange }: { selectedDate: string; on
   const selectDay = (day: number) => {
     const d = `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     if (d === selectedDate) return;
-    if (!pinUnlocked) {
-      const entered = window.prompt('Enter PIN to change date');
-      if (entered !== CALENDAR_PIN) return;
-      setPinUnlocked(true);
-    }
     onDateChange(d);
   };
 
@@ -114,35 +106,31 @@ export function Sidebar({
           AI Bet Builder
         </NavLink>
 
-        <NavLink
-          to="/performance"
-          className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
-          }>
-
-          <TrendingUp size={18} />
-          Performance
-        </NavLink>
-        <NavLink
-          to="/research"
-          className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
-          }>
-
-          <Search size={18} />
-          Research
-        </NavLink>
-
         <div className="my-4 border-t border-border pt-4 space-y-2">
           <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
             More
           </p>
           <NavLink
+            to="/performance"
+            className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+            }>
+            <TrendingUp size={18} />
+            Performance
+          </NavLink>
+          <NavLink
+            to="/research"
+            className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+            }>
+            <Search size={18} />
+            Research
+          </NavLink>
+          <NavLink
             to="/settings"
             className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
             }>
-
             <SettingsIcon size={18} />
             Account
           </NavLink>
