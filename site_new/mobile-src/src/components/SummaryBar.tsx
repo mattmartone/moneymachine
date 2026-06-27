@@ -16,10 +16,10 @@ import { NavLink } from 'react-router-dom';
 export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; races?: Race[];}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Include ALL committed races in NET (hit, miss, live, upcoming).
-  // Dropped races have $0 stakes so they don't affect the math either way.
-  const committedRaces = races.filter((r) => r.status !== 'dropped');
-  const net = committedRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
+  // Include settled races (hit/miss) plus live races (post time passed, money committed).
+  // Exclude upcoming (future, not yet at risk) and dropped ($0 stakes).
+  const activeRaces = races.filter((r) => r.status === 'hit' || r.status === 'miss' || r.status === 'live');
+  const net = activeRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
   const isPositive = net > 0;
   const isNegative = net < 0;
   // Next post countdown — lives in the header so it doesn't compete with the nav.
