@@ -27,7 +27,7 @@ export function App() {
         <Sidebar onOpenBetBuilder={() => setIsBetBuilderOpen(true)} selectedDate={selectedDate} onDateChange={handleDateChange} />
         <div className="w-full">
           <Routes>
-            <Route path="/" element={<Today selectedDate={selectedDate} />} />
+            <Route path="/" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} />} />
             <Route path="/history" element={<History />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/research" element={<Research />} />

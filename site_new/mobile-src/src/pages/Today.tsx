@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, Children, Fragment } from 'react';
 import { SummaryBar } from '../components/SummaryBar';
 import { RaceCard } from '../components/RaceCard';
 import { FeaturedVideo } from '../components/FeaturedVideo';
+import { DateNav } from '../components/DateNav';
 import { mockRaces, Race, fetchRaces } from '../data';
 import { motion } from 'framer-motion';
 // A race is "run" once it's settled or dropped; live/upcoming are still ahead.
@@ -71,7 +72,7 @@ function SectionTag({
     </div>);
 
 }
-export function Today({ selectedDate }: { selectedDate?: string }) {
+export function Today({ selectedDate, onDateChange }: { selectedDate?: string; onDateChange?: (date: string) => void }) {
   const [races, setRaces] = useState<Race[]>(mockRaces);
 
   useEffect(() => {
@@ -164,6 +165,10 @@ export function Today({ selectedDate }: { selectedDate?: string }) {
       <div ref={headerRef} className="sticky top-0 z-20 shadow-sm">
         <SummaryBar compact={scrolled} races={allRaces} />
       </div>
+
+      {selectedDate && onDateChange && (
+        <DateNav selectedDate={selectedDate} onDateChange={onDateChange} />
+      )}
 
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
         <FeaturedVideo />
