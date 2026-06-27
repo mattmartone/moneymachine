@@ -16,8 +16,10 @@ import { NavLink } from 'react-router-dom';
 export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; races?: Race[];}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const settledRaces = races.filter((r) => r.status === 'hit' || r.status === 'miss');
-  const net = settledRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
+  // Include ALL committed races in NET (hit, miss, live, upcoming).
+  // Dropped races have $0 stakes so they don't affect the math either way.
+  const committedRaces = races.filter((r) => r.status !== 'dropped');
+  const net = committedRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
   const isPositive = net > 0;
   const isNegative = net < 0;
   // Next post countdown — lives in the header so it doesn't compete with the nav.
@@ -173,7 +175,11 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                   Race Day
                 </NavLink>
 
-                <NavLink
+                <div className="my-4 border-t border-border pt-4 space-y-2">
+                  <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
+                    More
+                  </p>
+                  <NavLink
                   to="/performance"
                   onClick={() => setIsMenuOpen(false)}
                   className={({ isActive }) =>
@@ -182,7 +188,7 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                     <TrendingUp size={18} />
                     Performance
                   </NavLink>
-                <NavLink
+                  <NavLink
                   to="/research"
                   onClick={() => setIsMenuOpen(false)}
                   className={({ isActive }) =>
@@ -191,18 +197,12 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                     <Search size={18} />
                     Research
                   </NavLink>
-
-                <div className="my-4 border-t border-border pt-4 space-y-2">
-                  <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
-                    More
-                  </p>
                   <NavLink
                   to="/settings"
                   onClick={() => setIsMenuOpen(false)}
                   className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
                   }>
-
                     <SettingsIcon size={18} />
                     Account
                   </NavLink>
