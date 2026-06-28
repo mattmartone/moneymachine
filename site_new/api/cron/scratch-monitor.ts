@@ -157,25 +157,29 @@ export default async function handler(req: any, res: any) {
       );
       if (existing.rows.length > 0) continue;
 
-      // Record the alert
-      await query(
-        `INSERT INTO scratch_alerts (track, race_number, horse_name, date, is_favorite, is_win_pick, is_in_box)
-         VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6)`,
-        [race.track_name, race.race_number, scratchName, isFave, isWinPick, isInBox]
-      );
-
       let impact = '';
       let verdict = '';
+      let dbVerdict = '';
       if (isWinPick) {
         impact = '🚨 OUR WIN PICK IS SCRATCHED — NO WIN BET THIS RACE';
         verdict = '🛑 DROP RACE — win pick scratched';
+        dbVerdict = 'NO BET — thesis dead, set stake=$0';
       } else if (isFave) {
         impact = '⚠️ FAVORITE SCRATCHED — vulnerability thesis changes, pace map shifts';
         verdict = '⚠️ REVIEW — favorite scratched, thesis may change';
+        dbVerdict = 'RE-ANALYZE — if new fave is E-style in pace duel, bet stands; if P/S/closer with no vulnerability, no bet';
       } else if (isInBox) {
         impact = '⚠️ BOX HORSE SCRATCHED — exotic box reduced, consider adjustment';
         verdict = '🔄 REBUILD BOX — box horse scratched';
+        dbVerdict = 'NO BET — box horse scratched, set stake=$0 unless re-analysis shows thesis strengthened';
       }
+
+      // Record the alert
+      await query(
+        `INSERT INTO scratch_alerts (track, race_number, horse_name, date, is_favorite, is_win_pick, is_in_box, verdict)
+         VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7)`,
+        [race.track_name, race.race_number, scratchName, isFave, isWinPick, isInBox, dbVerdict]
+      );
 
       await postToSlack(
         `❌ *SCRATCH: ${scratchName}*\n` +
@@ -309,10 +313,14 @@ export default async function handler(req: any, res: any) {
     );
     const settledRaceIds = new Set(existingResults.rows.map((r: any) => r.race_id));
 
-    // Find races that need results
+    // Find races that need results — only if post time has passed
     const needResults = finishedWatched.filter(r => {
       const dbId = raceIdMap[r.race_number];
-      return dbId && !settledRaceIds.has(dbId);
+      if (!dbId || settledRaceIds.has(dbId)) return false;
+      if (!r.post_time_et) return false;
+      const [h, m] = r.post_time_et.split(':').map(Number);
+      const postMinutes = h * 60 + m;
+      return currentMinutes > postMinutes + 30;
     });
 
     if (needResults.length === 0) continue;
