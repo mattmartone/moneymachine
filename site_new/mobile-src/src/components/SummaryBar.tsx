@@ -20,6 +20,8 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
   // Exclude upcoming (future, not yet at risk) and dropped ($0 stakes).
   const activeRaces = races.filter((r) => r.status === 'hit' || r.status === 'miss' || r.status === 'live');
   const net = activeRaces.reduce((acc, r) => acc + (r.collected - r.totalStake), 0);
+  // Wagered = total committed for the day (all races with stake > 0, regardless of status)
+  const totalWagered = races.filter((r) => r.totalStake > 0).reduce((acc, r) => acc + r.totalStake, 0);
   const isPositive = net > 0;
   const isNegative = net < 0;
   // Next post countdown — lives in the header so it doesn't compete with the nav.
@@ -79,7 +81,7 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                   Wagered
                 </span>
                 <span className="text-sm font-bold tabular-nums leading-none text-gray-900">
-                  ${activeRaces.reduce((acc, r) => acc + r.totalStake, 0).toFixed(0)}
+                  ${totalWagered.toFixed(0)}
                 </span>
               </div>
               <div className="flex items-center gap-2 bg-app border border-border px-3 py-1.5 rounded-full shadow-sm">
