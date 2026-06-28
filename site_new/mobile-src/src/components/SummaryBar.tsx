@@ -26,13 +26,27 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
   const nextRace =
   races.find((r) => r.status === 'live') ??
   races.find((r) => r.status === 'upcoming');
-  const [timeLeft, setTimeLeft] = useState(14 * 60 + 23);
+  const calcTimeLeft = () => {
+    if (!nextRace?.postTime || nextRace.postTime === '—') return 0;
+    const now = new Date();
+    const [time, period] = nextRace.postTime.split(' ');
+    const [h, m] = time.split(':').map(Number);
+    let hours = h;
+    if (period === 'PM' && h !== 12) hours += 12;
+    if (period === 'AM' && h === 12) hours = 0;
+    const postDate = new Date(now);
+    postDate.setHours(hours, m, 0, 0);
+    const diff = Math.floor((postDate.getTime() - now.getTime()) / 1000);
+    return diff > 0 ? diff : 0;
+  };
+  const [timeLeft, setTimeLeft] = useState(calcTimeLeft);
   useEffect(() => {
+    setTimeLeft(calcTimeLeft());
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev > 0 ? prev - 1 : 0);
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextRace?.postTime]);
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
   return (
