@@ -26,22 +26,24 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
   const nextRace =
   races.find((r) => r.status === 'live') ??
   races.find((r) => r.status === 'upcoming');
-  const calcTimeLeft = () => {
-    if (!nextRace?.postTime || nextRace.postTime === '—') return 0;
-    const now = new Date();
-    const [time, period] = nextRace.postTime.split(' ');
-    const [h, m] = time.split(':').map(Number);
-    let hours = h;
-    if (period === 'PM' && h !== 12) hours += 12;
-    if (period === 'AM' && h === 12) hours = 0;
-    const postDate = new Date(now);
-    postDate.setHours(hours, m, 0, 0);
-    const diff = Math.floor((postDate.getTime() - now.getTime()) / 1000);
-    return diff > 0 ? diff : 0;
-  };
-  const [timeLeft, setTimeLeft] = useState(calcTimeLeft);
+  const [timeLeft, setTimeLeft] = useState(0);
   useEffect(() => {
-    setTimeLeft(calcTimeLeft());
+    const calc = () => {
+      if (!nextRace?.postTime || nextRace.postTime === '—') return 0;
+      const now = new Date();
+      const parts = nextRace.postTime.split(' ');
+      if (parts.length < 2) return 0;
+      const [time, period] = parts;
+      const [h, m] = time.split(':').map(Number);
+      let hours = h;
+      if (period === 'PM' && h !== 12) hours += 12;
+      if (period === 'AM' && h === 12) hours = 0;
+      const postDate = new Date(now);
+      postDate.setHours(hours, m, 0, 0);
+      const diff = Math.floor((postDate.getTime() - now.getTime()) / 1000);
+      return diff > 0 ? diff : 0;
+    };
+    setTimeLeft(calc());
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev > 0 ? prev - 1 : 0);
     }, 1000);
