@@ -73,15 +73,25 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
             {/* Desktop spacer to keep the right side aligned when brand is hidden */}
             <div className="hidden md:block" />
 
-            <div className="flex items-center gap-2 bg-app border border-border px-3 py-1.5 rounded-full shadow-sm">
-              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">
-                Net
-              </span>
-              <span
-                className={`text-sm font-bold tabular-nums leading-none ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-gray-900'}`}>
-                
-                {net === 0 ? '$0' : `${net >= 0 ? '+' : '-'}$${Math.abs(net).toFixed(2)}`}
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-app border border-border px-3 py-1.5 rounded-full shadow-sm">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">
+                  Wagered
+                </span>
+                <span className="text-sm font-bold tabular-nums leading-none text-gray-900">
+                  ${activeRaces.reduce((acc, r) => acc + r.totalStake, 0).toFixed(0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-app border border-border px-3 py-1.5 rounded-full shadow-sm">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-muted">
+                  Net
+                </span>
+                <span
+                  className={`text-sm font-bold tabular-nums leading-none ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-gray-900'}`}>
+
+                  {net === 0 ? '$0' : `${net >= 0 ? '+' : '-'}$${Math.abs(net).toFixed(2)}`}
+                </span>
+              </div>
             </div>
           </div>
 
