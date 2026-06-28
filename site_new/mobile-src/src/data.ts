@@ -345,7 +345,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         let hit = false;
 
         if (pick.bet_type === 'win') {
-          hit = pps.includes(results.win_pp);
+          hit = pps[0] === results.win_pp;
           if (hit && results.win_payout > 0) {
             wagerPaid = (results.win_payout / 2) * pick.stake;
           }
@@ -380,13 +380,13 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
         if (wagerIdx >= 0) {
           wagers[wagerIdx].paid = wagerPaid;
           if (pick.bet_type === 'win') {
-            wagers[wagerIdx].trackPays = hit && results.win_payout > 0 ? `$${results.win_payout.toFixed(2)} on $2` : undefined;
+            wagers[wagerIdx].trackPays = results.win_payout > 0 ? `$${results.win_payout.toFixed(2)} on $2` : undefined;
           } else if (pick.bet_type === 'exacta') {
-            wagers[wagerIdx].trackPays = hit && results.exacta_payout > 0 ? `$${results.exacta_payout.toFixed(2)} on $1` : undefined;
+            wagers[wagerIdx].trackPays = results.exacta_payout > 0 ? `$${results.exacta_payout.toFixed(2)} on $1` : undefined;
           } else if (pick.bet_type === 'trifecta') {
-            wagers[wagerIdx].trackPays = hit && results.trifecta_payout > 0 ? `$${results.trifecta_payout.toFixed(2)} on $1` : undefined;
+            wagers[wagerIdx].trackPays = results.trifecta_payout > 0 ? `$${results.trifecta_payout.toFixed(2)} on $1` : undefined;
           } else if (pick.bet_type === 'superfecta') {
-            wagers[wagerIdx].trackPays = hit && results.superfecta_payout > 0 ? `$${results.superfecta_payout.toFixed(2)} on $0.10` : undefined;
+            wagers[wagerIdx].trackPays = results.superfecta_payout > 0 ? `$${results.superfecta_payout.toFixed(2)} on $0.10` : undefined;
           }
         }
       }

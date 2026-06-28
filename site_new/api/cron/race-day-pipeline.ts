@@ -13,7 +13,7 @@ const TRACK_IDS: Record<string, string> = {
   'Belmont at the Big A': 'BAQ', 'Keeneland': 'KEE', 'Pimlico': 'PIM', 'Monmouth Park': 'MTH',
   'Woodbine': 'WO', 'Oaklawn Park': 'OP', 'Tampa Bay': 'TAM', 'Fair Grounds': 'FG',
   'Parx Racing': 'PRX', 'Canterbury Park': 'CBY', 'Prairie Meadows': 'PRM',
-  'Lone Star Park': 'LS', 'Hawthorne': 'HAW',
+  'Lone Star Park': 'LS', 'Hawthorne': 'HAW', 'Delaware Park': 'DEL',
 };
 
 interface CommissionRace {
