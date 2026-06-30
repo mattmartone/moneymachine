@@ -167,7 +167,7 @@ export default async function handler(req: any, res: any) {
       } else if (isFave) {
         impact = '⚠️ FAVORITE SCRATCHED — vulnerability thesis changes, pace map shifts';
         verdict = '⚠️ REVIEW — favorite scratched, thesis may change';
-        dbVerdict = 'RE-ANALYZE — if new fave is E-style in pace duel, bet stands; if P/S/closer with no vulnerability, no bet';
+        dbVerdict = 'RE-ANALYZE — is there still a vulnerable favorite to fade? If new fave is E-style in pace duel, bet stands (thesis transfers). If P/S/closer with no exploitable weakness, no bet (value creation mechanism gone)';
       } else if (isInBox) {
         impact = '⚠️ BOX HORSE SCRATCHED — exotic box reduced, consider adjustment';
         verdict = '🔄 REBUILD BOX — box horse scratched';

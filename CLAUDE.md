@@ -68,24 +68,44 @@ git push origin main
 7. **Phase 2-3 scoring** — tag styles, map pace, assess vulnerability, score signals.
 8. **Present HIGH candidates ranked by composite** — Matt picks ~10 for Commission.
 9. **Tag approved as COMMISSION** — only Matt-approved picks. Delete non-Commission bets.
+10. **Tag strategy_activations** — REQUIRED. Every Commission bet must have strategy tags. The cron pipeline auto-tags on every 5-min cycle via `ensureStrategyTags()`. If bets are created via `score_with_trace.mjs`, tagging happens inline. If created manually, the cron catches them. Verify with: `SELECT s.name, COUNT(*) FROM strategy_activations sa JOIN strategies s ON s.id = sa.strategy_id JOIN bets b ON b.id = sa.bet_id JOIN races r ON r.id = b.race_id WHERE r.date = CURRENT_DATE GROUP BY s.name`
 
 ## Hard Rules (Track Exclusions)
 
 | Rule | Tracks | Reason |
 |------|--------|--------|
-| No Bullring Tracks | CT, BTP, DED, EVD, FMT, MNR, TDN, FL | ≤1mi circumference, model edge neutralized |
+| No Bullring Tracks | CT, BTP, DED, EVD, FMT, MNR, TDN, FL, ARP (Arapahoe Park) | ≤1mi circumference, model edge neutralized |
 | No Texas Tracks | LS (Lone Star), HOU (Sam Houston), Retama | Not legal to bet from NJ |
+| No New Mexico Tracks | ALB (Albuquerque), SUN (Sunland Park) | No out-of-state betting allowed |
 | No Wyoming Downs | WYO | No Racing API coverage, no ML, no scratches |
 | No Woodbine (current) | WO | No Racing API coverage = no autonomous execution. May revisit if secondary data source found. |
+| No cheap claimers | Any race with purse < $25,000 | -56% ROI on 22 races (14% win rate). Cheap horses don't run to Beyers. Hard gate, no exceptions. |
+| No turf races | Any race on turf surface | -22.6% ROI on 28 races. Pace/Beyer thesis breaks on turf — closers benefit from trips, speed figures less predictive. Dirt only. |
 
 ## Race Day Hard Rules (Live)
 
 | Rule | Action |
 |------|--------|
 | Pick becomes chalk (below 5/2 live) | Kill win bet, play exotics only. Value is gone. Do NOT invoke Cosa Nostra. |
-| Thesis-critical scratch | DROP race entirely. Set conviction=COMMISSION, stake=$0, skip_reason='thesis_critical_scratch'. |
+| Win pick scratched | NO BET. Thesis dead. Set stake=$0, skip_reason. Alert members. |
+| Box horse scratched | NO BET (until re-analysis capability exists). Set stake=$0, skip_reason. Alert members. Exception: if re-analysis shows thesis STRENGTHENED, BET STANDS. |
+| Favorite scratched | RE-ANALYZE. The question is NOT "did the favorite scratch" — it's "is there still a vulnerable favorite to fade?" Identify new likely fav: if new fave is E-style in pace duel → BET STANDS (vulnerability transfers, thesis intact). If new fave is P/S/closer with no exploitable weakness → NO BET (no one to fade, value creation mechanism gone). |
+| Field drops below 5 | NO BET. Model edge thins in short fields. Set stake=$0, skip_reason. |
+| Irrelevant horse scratched | BET STANDS. Immaterial to thesis. No action needed. |
 | Dropped race in DB | Keep as COMMISSION with $0 stakes + skip_reason. Shows on card, doesn't affect math. |
 | Commission requires Matt approval | NEVER auto-tag races as COMMISSION. Model proposes, Matt approves. |
+
+## Box Sizing Rules
+
+Dynamic box sizing based on win pick morning line odds. Higher odds = bigger box (exotic payout will cover the combos). Lower odds = tighter box (breakeven math doesn't favor spreading thin).
+
+| Win Pick ML | Box Size | Combos | Breakeven (per $1 exacta) |
+|---|---|---|---|
+| 20-1+ | 5 horses | 20 combos | $6.06 (doubled $66 / 20 × $3.30/combo) |
+| 10-1 to 19-1 | 4 horses | 12 combos | $9.17 (doubled $66 / 12 × $5.50/combo) |
+| 6-1 to 9-1 | 3 horses | 6 combos | $18.33 (doubled $66 / 6 × $11/combo) |
+
+The win pick is ALWAYS in the box. Remaining slots filled by highest-Beyer horses in the field that fit the pace thesis.
 
 ## Payout Storage Rules
 
@@ -102,12 +122,66 @@ DB stores all payouts **normalized to $1 base**. Conversion happens at ingestion
 When Matt gives payouts from NJ4Bets, he'll state the base (e.g. "$2 exacta paid $24.40"). Divide by base before storing.
 When API gives payouts, use the `base_amount` field (but verify — sometimes returns $0, fall back to track table above).
 
-## Postmortem Standards
+## Phase 5: Publish to Site (after Commission selection)
 
-After every race day, Phase 7 includes:
-- **Model vs Random** — run 1000 random simulations on same races/structure. Track "% random beats model." Target: <30%. Store in `postmortem_metrics` table.
-- **Strategy performance update** — for each Commission bet, check strategy_activations, determine hit/miss, update strategy_performance table.
-- **Verify strategy_activations tagging** — must be accurate and complete. Powers pattern recognition over time.
+After Matt selects Commission and Capo picks, execute these IN ORDER before the card is "live":
+
+1. **Write bets to DB** — Insert win + exacta for each selected race. 70/30 win-to-exacta split. Doubled races get $154 win + $66 exacta ($220 total). Standard: $77 win + $33 exacta ($110 total). Box size is dynamic based on win pick odds — see Box Sizing Rules below.
+2. **Pull post times** — From Racing API `post_time_long` field (Unix ms timestamp). Convert to ET. Write to `races.post_time`. Field: `entriesData.races[].post_time_long` (NOT `post_time` which is often null).
+3. **Write race theories** — For each scored race, write the theory text to `races.race_theory`. Match by track + win_pick PP + Beyer.
+4. **Tag strategy activations** — Every bet gets at minimum "Beyer Ceiling Box" (strategy_id 33). Vulnerable fave races also get "Spot the Vulnerable Favorite" (strategy_id 1). Win picks with top Beyer get S6 (7) and S9 (4).
+5. **Verify site displays** — Load the mobile site for today. Confirm: races show with post times, theories visible, Commission badge present.
+
+**Critical note on Racing API:** Use `post_time_long` (Unix ms) for post times, `morning_line_odds` for ML, `program_number` for PP matching. Do NOT let the Racing API create new races or overwrite Brisnet entries — only UPDATE existing fields (ML, post_time, jockey, trainer, scratched).
+
+## Phase 7: Settle & Verify (Closeout Protocol)
+
+Every race day MUST complete these steps before being considered closed. Order matters.
+
+### Step 1: Pull Results
+Query Racing API for all Commission races. For each, confirm finish order (PP positions) and payouts are in the `results` table.
+
+### Step 2: Verify Payout Normalization
+DB stores: `win_payout` = raw track price per $2 | `exacta_payout` = per $1 | `trifecta_payout` = per $1 | `superfecta_payout` = per $0.10.
+
+**Known bug (backlog #8):** The cron's `settleRace()` stores COLLECTED amounts (pre-multiplied by stake) instead of raw track payouts. If the cron settled a race, divide back: `win / (stake/2)`, `exacta / perCombo`. The `fetch-results.ts` admin button stores correctly.
+
+API normalization formula: `normalizeExoticPayout(amount, tickets_bet, target_base)` = `(amount / (tickets_bet/100)) * target_base`
+
+### Step 3: Verify Finish Positions
+Cross-check every stored result's win_pp/place_pp/show_pp against Racing API `runners[0]/[1]/[2].program_number`. A wrong PP = wrong P/L silently. This caught CD R2 on 6/26 (DB had PP1, actual winner was PP8).
+
+### Step 4: Verify Bet Stakes
+Standard: Win $50, Exacta $60. Doubled: Win $100, Exacta $120. Any $0 stake must have `skip_reason` set on the race. Non-standard stakes need explanation or correction.
+
+### Step 5: Verify Skipped Races
+Every dropped race must have: all bet stakes = 0, `skip_reason` populated on the races row. The site displays "SKIPPED" based on `skip_reason` presence.
+
+### Step 6: Compute & Verify Day P/L
+```
+Win collected = (win_payout / 2) * win_stake  [only if pps[0] == win_pp]
+Exacta collected = exacta_payout * (exacta_stake / permutations(n, 2))  [only if win_pp AND place_pp both in box]
+Day net = total_collected - total_wagered
+```
+Cross-check against what the mobile site displays for that date.
+
+### Step 7: Verify Strategy Tags on ALL Bets
+Every Commission bet (win AND exacta) must have at least one `strategy_activation`. The `ensureStrategyTags()` function handles this but only runs for CURRENT_DATE. For historical days, run it manually. Win bets historically were untagged — this is being fixed (backlog #10).
+
+### Step 8: Model vs Random Simulation
+Run 1000 random picks (same box size, same available field) against each played race. Store in `postmortem_metrics`: model_net, random_avg_net, random_pct_beats, model_win_rate, random_win_rate, model_exacta_rate, random_exacta_rate.
+
+### Step 9: Update postmortem_metrics
+Ensure races_played, total_wagered, total_collected, model_net all match step 6's computed values exactly.
+
+### Step 10: Write Postmortem
+Save to `money_machine/sessions/YYYY-MM-DD_postmortem.md`. Include: race-by-race table, day summary, observations, issues found, backlog items, and a "Work Value" section capturing any learnings about the agentic+determinism pattern, customer conversations influenced by this work, or insights worth sharing externally.
+
+### Step 11: Deploy Code Fixes
+Any bugs found during closeout (normalization, display, missing TRACK_IDs) — fix, commit, push before declaring the day closed.
+
+### Step 12: Verify Site Display
+Load `/mobile?date=YYYY-MM-DD`. Confirm: skipped = skipped, hits show correct $, total P/L matches step 6.
 
 ## Commission Selection Formula (Phase 4, Step 16)
 
@@ -125,6 +199,41 @@ Where:
 Sort descending. Present ranked list to Matt. He selects ~10 for Commission.
 
 **Validated 6/20:** Top 10 by composite returned +$284 (+18% ROI). Bottom 11 would have returned -$849 (-57% ROI). The formula is selecting the right races.
+
+## Doubling Criteria
+
+A doubled race gets Win $100 + Exacta $120 (both doubled, not just win). The doubled flag requires ALL THREE:
+
+1. **Vulnerable favorite** — E-style fave in a pace duel, OR P/S fave drawn inside in 8+ horse field
+2. **Win pick is AT or WITHIN 5 Beyer points of the distance ceiling** — our horse has the figure to actually win, not just benefit from the fave fading
+3. **Price** — ML ≥ 6/1 on the win pick
+
+**Rationale:** Doubling bets on the WIN — a single horse crossing first. The "fave will lose" thesis helps the entire box (exacta), but only justifies doubling the win when our pick has the top figure to capitalize. A 20-1 shot with an 83 Beyer in a field with a 107 ceiling will benefit from the fave fading but won't likely win — play standard stake and let the exacta box capture the value.
+
+**Standard stake:** Win $50, Exacta $60.
+**Doubled stake:** Win $100, Exacta $120.
+
+## Model vs Random Performance Reporting
+
+After every race day postmortem, save performance data to `postmortem_metrics` table. The site displays this as a comparison table.
+
+**Query:**
+```sql
+SELECT 
+  date,
+  model_net as "Model P/L",
+  random_avg_net as "Random P/L",
+  ROUND(model_win_rate * 100) || '%' as "Model Wins",
+  ROUND(random_win_rate * 100) || '%' as "Random Wins",
+  ROUND(model_exacta_rate * 100) || '%' as "Model Exacta",
+  ROUND(random_exacta_rate * 100) || '%' as "Random Exacta"
+FROM postmortem_metrics
+ORDER BY date
+```
+
+**How to populate:** Run 5 random simulations against same races/structure. Record model win rate, random win rate, model exacta rate, random exacta rate, both P/Ls. One row per race day.
+
+**Key insight:** Model wins less often than random (we never pick favorites) but hits exactas at 2x+ the rate of random. P/L favors the model because exacta consistency compounds.
 
 ## Settlement Display Rules
 
