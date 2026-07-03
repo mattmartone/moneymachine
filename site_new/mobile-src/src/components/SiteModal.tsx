@@ -31,17 +31,10 @@ export function SiteModal() {
           Claudio Pronto
         </h2>
 
-        {/* Temperature notice */}
         <div className="py-4 text-center">
-          <svg width="32" height="32" viewBox="0 0 44 44" fill="none" className="mx-auto mb-3">
-            <rect x="18" y="4" width="8" height="28" rx="4" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1"/>
-            <circle cx="22" cy="36" r="6" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1"/>
-            <rect x="20" y="14" width="4" height="20" rx="2" fill="#ef4444"/>
-            <circle cx="22" cy="36" r="4" fill="#ef4444"/>
-          </svg>
-          <h3 className="text-gray-900 text-lg font-light mb-1">Temperature</h3>
+          <h3 className="text-gray-900 text-lg font-light mb-1">Extreme Heat</h3>
           <p className="text-gray-500 text-sm">
-            Extreme heat is causing cancellations across multiple tracks. Nothing qualifies today.
+            Cancellations across multiple tracks. Nothing qualifies today.
           </p>
         </div>
 
