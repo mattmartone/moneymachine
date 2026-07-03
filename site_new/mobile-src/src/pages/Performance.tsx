@@ -125,6 +125,18 @@ export function Performance() {
       </div>
 
       <main className="max-w-md md:max-w-3xl mx-auto px-4 pt-6">
+        {/* Model version banner */}
+        <div className="bg-gray-900 text-white rounded-xl px-4 py-3 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Active Model</p>
+            <p className="text-sm font-semibold">Claudio v2.0 <span className="text-gray-400 font-normal">— Exacta-First</span></p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-gray-400">Live since</p>
+            <p className="text-sm font-medium">Jul 3, 2026</p>
+          </div>
+        </div>
+
         {/* Filter toggles */}
         <div className="flex flex-wrap gap-2 mb-6">
           {(Object.keys(FILTER_LABELS) as FilterType[]).map((key) => (
@@ -285,6 +297,12 @@ export function Performance() {
         {/* Model vs Random chart + table */}
         {filter === 'model' && data.length > 0 && (
           <div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
+              <p className="text-xs font-semibold text-amber-800 mb-1">Model Update — July 3, 2026</p>
+              <p className="text-xs text-amber-700 leading-relaxed">
+                Performance below reflects <strong>Claudio v1</strong> (win-first, flat staking). As of today we're running <strong>v2 — Exacta-First</strong>: pool-weighted allocation, win bets only on triple-signal (S4+S5+S9), fixed distance data pipeline. Prior period preserved for comparison.
+              </p>
+            </div>
             <p className="text-xs text-muted mb-4 leading-relaxed italic">
               Can an AI beat random chance at picking horses? We test every race day. Same races, same bets, same stakes — just random picks vs our model. The exacta rate tells the story.
             </p>
