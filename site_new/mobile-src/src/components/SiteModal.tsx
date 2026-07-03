@@ -38,13 +38,9 @@ export function SiteModal() {
         <div className="py-4 text-center">
           <h3 className="text-gray-900 text-lg font-light mb-1">Extreme Heat</h3>
           <p className="text-gray-500 text-sm">
-            Cancellations across multiple tracks. Nothing qualifies today.
+            Cancellations across multiple tracks. Nothing qualifies today. Drop your email to get notified when we're back in action.
           </p>
         </div>
-
-        <p className="text-gray-600 text-sm mt-4 mb-2">
-          Drop your email to get notified when we're back in action.
-        </p>
 
         {submitted ? (
           <div className="mt-4 bg-green-50 border border-green-200 rounded-lg py-3 px-4">
