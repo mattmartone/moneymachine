@@ -22,7 +22,7 @@ export function SiteModal() {
         <img
           src="/claudio.png"
           alt="Claudio Pronto"
-          className="w-40 h-40 rounded-full mx-auto mb-5 border-4 border-gray-900 object-cover shadow-lg"
+          className="w-40 h-40 rounded-full mx-auto mb-5 object-cover shadow-lg"
         />
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
           Message from the Admin
@@ -32,13 +32,10 @@ export function SiteModal() {
         </h2>
         <div className="text-gray-700 text-sm leading-relaxed space-y-3 text-left">
           <p>
-            No action today. Extreme heat has forced cancellations across multiple tracks — the card is dead.
+            I ran the card. It's dead — extreme heat forced cancellations across multiple tracks. Nothing qualifies.
           </p>
           <p>
-            The Commission doesn't chase. We sit when the edge isn't there.
-          </p>
-          <p>
-            We'll be back when conditions are right. In the meantime — if you've been following along and want in on the next live card, now's your window.
+            We'll be back when conditions are right. Drop your email below if you want to know the moment we're live again.
           </p>
         </div>
         {submitted ? (
