@@ -79,14 +79,14 @@ export function Performance() {
     }
   }, [insightsLoaded]);
 
-  const cacheKey = (f: FilterType) => f === 'today' || f === 'model' ? f : `${f}_${tier}`;
+  const cacheKey = (f: FilterType) => f === 'today' ? f : `${f}_${tier}`;
 
   const fetchLiveData = async (f: FilterType) => {
     const key = cacheKey(f);
     if (liveData[key]) return;
     setLoading(true);
     try {
-      const tierParam = (f !== 'today' && f !== 'model') ? `&tier=${tier}` : '';
+      const tierParam = f !== 'today' ? `&tier=${tier}` : '';
       const res = await fetch(`/api/lab/performance-detail?filter=${f}${tierParam}`, {
         headers: { Authorization: 'Bearer public' }
       });
@@ -158,8 +158,8 @@ export function Performance() {
           ))}
         </div>
 
-        {/* Tier toggle (Commission / Capo / All) — shown on breakdown tabs */}
-        {filter !== 'today' && filter !== 'model' && (
+        {/* Tier toggle (Commission / Capo / All) — shown on all tabs except Today */}
+        {filter !== 'today' && (
           <div className="flex gap-2 mb-4">
             {(['commission', 'capo', 'all'] as const).map((t) => (
               <button
