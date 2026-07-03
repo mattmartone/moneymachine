@@ -67,6 +67,7 @@ export function Performance() {
   const [insights, setInsights] = useState<string[]>([]);
   const [insightsLoaded, setInsightsLoaded] = useState(false);
   const [chartView, setChartView] = useState<'earnings' | 'hitrate'>('earnings');
+  const [tier, setTier] = useState<'all' | 'commission' | 'capo'>('commission');
 
   useEffect(() => {
     if (!insightsLoaded) {
@@ -78,27 +79,31 @@ export function Performance() {
     }
   }, [insightsLoaded]);
 
+  const cacheKey = (f: FilterType) => f === 'today' || f === 'model' ? f : `${f}_${tier}`;
+
   const fetchLiveData = async (f: FilterType) => {
-    if (liveData[f]) return;
+    const key = cacheKey(f);
+    if (liveData[key]) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/lab/performance-detail?filter=${f}`, {
+      const tierParam = (f !== 'today' && f !== 'model') ? `&tier=${tier}` : '';
+      const res = await fetch(`/api/lab/performance-detail?filter=${f}${tierParam}`, {
         headers: { Authorization: 'Bearer public' }
       });
       const json = await res.json();
       if (f === 'today') {
-        setLiveData(prev => ({ ...prev, [f]: json }));
+        setLiveData(prev => ({ ...prev, [key]: json }));
       } else if (json.data) {
-        setLiveData(prev => ({ ...prev, [f]: json.data }));
+        setLiveData(prev => ({ ...prev, [key]: json.data }));
       }
     } catch {}
     setLoading(false);
   };
 
-  // Auto-fetch on mount and filter change
-  if (!liveData[filter] && !loading) fetchLiveData(filter);
+  // Auto-fetch on mount and filter/tier change
+  if (!liveData[cacheKey(filter)] && !loading) fetchLiveData(filter);
 
-  const rawData = liveData[filter] || [];
+  const rawData = liveData[cacheKey(filter)] || [];
   const data = (filter === 'model' || filter === 'today') ? rawData : [...rawData].sort((a, b) => {
     const aVal = a[sortBy];
     const bVal = b[sortBy];
@@ -152,6 +157,24 @@ export function Performance() {
             </button>
           ))}
         </div>
+
+        {/* Tier toggle (Commission / Capo / All) — shown on breakdown tabs */}
+        {filter !== 'today' && filter !== 'model' && (
+          <div className="flex gap-2 mb-4">
+            {(['commission', 'capo', 'all'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTier(t)}
+                className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-colors ${
+                  tier === t
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-surface border border-border text-gray-600 hover:bg-app'
+                }`}>
+                {t === 'commission' ? 'Commission' : t === 'capo' ? 'Capo' : 'All'}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading && (
           <div className="bg-app border border-border rounded-xl px-3 py-4 mb-4 text-center">

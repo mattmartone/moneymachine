@@ -185,7 +185,7 @@ export default async function handler(req: any, res: any) {
         FROM bets b
         JOIN races r ON r.id = b.race_id
         JOIN results res ON res.race_id = r.id
-        WHERE b.conviction IN ('COMMISSION', 'HIGH')
+        WHERE UPPER(b.conviction) IN ${tierFilter}
           AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
         GROUP BY b.bet_type
         ORDER BY b.bet_type
@@ -204,7 +204,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries ep ON ep.id = res.place_entry_id
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
-        WHERE b.conviction IN ('COMMISSION', 'HIGH')
+        WHERE UPPER(b.conviction) IN ${tierFilter}
           AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
@@ -296,7 +296,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries ep ON ep.id = res.place_entry_id
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
-        WHERE b.conviction IN ('COMMISSION', 'HIGH')
+        WHERE UPPER(b.conviction) IN ${tierFilter}
           AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
@@ -353,7 +353,7 @@ export default async function handler(req: any, res: any) {
         JOIN results res ON res.race_id = r.id
         LEFT JOIN entries ew ON ew.id = res.win_entry_id
         LEFT JOIN horses h ON h.id = ew.horse_id
-        WHERE b.conviction IN ('COMMISSION', 'HIGH') AND b.bet_type = 'win'
+        WHERE UPPER(b.conviction) IN ${tierFilter} AND b.bet_type = 'win'
           AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
