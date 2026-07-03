@@ -185,6 +185,7 @@ export default async function handler(req: any, res: any) {
         JOIN races r ON r.id = b.race_id
         JOIN results res ON res.race_id = r.id
         WHERE b.conviction IN ('COMMISSION', 'HIGH')
+          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
         GROUP BY b.bet_type
         ORDER BY b.bet_type
       `);
@@ -203,6 +204,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
         WHERE b.conviction IN ('COMMISSION', 'HIGH')
+          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -294,6 +296,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
         WHERE b.conviction IN ('COMMISSION', 'HIGH')
+          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -350,6 +353,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries ew ON ew.id = res.win_entry_id
         LEFT JOIN horses h ON h.id = ew.horse_id
         WHERE b.conviction IN ('COMMISSION', 'HIGH') AND b.bet_type = 'win'
+          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -406,6 +410,7 @@ export default async function handler(req: any, res: any) {
         WHERE b.conviction IN ('COMMISSION', 'HIGH')
           AND b.bet_type = 'win'
           AND ${personCol} IS NOT NULL
+          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
           AND e.post_position = (
             SELECT CAST(REPLACE(entries_used[1], '#', '') AS int)
             FROM bets b2 WHERE b2.id = b.id
