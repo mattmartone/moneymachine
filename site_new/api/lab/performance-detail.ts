@@ -13,6 +13,7 @@ export default async function handler(req: any, res: any) {
 
   const { filter, tier } = req.query;
   const tierFilter = tier === 'capo' ? `('MEDIUM', 'CAPO')` : tier === 'commission' ? `('COMMISSION', 'HIGH')` : `('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')`;
+  const VERIFIED_DATES = `('2026-06-14', '2026-06-18', '2026-06-19', '2026-06-20', '2026-06-21')`;
 
   try {
     if (filter === 'today') {
@@ -154,25 +155,77 @@ export default async function handler(req: any, res: any) {
     }
 
     if (filter === 'model') {
-      const { rows } = await query(`
-        SELECT date, model_net, random_avg_net, model_win_rate, random_win_rate,
-               model_exacta_rate, random_exacta_rate, races_played, random_pct_beats
-        FROM postmortem_metrics
-        WHERE model_net IS NOT NULL
-        ORDER BY date DESC
+      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
+      function factorial(n: number): number { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+      function permutations(n: number, k: number): number { return factorial(n) / factorial(n - k); }
+
+      const { rows: bets } = await query(`
+        SELECT b.race_id, b.bet_type, b.stake, b.entries_used,
+               r.date,
+               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               ew.post_position as win_pp, ep.post_position as place_pp,
+               es.post_position as show_pp, ef.post_position as fourth_pp
+        FROM bets b
+        JOIN races r ON r.id = b.race_id
+        JOIN results res ON res.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id
+        LEFT JOIN entries es ON es.id = res.show_entry_id
+        LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
+        WHERE UPPER(b.conviction) IN ${tierFilter}
+          AND r.date IN ${VERIFIED_DATES}
+        ORDER BY r.date
       `);
 
-      const data = rows.map((r: any) => ({
-        date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        model_net: r.model_net ? Math.round(r.model_net * 100) / 100 : 0,
-        random_net: r.random_avg_net ? Math.round(r.random_avg_net * 100) / 100 : 0,
-        model_win_rate: r.model_win_rate ? Math.round(r.model_win_rate * 100) : null,
-        random_win_rate: r.random_win_rate ? Math.round(r.random_win_rate * 100) : null,
-        model_exacta_rate: r.model_exacta_rate ? Math.round(r.model_exacta_rate * 100) : null,
-        random_exacta_rate: r.random_exacta_rate ? Math.round(r.random_exacta_rate * 100) : null,
-        races: r.races_played,
-        model_beats: r.random_pct_beats ? (100 - r.random_pct_beats) : null,
-      }));
+      const dayMap: Record<string, { wagered: number; collected: number; winBets: number; winHits: number; exBets: number; exHits: number; races: Set<number> }> = {};
+
+      for (const bet of bets) {
+        const dateKey = new Date(bet.date).toISOString().split('T')[0];
+        if (!dayMap[dateKey]) dayMap[dateKey] = { wagered: 0, collected: 0, winBets: 0, winHits: 0, exBets: 0, exHits: 0, races: new Set() };
+        const day = dayMap[dateKey];
+        day.wagered += bet.stake;
+        day.races.add(bet.race_id);
+
+        if (!bet.entries_used?.length) continue;
+        const pps = bet.entries_used.map(parsePP);
+        const n = pps.length;
+
+        if (bet.bet_type === 'win') {
+          day.winBets++;
+          if (pps.includes(bet.win_pp) && bet.win_payout > 0) {
+            day.collected += (bet.win_payout / 2) * bet.stake;
+            day.winHits++;
+          }
+        } else if (bet.bet_type === 'exacta') {
+          day.exBets++;
+          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && bet.exacta_payout > 0) {
+            day.collected += bet.exacta_payout * (bet.stake / permutations(n, 2));
+            day.exHits++;
+          }
+        } else if (bet.bet_type === 'trifecta') {
+          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && pps.includes(bet.show_pp) && bet.trifecta_payout > 0) {
+            day.collected += bet.trifecta_payout * (bet.stake / permutations(n, 3));
+          }
+        } else if (bet.bet_type === 'superfecta') {
+          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && pps.includes(bet.show_pp) && bet.fourth_pp && pps.includes(bet.fourth_pp) && bet.superfecta_payout > 0) {
+            day.collected += bet.superfecta_payout * (bet.stake / permutations(n, 4));
+          }
+        }
+      }
+
+      const data = Object.entries(dayMap)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([dateStr, day]) => ({
+          date: new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          model_net: Math.round((day.collected - day.wagered) * 100) / 100,
+          random_net: 0,
+          model_win_rate: day.winBets > 0 ? Math.round((day.winHits / day.winBets) * 100) : null,
+          random_win_rate: null,
+          model_exacta_rate: day.exBets > 0 ? Math.round((day.exHits / day.exBets) * 100) : null,
+          random_exacta_rate: null,
+          races: day.races.size,
+          model_beats: null,
+        }));
 
       return res.status(200).json({ data, type: 'model' });
     }
@@ -186,7 +239,7 @@ export default async function handler(req: any, res: any) {
         JOIN races r ON r.id = b.race_id
         JOIN results res ON res.race_id = r.id
         WHERE UPPER(b.conviction) IN ${tierFilter}
-          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
+          AND r.date IN ${VERIFIED_DATES}
         GROUP BY b.bet_type
         ORDER BY b.bet_type
       `);
@@ -205,7 +258,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
         WHERE UPPER(b.conviction) IN ${tierFilter}
-          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
+          AND r.date IN ${VERIFIED_DATES}
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -297,7 +350,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries es ON es.id = res.show_entry_id
         LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
         WHERE UPPER(b.conviction) IN ${tierFilter}
-          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
+          AND r.date IN ${VERIFIED_DATES}
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -354,7 +407,7 @@ export default async function handler(req: any, res: any) {
         LEFT JOIN entries ew ON ew.id = res.win_entry_id
         LEFT JOIN horses h ON h.id = ew.horse_id
         WHERE UPPER(b.conviction) IN ${tierFilter} AND b.bet_type = 'win'
-          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
+          AND r.date IN ${VERIFIED_DATES}
       `);
 
       const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
@@ -411,7 +464,7 @@ export default async function handler(req: any, res: any) {
         WHERE b.conviction IN ('COMMISSION', 'HIGH')
           AND b.bet_type = 'win'
           AND ${personCol} IS NOT NULL
-          AND r.date IN (SELECT date FROM postmortem_metrics WHERE model_net IS NOT NULL)
+          AND r.date IN ${VERIFIED_DATES}
           AND e.post_position = (
             SELECT CAST(REPLACE(entries_used[1], '#', '') AS int)
             FROM bets b2 WHERE b2.id = b.id
