@@ -170,6 +170,14 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         <DateNav selectedDate={selectedDate} onDateChange={onDateChange} />
       )}
 
+      {selectedDate && ['2026-06-25', '2026-06-26', '2026-06-27', '2026-06-28'].includes(selectedDate) && (
+        <div className="mx-4 mt-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <p className="text-[11px] text-red-700 font-medium">
+            ⚠ Data integrity issue — bets for this date were corrupted during the 7/3 pipeline migration. What's shown here may not reflect actual Commission picks.
+          </p>
+        </div>
+      )}
+
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
         <FeaturedVideo />
 
