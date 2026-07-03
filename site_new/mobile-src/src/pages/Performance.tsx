@@ -510,23 +510,37 @@ export function Performance() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {data.map((row: any, idx: number) => {
+                    const isFirstV1 = idx > 0 && row.date && row.date.includes('Jun');
+                    const prevRow = idx > 0 ? data[idx - 1] : null;
+                    const showDivider = prevRow && !prevRow.date?.includes('Jun') && row.date?.includes('Jun');
                     return (
-                      <tr key={idx}>
-                        <td className="py-2.5 px-2 text-gray-900 text-xs whitespace-nowrap">{row.date}</td>
-                        <td className="py-2.5 px-1 text-center">
-                          {row.model_net > row.random_net && <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />}
-                        </td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
-                          {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
-                        </td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
-                          {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
-                        </td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_win_rate != null ? row.random_win_rate + '%' : '—'}</td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
-                        <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_exacta_rate != null ? row.random_exacta_rate + '%' : '—'}</td>
-                      </tr>
+                      <React.Fragment key={idx}>
+                        {idx === 0 && data.length > 0 && (
+                          <tr className="bg-gray-900">
+                            <td colSpan={8} className="py-2 px-3 text-center">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
+                                ▲ Claudio Pronto v2.0 — Exacta-First (Jul 3, 2026)
+                              </span>
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className="py-2.5 px-2 text-gray-900 text-xs whitespace-nowrap">{row.date}</td>
+                          <td className="py-2.5 px-1 text-center">
+                            {row.model_net > row.random_net && <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
+                            {row.model_net >= 0 ? '+' : '-'}${Math.abs(row.model_net)}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">
+                            {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_win_rate != null ? row.random_win_rate + '%' : '—'}</td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_exacta_rate != null ? row.random_exacta_rate + '%' : '—'}</td>
+                        </tr>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
@@ -566,6 +580,7 @@ export function Performance() {
                     {label} {sortBy === key && (sortDir === 'desc' ? '↓' : '↑')}
                   </th>
                 ))}
+                <th className="py-2.5 px-3 text-[10px] uppercase tracking-wider font-semibold text-muted text-right">Win %</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -579,6 +594,9 @@ export function Performance() {
                   </td>
                   <td className={`py-2.5 px-3 text-right tabular-nums font-semibold ${row.net >= 0 ? 'text-success' : 'text-gray-700'}`}>
                     {row.net >= 0 ? '+' : '-'}${Math.abs(row.net)}
+                  </td>
+                  <td className="py-2.5 px-3 text-right tabular-nums text-gray-700">
+                    {row.fires > 0 ? Math.round((row.wins / row.fires) * 100) : 0}%
                   </td>
                 </tr>
               ))}
