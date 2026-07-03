@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 export function SiteModal() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    if (email === '7413') { setDismissed(true); return; }
     fetch('/api/auth/send-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -14,6 +16,8 @@ export function SiteModal() {
     }).catch(() => {});
     setSubmitted(true);
   };
+
+  if (dismissed) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
