@@ -10,6 +10,7 @@ import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { BetBuilderOverlay } from './components/BetBuilderOverlay';
 import { ThemeProvider } from './components/ThemeProvider';
+import { SiteModal } from './components/SiteModal';
 export function App() {
   const [isBetBuilderOpen, setIsBetBuilderOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,7 +40,7 @@ export function App() {
         <BetBuilderOverlay
           isOpen={isBetBuilderOpen}
           onClose={() => setIsBetBuilderOpen(false)} />
-        
+        <SiteModal />
       </div>
     </ThemeProvider>);
 
