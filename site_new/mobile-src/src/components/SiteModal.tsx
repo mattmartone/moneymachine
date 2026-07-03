@@ -5,10 +5,14 @@ export function SiteModal() {
   const [submitted, setSubmitted] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
+  const handleChange = (val: string) => {
+    setEmail(val);
+    if (val === '7413') { setDismissed(true); return; }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    if (email === '7413') { setDismissed(true); return; }
     fetch('/api/auth/send-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,7 +55,7 @@ export function SiteModal() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
               placeholder="Enter your email"
               required
               className="w-full border border-gray-300 rounded-lg py-3 px-4 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
