@@ -65,7 +65,7 @@ git push origin main
 4. **Cross-reference ML by post position** — API rows may use different track names than Brisnet rows. Match by post position.
 5. **Run `get_ml_gaps()`** — if any qualified races still missing ML, ask Matt for NJ4Bets screenshot.
 6. **Tag `races.qualified` and `skip_reason`** — as gates run, mark each race.
-7. **Phase 2-3 scoring** — tag styles, map pace, assess vulnerability, score signals.
+7. **Phase 2-3 scoring** — tag styles, map pace, assess vulnerability, score signals. Persists ALL candidates (HIGH, MEDIUM, LOW, and blocked) to `scored_candidates` table automatically via `score_with_trace.mjs`.
 8. **Present HIGH candidates ranked by composite** — Matt picks ~10 for Commission.
 9. **Tag approved as COMMISSION** — only Matt-approved picks. Delete non-Commission bets.
 10. **Tag strategy_activations** — REQUIRED. Every Commission bet must have strategy tags. The cron pipeline auto-tags on every 5-min cycle via `ensureStrategyTags()`. If bets are created via `score_with_trace.mjs`, tagging happens inline. If created manually, the cron catches them. Verify with: `SELECT s.name, COUNT(*) FROM strategy_activations sa JOIN strategies s ON s.id = sa.strategy_id JOIN bets b ON b.id = sa.bet_id JOIN races r ON r.id = b.race_id WHERE r.date = CURRENT_DATE GROUP BY s.name`
@@ -95,17 +95,45 @@ git push origin main
 | Dropped race in DB | Keep as COMMISSION with $0 stakes + skip_reason. Shows on card, doesn't affect math. |
 | Commission requires Matt approval | NEVER auto-tag races as COMMISSION. Model proposes, Matt approves. |
 
+## Wagering Philosophy: Exacta-First
+
+**The box is the product, not the win pick.** Backtest data (4 days, 162 candidates) shows:
+- Box captures the exacta in 44% of scored races
+- Win pick hits only 7% of the time
+- High-value exactas fire regardless of whether the favorite is vulnerable
+- S4+S9 combo correlates with the best-paying exactas
+
+**What this means:** The model's edge is in identifying the 4-5 horses most likely to finish 1-2, ranked by distance ceiling Beyer. The win pick is Matt's judgment call on top of that — it's gravy, not the thesis. Staking should reflect this: exotics are the core bet, win is the bonus.
+
+### Staking (Exacta-First, adopted 7/3)
+
+**Daily bankroll: $1,000.** Distributed across Commission races weighted by exacta pool size.
+
+**Allocation method:**
+1. Pull exacta pool totals from Racing API for each Commission race
+2. Compute each race's share: `race_pool / total_pools_across_commission`
+3. Allocate $1,000 proportionally — bigger pools get more money
+4. Mid-range pools ($50K–$300K) are the sweet spot; very large pools (>$300K) are efficient (less edge); very small pools (<$50K) have thin liquidity
+
+**Per-race bet structure:**
+- **Default:** Exacta box only (allocated amount goes entirely to exacta)
+- **Triple signal (S4+S5+S9):** Split 75/25 — 75% to exacta box, 25% to win
+
+The triple signal is the only pattern that justifies a win bet. It fires ~10% of the time but carries the highest composite (24.3 avg). All other races: exacta box only, sized by pool.
+
+**Floor/cap:** No race gets less than $50 or more than $200 regardless of pool math. If a race would fall below $50, skip it — the pool is too thin.
+
 ## Box Sizing Rules
 
 Dynamic box sizing based on win pick morning line odds. Higher odds = bigger box (exotic payout will cover the combos). Lower odds = tighter box (breakeven math doesn't favor spreading thin).
 
 | Win Pick ML | Box Size | Combos | Breakeven (per $1 exacta) |
 |---|---|---|---|
-| 20-1+ | 5 horses | 20 combos | $6.06 (doubled $66 / 20 × $3.30/combo) |
-| 10-1 to 19-1 | 4 horses | 12 combos | $9.17 (doubled $66 / 12 × $5.50/combo) |
-| 6-1 to 9-1 | 3 horses | 6 combos | $18.33 (doubled $66 / 6 × $11/combo) |
+| 20-1+ | 5 horses | 20 combos | $6.06 ($120 / 20 × $6/combo) |
+| 10-1 to 19-1 | 4 horses | 12 combos | $9.17 ($120 / 12 × $10/combo) |
+| 6-1 to 9-1 | 3 horses | 6 combos | $18.33 ($120 / 6 × $20/combo) |
 
-The win pick is ALWAYS in the box. Remaining slots filled by highest-Beyer horses in the field that fit the pace thesis.
+The win pick is ALWAYS in the box. Remaining slots filled by highest distance Beyer (career Beyer fallback) in the field.
 
 ## Payout Storage Rules
 
@@ -126,7 +154,7 @@ When API gives payouts, use the `base_amount` field (but verify — sometimes re
 
 After Matt selects Commission and Capo picks, execute these IN ORDER before the card is "live":
 
-1. **Write bets to DB** — Insert win + exacta for each selected race. 70/30 win-to-exacta split. Doubled races get $154 win + $66 exacta ($220 total). Standard: $77 win + $33 exacta ($110 total). Box size is dynamic based on win pick odds — see Box Sizing Rules below.
+1. **Write bets to DB** — Insert exacta + win for each selected race. Exacta-first split: Standard $80 exacta + $30 win ($110 total). Doubled: $120 exacta + $60 win ($180 total). Box size is dynamic based on win pick odds — see Box Sizing Rules.
 2. **Pull post times** — From Racing API `post_time_long` field (Unix ms timestamp). Convert to ET. Write to `races.post_time`. Field: `entriesData.races[].post_time_long` (NOT `post_time` which is often null).
 3. **Write race theories** — For each scored race, write the theory text to `races.race_theory`. Match by track + win_pick PP + Beyer.
 4. **Tag strategy activations** — Every bet gets at minimum "Beyer Ceiling Box" (strategy_id 33). Vulnerable fave races also get "Spot the Vulnerable Favorite" (strategy_id 1). Win picks with top Beyer get S6 (7) and S9 (4).
@@ -174,13 +202,26 @@ Run 1000 random picks (same box size, same available field) against each played 
 ### Step 9: Update postmortem_metrics
 Ensure races_played, total_wagered, total_collected, model_net all match step 6's computed values exactly.
 
-### Step 10: Write Postmortem
-Save to `money_machine/sessions/YYYY-MM-DD_postmortem.md`. Include: race-by-race table, day summary, observations, issues found, backlog items, and a "Work Value" section capturing any learnings about the agentic+determinism pattern, customer conversations influenced by this work, or insights worth sharing externally.
+### Step 10: Scored Candidates Insights
+Query `scored_candidates` for the day's signal patterns vs historical set. Report: signal combo hit rates (today vs all-time), composite cutoff performance, day confidence assessment (high-signal day vs grind day). This informs whether the selection formula or signal weights need adjustment.
 
-### Step 11: Deploy Code Fixes
+```sql
+-- Day's signal pattern vs history
+SELECT date, count(*) as candidates,
+  count(*) FILTER (WHERE s4_fired AND s5_fired AND s9_fired) as triple_signal,
+  count(*) FILTER (WHERE fave_vulnerable) as vulnerable_faves,
+  avg(composite_score) as avg_composite
+FROM scored_candidates WHERE status = 'scored'
+GROUP BY date ORDER BY date DESC;
+```
+
+### Step 11: Write Postmortem
+Save to `money_machine/sessions/YYYY-MM-DD_postmortem.md`. Include: race-by-race table, day summary, observations, issues found, backlog items, scored_candidates insights (signal combos, composite analysis), and a "Work Value" section capturing any learnings about the agentic+determinism pattern, customer conversations influenced by this work, or insights worth sharing externally.
+
+### Step 12: Deploy Code Fixes
 Any bugs found during closeout (normalization, display, missing TRACK_IDs) — fix, commit, push before declaring the day closed.
 
-### Step 12: Verify Site Display
+### Step 13: Verify Site Display
 Load `/mobile?date=YYYY-MM-DD`. Confirm: skipped = skipped, hits show correct $, total P/L matches step 6.
 
 ## Commission Selection Formula (Phase 4, Step 16)
@@ -349,19 +390,15 @@ DB stores RAW track payouts (what the track pays per base unit), not pre-calcula
 
 ## Build Backlog
 
-1. **Fix entries_used type mismatch** — box stores strings ["8","2","6","4"], finish positions are integers. `box.includes(2)` fails. Cast with `box.map(Number).includes(pos)` everywhere hit/miss is checked. Verified broken: LRL R7 6/20 shows trifecta as miss when it hit.
-2. **Fix results display calculations** — exacta collected is multiplied extra times, superfecta incorrectly marked as miss. See settlement math in Key Patterns above.
-3. **Calendar date change doesn't update net value** — top-right P/L badge stays stale when switching dates
-4. **URL doesn't change on date selection** — should update to `/mobile?date=YYYY-MM-DD` for bookmarkability
-5. **Performance trend chart** — plot model vs random (% days model beats random) over time from `postmortem_metrics` table
-6. **Clean historical bets** — tag COMMISSION vs CANDIDATE for all dates. Match site truth (40 lifetime races through 6/14).
-7. **Backfill results** — pull results for 5/24, 6/6, 6/7, 6/11, 6/13 from Racing API or session files
-8. **6-horse box pricing formula** — compute combos dynamically: n*(n-1) for exacta, n*(n-1)*(n-2) for tri, etc. Don't hardcode $60/$100.
-9. **Store conviction on all scored races** — not just Commission. Add `conviction` column to races table or separate scored_races table.
-10. **Live odds from horse_data_pools** — API `live_odds` field is always null, but `horse_data_pools[].fractional_odds` has real-time tote. Parse that in the cron.
-11. **Auto-update strategy performance after settlement** — once type mismatch (#1) is fixed, after results are logged: query strategy_activations for each settled bet, determine hit/miss, update strategy_performance table (fires, W/P/S/L, win_rate, itm_rate, trend). Should run automatically as part of the settlement flow.
-12. **Payout base normalization at ingestion** — DB stores all payouts normalized to $1 base. When ingesting from API (which reports various bases: $2 ex, $0.50 tri, $0.10 super), divide by base before storing. Track-specific bases: Churchill/PRM = $2 ex/$0.50 tri/$0.10 super; Gulfstream/Laurel = $1 ex; Woodbine = $1 ex/$0.20 tri/$0.20 super. See session 6/20 for full table.
-13. **Faster results service** — Racing API takes 15-30 min to post finals. Find a faster source (direct track feeds, Equibase, scraper) so settlement can happen automatically within minutes.
+1. **Performance trend chart** — plot model vs random (% days model beats random) over time from `postmortem_metrics` table
+2. **Clean historical bets** — tag COMMISSION vs CANDIDATE for all dates. Match site truth (40 lifetime races through 6/14).
+3. **6-horse box pricing formula** — compute combos dynamically: n*(n-1) for exacta, n*(n-1)*(n-2) for tri, etc. Don't hardcode $60/$100.
+4. ~~**Store conviction on all scored races**~~ — DONE (2026-07-02). `scored_candidates` table persists all scored + blocked races with full signal breakdown.
+9. **Wire P/L back to scored_candidates** — join `results` to `scored_candidates` (via race_id) so insights queries can answer "which signal combos actually win?" Add win_hit/exacta_hit/collected columns or compute via view. Enables composite cutoff validation and signal weight tuning.
+5. **Live odds from horse_data_pools** — API `live_odds` field is always null, but `horse_data_pools[].fractional_odds` has real-time tote. Parse that in the cron.
+6. **Auto-update strategy performance after settlement** — after results are logged: query strategy_activations for each settled bet, determine hit/miss, update strategy_performance table (fires, W/P/S/L, win_rate, itm_rate, trend). Should run automatically as part of the settlement flow.
+7. **Payout base normalization at ingestion** — DB stores all payouts normalized to $1 base. When ingesting from API (which reports various bases: $2 ex, $0.50 tri, $0.10 super), divide by base before storing. Track-specific bases: Churchill/PRM = $2 ex/$0.50 tri/$0.10 super; Gulfstream/Laurel = $1 ex; Woodbine = $1 ex/$0.20 tri/$0.20 super. See session 6/20 for full table.
+8. **Faster results service** — Racing API takes 15-30 min to post finals. Find a faster source (direct track feeds, Equibase, scraper) so settlement can happen automatically within minutes.
 
 ## Principles
 

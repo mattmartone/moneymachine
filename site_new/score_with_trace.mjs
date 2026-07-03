@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { RaceTracer, generateRunId, distanceToYards } from './trace_lib.mjs';
+import { writeScoredCandidate } from './scored_candidates_lib.mjs';
 const { Pool } = pg;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -10,6 +11,7 @@ const pool = new Pool({
 
 const DATE = process.argv[2] || new Date().toISOString().split('T')[0];
 const SLOW = process.argv.includes('--slow');
+const CANDIDATES_ONLY = process.argv.includes('--candidates-only');
 const RUN_ID = generateRunId();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -301,6 +303,11 @@ async function scoreRace(raceId) {
 
   // If blocked, skip remaining analysis and save
   if (tracer.blocked) {
+    const blockedReason = allEntries.length < 5 ? 'field_size < 5' : 'no_ml_odds';
+    await writeScoredCandidate(pool, {
+      raceId, date: DATE, status: 'blocked', blockedReason,
+      conviction: 'BLOCKED', fieldSize: allEntries.length, runId: RUN_ID
+    });
     await tracer.step('conclusion', 'BLOCKED — Skipping scoring', null, async () => {
       return {
         input: {},
@@ -339,7 +346,7 @@ async function scoreRace(raceId) {
       const odds = parseOdds(e.morning_line_odds);
       return odds !== null && odds >= 2.5 && e !== fave;
     })
-    .sort((a, b) => (b.signalScore - a.signalScore) || ((b.distanceBeyer || b.best_beyer || 0) - (a.distanceBeyer || a.best_beyer || 0)));
+    .sort((a, b) => (b.signalScore - a.signalScore) || ((b.distanceBeyer || 0) - (a.distanceBeyer || 0)) || ((b.best_beyer || 0) - (a.best_beyer || 0)));
 
   await tracer.step('analysis', 'Win Candidate Ranking', 'info', async () => {
     return {
@@ -370,24 +377,25 @@ async function scoreRace(raceId) {
     };
   });
 
-  // STEP 14: Box Construction (using distance Beyer)
-  const byDistBeyer = [...allEntries].sort((a, b) => (b.distanceBeyer || 0) - (a.distanceBeyer || 0));
-  let box = byDistBeyer.slice(0, 4);
+  // STEP 14: Box Construction (distance Beyer preferred, career Beyer fallback)
+  const byBeyer = [...allEntries].sort((a, b) => ((b.distanceBeyer || b.best_beyer || 0) - (a.distanceBeyer || a.best_beyer || 0)));
+  let box = byBeyer.slice(0, 4);
   if (fave && !box.find(e => e.post_position === fave.post_position)) box.push(fave);
   if (winPick && !box.find(e => e.post_position === winPick.post_position)) box.push(winPick);
   box = box.slice(0, 5);
 
   await tracer.step('conclusion', 'Box Construction', 'info', async () => {
     return {
-      input: { method: 'distance_ceiling_sort' },
-      logic: 'Top 4 by distance Beyer, ensure fave + win pick included, cap at 5',
+      input: { method: 'distance_beyer_with_career_fallback' },
+      logic: 'Top 4 by distance Beyer (career Beyer fallback), ensure fave + win pick included, cap at 5',
       result: box.map(e => ({ pp: e.post_position, name: e.horse_name, dist_beyer: e.distanceBeyer, overall_beyer: e.best_beyer, ml: e.morning_line_odds })),
       status: 'passed',
-      message: `Box: ${box.map(e => `PP${e.post_position} ${e.horse_name} (${e.distanceBeyer || '?'})`).join(', ')}`
+      message: `Box: ${box.map(e => `PP${e.post_position} ${e.horse_name} (${e.distanceBeyer || e.best_beyer || '?'}${e.distanceBeyer ? '' : '*'})`).join(', ')}`
     };
   });
 
-  // STEP 15: Distance Ceiling Gate (on pick + box)
+  // STEP 15: Distance Ceiling Gate (relative — only blocks when pick is uniquely unproven)
+  let fallbackMode = false;
   await tracer.step('conclusion', 'Distance Ceiling Gate', 'hard_block', async () => {
     if (!raceYards) {
       return { input: {}, logic: 'No race yards — skip gate', result: {}, status: 'passed', message: 'Cannot parse distance — gate skipped' };
@@ -397,22 +405,67 @@ async function scoreRace(raceId) {
     }
 
     const pickHasCeiling = winPick.distanceBeyer !== null;
-    const boxWithCeiling = box.filter(e => e.distanceBeyer !== null).length;
-    const boxTotal = box.length;
-    const failed = !pickHasCeiling || boxWithCeiling < 2;
+    const fieldWithCeiling = allEntries.filter(e => e.distanceBeyer !== null).length;
+    const pickPPs = (winPick.past_performances || []).length;
+
+    // Gate 2 (absolute): block genuinely green horses (< 3 career races)
+    if (pickPPs < 3) {
+      return {
+        input: { pick_pps: pickPPs },
+        logic: 'Absolute gate: win pick has < 3 career races — too green to bet.',
+        result: { pick_pps: pickPPs },
+        status: 'failed',
+        message: `BLOCKED — Win pick has only ${pickPPs} career races (need 3+)`
+      };
+    }
+
+    // Gate 1 (relative): block if pick is uniquely unproven while 2+ rivals ARE proven
+    if (!pickHasCeiling && fieldWithCeiling >= 2) {
+      return {
+        input: { pick_has_ceiling: false, field_with_ceiling: fieldWithCeiling },
+        logic: 'Relative gate: pick has no distance Beyer but 2+ rivals do — pick is the question mark in a room of answers.',
+        result: { pick_has_ceiling: false, field_proven: fieldWithCeiling, total: allEntries.length },
+        status: 'failed',
+        message: `BLOCKED — Win pick unproven at distance, ${fieldWithCeiling}/${allEntries.length} rivals ARE proven`
+      };
+    }
+
+    // Fallback mode: nobody (or < 2) has distance proof — rank by career Beyer, cap at MEDIUM
+    if (fieldWithCeiling < 2) {
+      fallbackMode = true;
+      return {
+        input: { field_with_ceiling: fieldWithCeiling, total: allEntries.length },
+        logic: 'Fallback mode: < 2 horses proven at distance — everyone equally unproven. Use career Beyer, cap conviction at MEDIUM.',
+        result: { fallback: true, field_proven: fieldWithCeiling },
+        status: 'passed',
+        message: `FALLBACK — Only ${fieldWithCeiling}/${allEntries.length} proven at distance. Career Beyer ranking, conviction capped.`
+      };
+    }
 
     return {
-      input: { win_pick: { pp: winPick.post_position, name: winPick.horse_name, dist_beyer: winPick.distanceBeyer }, box: box.map(e => ({ pp: e.post_position, name: e.horse_name, dist_beyer: e.distanceBeyer })) },
-      logic: 'Win pick MUST have a distance Beyer. At least 2 of the box horses must have one.',
-      result: { pick_has_ceiling: pickHasCeiling, box_with_ceiling: boxWithCeiling, box_total: boxTotal },
-      status: failed ? 'failed' : 'passed',
-      message: failed
-        ? `BLOCKED — ${!pickHasCeiling ? 'Win pick has NO distance Beyer' : `Only ${boxWithCeiling}/${boxTotal} box horses proven at distance`}`
-        : `Win pick proven (${winPick.distanceBeyer}) + ${boxWithCeiling}/${boxTotal} box proven`
+      input: { pick_has_ceiling: pickHasCeiling, field_with_ceiling: fieldWithCeiling },
+      logic: 'Pick is proven at distance and rivals have proof too — normal mode.',
+      result: { pick_dist_beyer: winPick.distanceBeyer, field_proven: fieldWithCeiling },
+      status: 'passed',
+      message: `Win pick proven (${winPick.distanceBeyer}) + ${fieldWithCeiling} rivals proven — normal mode`
     };
   });
 
   if (tracer.blocked) {
+    const pickPPs = (winPick?.past_performances || []).length;
+    const blockedReason = pickPPs < 3 ? 'too_few_career_races' : 'uniquely_unproven_at_distance';
+    await writeScoredCandidate(pool, {
+      raceId, date: DATE, status: 'blocked', blockedReason,
+      conviction: 'BLOCKED', fieldSize: allEntries.length,
+      paceScenario, faveVulnerable: vulnerable,
+      favePP: fave?.post_position, faveName: fave?.horse_name,
+      faveStyle: fave?.running_style, vulnerabilityReason: vulnReason || null,
+      winPickPP: winPick?.post_position, winPickName: winPick?.horse_name,
+      winPickML: winPick?.morning_line_odds, winPickStyle: winPick?.running_style,
+      winPickBeyer: winPick?.best_beyer, winPickDistanceBeyer: winPick?.distanceBeyer,
+      signals: winPick?.signalsFired || [], signalScore: winPick?.signalScore || 0,
+      runId: RUN_ID
+    });
     await tracer.complete({ conviction: 'BLOCKED' });
     return { raceId, status: 'blocked', track: race.track, raceNumber: race.race_number };
   }
@@ -437,13 +490,14 @@ async function scoreRace(raceId) {
     };
   });
 
-  // STEP 16: Conviction
+  // STEP 16: Conviction (fallback mode uses career Beyer × 0.9 and caps at MEDIUM)
   const signalScore = winPick?.signalScore || 0;
-  const distBeyer = winPick?.distanceBeyer || 0;
+  const distBeyer = fallbackMode ? Math.round((winPick?.best_beyer || 0) * 0.9) : (winPick?.distanceBeyer || 0);
   const mlOdds = parseOdds(winPick?.morning_line_odds);
   const oddsBonus = mlOdds >= 10 ? 2 : mlOdds >= 6 ? 1 : 0;
   const composite = (signalScore * 2) + (distBeyer / 10) + oddsBonus;
-  const conviction = (vulnerable && winPick && signalScore >= 3) ? 'HIGH' : (winPick && signalScore >= 2) ? 'MEDIUM' : 'LOW';
+  let conviction = (vulnerable && winPick && signalScore >= 3) ? 'HIGH' : (winPick && signalScore >= 2) ? 'MEDIUM' : 'LOW';
+  if (fallbackMode && conviction === 'HIGH') conviction = 'MEDIUM';
 
   await tracer.step('conclusion', 'Conviction Level', 'info', async () => {
     return {
@@ -470,10 +524,28 @@ async function scoreRace(raceId) {
     };
   });
 
-  // STEP 18: Write Bets (skip if no win pick or LOW conviction)
-  if (winPick && conviction !== 'LOW') {
+  // Persist scored candidate (all conviction levels)
+  await writeScoredCandidate(pool, {
+    raceId, date: DATE, status: 'scored', conviction,
+    composite, signalScore, oddsBonus,
+    signals: winPick?.signalsFired || [],
+    winPickPP: winPick?.post_position, winPickName: winPick?.horse_name,
+    winPickML: winPick?.morning_line_odds, winPickStyle: winPick?.running_style,
+    winPickBeyer: winPick?.best_beyer, winPickDistanceBeyer: winPick?.distanceBeyer,
+    boxPPs: box.map(e => e.post_position), boxNames: box.map(e => e.horse_name),
+    fieldSize: allEntries.length, paceScenario,
+    faveVulnerable: vulnerable, favePP: fave?.post_position,
+    faveName: fave?.horse_name, faveStyle: fave?.running_style,
+    vulnerabilityReason: vulnReason || null,
+    proposedWinStake: winStake, proposedExactaStake: 60, doubled,
+    raceTheory: theory, runId: RUN_ID
+  });
+
+  // STEP 18: Write Bets (skip if no win pick or LOW conviction or candidates-only mode)
+  if (winPick && conviction !== 'LOW' && !CANDIDATES_ONLY) {
     await tracer.step('save', 'Write Bets', null, async () => {
-      const boxPPs = box.map(e => String(e.post_position));
+      const winPP = String(winPick.post_position);
+      const boxPPs = [winPP, ...box.filter(e => String(e.post_position) !== winPP).map(e => String(e.post_position))];
       const { rows: [winBet] } = await pool.query(
         `INSERT INTO bets (race_id, bet_type, entries_used, stake, doubled, conviction) VALUES ($1, 'win', $2, $3, $4, $5) RETURNING id`,
         [raceId, boxPPs, winStake, doubled, conviction]
@@ -547,15 +619,17 @@ async function run() {
   console.log(`\n=== SCORE WITH TRACE — ${DATE} ===`);
   console.log(`Run ID: ${RUN_ID}\n`);
 
-  // Clear previous bets for this date (re-score replaces)
-  await pool.query(`DELETE FROM strategy_activations WHERE bet_id IN (SELECT id FROM bets WHERE race_id IN (SELECT id FROM races WHERE date = $1))`, [DATE]);
-  await pool.query(`DELETE FROM bets WHERE race_id IN (SELECT id FROM races WHERE date = $1)`, [DATE]);
-  console.log(`Cleared existing bets for ${DATE}`);
+  // Clear previous bets for this date (re-score replaces) — skip in candidates-only mode
+  if (!CANDIDATES_ONLY) {
+    await pool.query(`DELETE FROM strategy_activations WHERE bet_id IN (SELECT id FROM bets WHERE race_id IN (SELECT id FROM races WHERE date = $1))`, [DATE]);
+    await pool.query(`DELETE FROM bets WHERE race_id IN (SELECT id FROM races WHERE date = $1)`, [DATE]);
+  }
 
   // Clear previous traces for this date
   await pool.query(`DELETE FROM trace_steps WHERE trace_id IN (SELECT id FROM race_traces WHERE date = $1)`, [DATE]);
   await pool.query(`DELETE FROM race_traces WHERE date = $1`, [DATE]);
-  console.log(`Cleared previous traces for ${DATE}\n`);
+  await pool.query(`DELETE FROM scored_candidates WHERE date = $1`, [DATE]);
+  console.log(`Cleared previous ${CANDIDATES_ONLY ? 'traces/candidates' : 'bets/traces/candidates'} for ${DATE}\n`);
 
   // Get qualified races
   const { rows: races } = await pool.query(`
@@ -595,7 +669,9 @@ async function run() {
     console.log(`  ${r.track} R${r.raceNumber} [${r.conviction}] composite:${r.composite?.toFixed(1)} → ${r.winPick?.name} (${r.winPick?.ml})`);
   }
 
-  console.log(`\nView trace: http://localhost:6291/trace?date=${DATE}`);
+  const { rows: [scCount] } = await pool.query(`SELECT count(*) as total, count(*) FILTER (WHERE status = 'scored') as scored, count(*) FILTER (WHERE status = 'blocked') as blocked FROM scored_candidates WHERE date = $1`, [DATE]);
+  console.log(`\nScored candidates persisted: ${scCount.total} (${scCount.scored} scored, ${scCount.blocked} blocked)`);
+  console.log(`View trace: http://localhost:6291/trace?date=${DATE}`);
 
   await pool.end();
 }

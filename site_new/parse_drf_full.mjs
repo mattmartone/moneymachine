@@ -54,8 +54,8 @@ function buildPPs(f) {
     pps.push({
       date,
       track: s(f, 125 + i),
-      distance: yardsToDistance(s(f, 137 + i)),
-      distance_yards: n(f, 137 + i),
+      distance: yardsToDistance(s(f, 315 + i)),
+      distance_yards: n(f, 315 + i),
       surface_condition: s(f, 149 + i),
       track_type: s(f, 161 + i),
       inner_outer: s(f, 173 + i),
@@ -99,6 +99,9 @@ function buildWorkouts(f) {
 }
 
 async function run() {
+  const { rows: aliasRows } = await pool.query('SELECT alias, canonical_name FROM track_aliases');
+  const trackLookup = Object.fromEntries(aliasRows.map(r => [r.alias, r.canonical_name]));
+
   const races = new Map();
   const allEntries = [];
 
@@ -142,8 +145,7 @@ async function run() {
 
     const date = formatDate(dateStr);
     const raceKey = `${trackCode}-${date}-${raceNum}`;
-    const TRACK_NAMES = { 'SA':'Santa Anita', 'LRL':'Laurel Park', 'SAR':'Saratoga', 'CD':'Churchill Downs', 'DMR':'Del Mar', 'GP':'Gulfstream Park', 'AQU':'Aqueduct', 'BEL':'Belmont', 'BAQ':'Belmont at the Big A', 'KEE':'Keeneland', 'PIM':'Pimlico', 'MTH':'Monmouth Park', 'WO':'Woodbine', 'OP':'Oaklawn Park', 'TAM':'Tampa Bay', 'FG':'Fair Grounds', 'PRX':'Parx', 'CT':'Charles Town', 'PEN':'Penn National', 'TUP':'Turf Paradise', 'GG':'Golden Gate', 'LA':'Los Alamitos', 'SLR':'Santa Anita' };
-    const trackName = TRACK_NAMES[trackCode] || trackCode;
+    const trackName = trackLookup[trackCode] || trackCode;
 
     if (!races.has(raceKey)) {
       races.set(raceKey, {

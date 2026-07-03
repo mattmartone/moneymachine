@@ -11,7 +11,8 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  const { filter } = req.query;
+  const { filter, tier } = req.query;
+  const tierFilter = tier === 'capo' ? `('MEDIUM', 'CAPO')` : tier === 'commission' ? `('COMMISSION', 'HIGH')` : `('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')`;
 
   try {
     if (filter === 'today') {
