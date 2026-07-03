@@ -24,6 +24,9 @@ export function SiteModal() {
           alt="Claudio Pronto"
           className="w-36 h-36 rounded-full mx-auto mb-4 object-cover"
         />
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+          Message from the Admin
+        </p>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Claudio Pronto
         </h2>
