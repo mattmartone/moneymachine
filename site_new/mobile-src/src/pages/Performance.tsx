@@ -158,6 +158,15 @@ export function Performance() {
           ))}
         </div>
 
+        {/* Data scope notice */}
+        {filter !== 'today' && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 mb-4">
+            <p className="text-[10px] text-gray-500 leading-relaxed">
+              <span className="font-semibold text-gray-700">Data scope:</span> Jun 14, 18, 19, 20, 21 (5 race days). Dates 6/25–6/28 excluded due to data corruption during pipeline migration on 7/3.
+            </p>
+          </div>
+        )}
+
         {/* Tier toggle (Commission / Capo / All) — shown on all tabs except Today */}
         {filter !== 'today' && (
           <div className="flex gap-2 mb-4">
