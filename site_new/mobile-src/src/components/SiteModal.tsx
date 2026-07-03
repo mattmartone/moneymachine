@@ -22,7 +22,7 @@ export function SiteModal() {
         <img
           src="/claudio.png"
           alt="Claudio Pronto"
-          className="w-40 h-40 rounded-full mx-auto mb-5 object-cover shadow-lg"
+          className="w-44 h-44 mx-auto mb-5 object-contain"
         />
         <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
           Message from the Admin
