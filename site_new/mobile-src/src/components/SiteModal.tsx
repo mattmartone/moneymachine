@@ -22,23 +22,23 @@ export function SiteModal() {
         <img
           src="/claudio.png"
           alt="Claudio Pronto"
-          className="w-44 h-44 mx-auto mb-5 object-contain"
+          className="w-36 h-36 rounded-full mx-auto mb-4 object-cover"
         />
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
           Claudio Pronto
-        </p>
+        </h2>
 
         {/* Temperature notice */}
-        <div className="bg-gray-900 rounded-xl py-5 px-4 my-4 text-center">
+        <div className="py-4 text-center">
           <svg width="32" height="32" viewBox="0 0 44 44" fill="none" className="mx-auto mb-3">
-            <rect x="18" y="4" width="8" height="28" rx="4" fill="#444" stroke="#666" strokeWidth="1"/>
-            <circle cx="22" cy="36" r="6" fill="#444" stroke="#666" strokeWidth="1"/>
+            <rect x="18" y="4" width="8" height="28" rx="4" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1"/>
+            <circle cx="22" cy="36" r="6" fill="#d1d5db" stroke="#9ca3af" strokeWidth="1"/>
             <rect x="20" y="14" width="4" height="20" rx="2" fill="#ef4444"/>
             <circle cx="22" cy="36" r="4" fill="#ef4444"/>
           </svg>
-          <h2 className="text-white text-xl font-light mb-1">Temperature</h2>
-          <p className="text-gray-400 text-sm">
-            The card needs to cool down before you can bet it.
+          <h3 className="text-gray-900 text-lg font-light mb-1">Temperature</h3>
+          <p className="text-gray-500 text-sm">
+            Extreme heat is causing cancellations across multiple tracks. Nothing qualifies today.
           </p>
         </div>
 
