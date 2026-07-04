@@ -9,8 +9,8 @@ export function SiteModal() {
   const handleChange = (val: string) => {
     setEmail(val);
     if (val === '7413') { setDismissed(true); return; }
-    if (val === '666') {
-      window.gtag?.('event', 'gate_bypass', { code: '666' });
+    if (val === '666' || val === '6667') {
+      window.gtag?.('event', 'gate_bypass', { code: val });
       setDismissed(true);
       return;
     }
