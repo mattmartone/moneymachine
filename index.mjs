@@ -1,6 +1,7 @@
 import express from 'express';
 import cron from 'node-cron';
 import { query } from './lib/db.mjs';
+import { notify } from './lib/notify.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,12 @@ app.get('/health', async (req, res) => {
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
   }
+});
+
+// Test notification
+app.post('/test-notify', async (req, res) => {
+  await notify('System Test', 'Verifying Slack connection', 'Street Boss is alive and connected.');
+  res.json({ status: 'sent' });
 });
 
 // Manual trigger: score a date
@@ -32,20 +39,23 @@ app.post('/pull-api', async (req, res) => {
 // Scheduled jobs (ET timezone)
 // 6:00 AM — Pull Racing API
 cron.schedule('0 6 * * *', async () => {
-  console.log('[CRON 6:00 AM] Pulling Racing API...');
+  await notify('Racing API Pull', 'Scheduled 6:00 AM — enrich today\'s entries with ML, post times, scratches', 'Starting...');
   // TODO: Sprint 1 Step 3
+  await notify('Racing API Pull', 'Complete', 'Not yet implemented');
 }, { timezone: 'America/New_York' });
 
 // 7:00 AM — Score all qualified races
 cron.schedule('0 7 * * *', async () => {
-  console.log('[CRON 7:00 AM] Scoring card...');
+  await notify('Scoring Card', 'Scheduled 7:00 AM — run Phase 1-5 on all qualified races', 'Starting...');
   // TODO: Sprint 1 Step 5
+  await notify('Scoring Card', 'Complete', 'Not yet implemented');
 }, { timezone: 'America/New_York' });
 
 // 7:05 AM — Run insights
 cron.schedule('5 7 * * *', async () => {
-  console.log('[CRON 7:05 AM] Running insights...');
+  await notify('Insights', 'Scheduled 7:05 AM — signal combos, day confidence', 'Starting...');
   // TODO: Sprint 1 Step 6
+  await notify('Insights', 'Complete', 'Not yet implemented');
 }, { timezone: 'America/New_York' });
 
 app.listen(PORT, () => {
