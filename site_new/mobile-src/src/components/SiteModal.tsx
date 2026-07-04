@@ -40,9 +40,9 @@ export function SiteModal() {
         </h2>
 
         <div className="py-4 text-center">
-          <h3 className="text-gray-900 text-lg font-light mb-1">Extreme Heat</h3>
+          <h3 className="text-gray-900 text-lg font-light mb-1">It's hot but they're running.</h3>
           <p className="text-gray-500 text-sm">
-            Cancellations across multiple tracks. Nothing qualifies today. Drop your email to get notified when we're back in action.
+            Fade says he'll meet you at the window. Drop your email for guidance to follow.
           </p>
         </div>
 
