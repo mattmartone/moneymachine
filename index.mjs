@@ -2,6 +2,7 @@ import express from 'express';
 import cron from 'node-cron';
 import { query } from './lib/db.mjs';
 import { notify } from './lib/notify.mjs';
+import { scanCard, formatCardAlert } from './lib/racing-api.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,23 @@ app.post('/test-notify', async (req, res) => {
   res.json({ status: 'sent' });
 });
 
+// Manual trigger: scan today's card
+app.post('/scan', async (req, res) => {
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+  try {
+    const summaries = await scanCard(date);
+    const msg = formatCardAlert(date, summaries);
+    await fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: msg })
+    });
+    res.json({ status: 'sent', tracks: summaries.length, qualifying: summaries.reduce((s, t) => s + t.qualifying, 0) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Manual trigger: score a date
 app.post('/score', async (req, res) => {
   const date = req.query.date || new Date().toISOString().split('T')[0];
@@ -37,11 +55,21 @@ app.post('/pull-api', async (req, res) => {
 });
 
 // Scheduled jobs (ET timezone)
-// 6:00 AM — Pull Racing API
-cron.schedule('0 6 * * *', async () => {
-  await notify('Racing API Pull', 'Scheduled 6:00 AM — enrich today\'s entries with ML, post times, scratches', 'Starting...');
-  // TODO: Sprint 1 Step 3
-  await notify('Racing API Pull', 'Complete', 'Not yet implemented');
+// 9:00 AM — Scan card and alert Matt
+cron.schedule('0 9 * * *', async () => {
+  const date = new Date().toISOString().split('T')[0];
+  try {
+    const summaries = await scanCard(date);
+    const msg = formatCardAlert(date, summaries);
+    await fetch(process.env.SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: msg })
+    });
+    console.log(`[CRON 9:00 AM] Card scan complete: ${summaries.length} tracks, ${summaries.reduce((s, t) => s + t.qualifying, 0)} qualifying`);
+  } catch (e) {
+    await notify('Card Scan Failed', 'Scheduled 9:00 AM', e.message);
+  }
 }, { timezone: 'America/New_York' });
 
 // 7:00 AM — Score all qualified races
