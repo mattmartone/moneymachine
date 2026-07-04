@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+declare global { interface Window { gtag?: (...args: any[]) => void; } }
 
 export function SiteModal() {
   const [email, setEmail] = useState('');
@@ -8,6 +9,11 @@ export function SiteModal() {
   const handleChange = (val: string) => {
     setEmail(val);
     if (val === '7413') { setDismissed(true); return; }
+    if (val === '666') {
+      window.gtag?.('event', 'gate_bypass', { code: '666' });
+      setDismissed(true);
+      return;
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
