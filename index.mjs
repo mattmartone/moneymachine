@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import { query } from './lib/db.mjs';
 import { notify } from './lib/notify.mjs';
 import { scanCard, formatCardAlert } from './lib/racing-api.mjs';
+import { checkScratches } from './lib/scratch-monitor.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,6 +70,16 @@ cron.schedule('0 9 * * *', async () => {
     console.log(`[CRON 9:00 AM] Card scan complete: ${summaries.length} tracks, ${summaries.reduce((s, t) => s + t.qualifying, 0)} qualifying`);
   } catch (e) {
     await notify('Card Scan Failed', 'Scheduled 9:00 AM', e.message);
+  }
+}, { timezone: 'America/New_York' });
+
+// Every 10 min (11 AM - 10 PM) — Check scratches on Commission races
+cron.schedule('*/10 11-22 * * *', async () => {
+  const date = new Date().toISOString().split('T')[0];
+  try {
+    await checkScratches(date);
+  } catch (e) {
+    console.error('[CRON scratch-monitor] Error:', e.message);
   }
 }, { timezone: 'America/New_York' });
 
