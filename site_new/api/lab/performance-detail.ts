@@ -55,7 +55,7 @@ export default async function handler(req: any, res: any) {
         const showPP = bet.show_pp;
         const fourthPP = bet.fourth_pp;
 
-        if (bet.bet_type === 'win' && pps.includes(winPP) && bet.win_payout > 0) {
+        if (bet.bet_type === 'win' && pps[0] === winPP && bet.win_payout > 0) {
           return { collected: (bet.win_payout / 2) * bet.stake, hit: true };
         } else if (bet.bet_type === 'exacta' && pps.includes(winPP) && pps.includes(placePP) && bet.exacta_payout > 0) {
           return { collected: bet.exacta_payout * (bet.stake / permutations(n, 2)), hit: true };
@@ -192,7 +192,7 @@ export default async function handler(req: any, res: any) {
 
         if (bet.bet_type === 'win') {
           day.winBets++;
-          if (pps.includes(bet.win_pp) && bet.win_payout > 0) {
+          if (pps[0] === bet.win_pp && bet.win_payout > 0) {
             day.collected += (bet.win_payout / 2) * bet.stake;
             day.winHits++;
           }
@@ -289,7 +289,7 @@ export default async function handler(req: any, res: any) {
         const fourthPP = bet.fourth_pp;
 
         if (bet.bet_type === 'win') {
-          if (pps.includes(winPP) && bet.win_payout > 0) {
+          if (pps[0] === winPP && bet.win_payout > 0) {
             const collected = (bet.win_payout / 2) * bet.stake;
             collectedByType.win.collected += collected;
             collectedByType.win.wins++;
@@ -373,7 +373,7 @@ export default async function handler(req: any, res: any) {
         const n = pps.length;
 
         let collected = 0;
-        if (row.bet_type === 'win' && pps.includes(row.win_pp) && row.win_payout > 0) {
+        if (row.bet_type === 'win' && pps[0] === row.win_pp && row.win_payout > 0) {
           collected = (row.win_payout / 2) * row.stake;
           s.wins++;
         } else if (row.bet_type === 'exacta' && pps.includes(row.win_pp) && pps.includes(row.place_pp) && row.exacta_payout > 0) {
