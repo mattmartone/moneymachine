@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
 
   const { filter, tier } = req.query;
   const tierFilter = tier === 'capo' ? `('MEDIUM', 'CAPO')` : tier === 'commission' ? `('COMMISSION', 'HIGH')` : `('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')`;
-  const VERIFIED_DATES = `('2026-06-14', '2026-06-18', '2026-06-19', '2026-06-20', '2026-06-21')`;
+  const VERIFIED_DATES = `('2026-06-14', '2026-06-18', '2026-06-19', '2026-06-20', '2026-06-21', '2026-07-04')`;
 
   try {
     if (filter === 'today') {
