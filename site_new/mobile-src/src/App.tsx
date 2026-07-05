@@ -40,7 +40,7 @@ export function App() {
         <BetBuilderOverlay
           isOpen={isBetBuilderOpen}
           onClose={() => setIsBetBuilderOpen(false)} />
-        {/* <SiteModal /> */}
+        <SiteModal />
       </div>
     </ThemeProvider>);
 

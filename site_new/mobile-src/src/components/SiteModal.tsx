@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 declare global { interface Window { gtag?: (...args: any[]) => void; } }
 
 export function SiteModal() {
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [code, setCode] = useState('');
   const [dismissed, setDismissed] = useState(false);
 
   const handleChange = (val: string) => {
-    setEmail(val);
+    setCode(val);
     if (val === '7413') { setDismissed(true); return; }
     if (val === '666' || val === '6667') {
       window.gtag?.('event', 'gate_bypass', { code: val });
@@ -15,17 +14,6 @@ export function SiteModal() {
       setDismissed(true);
       return;
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    fetch('/api/auth/send-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    }).catch(() => {});
-    setSubmitted(true);
   };
 
   if (dismissed) return null;
@@ -47,36 +35,23 @@ export function SiteModal() {
         </h2>
 
         <div className="py-4 text-center">
-          <h3 className="text-gray-900 text-lg font-light mb-1">It's hot but they're running.</h3>
+          <h3 className="text-gray-900 text-lg font-light mb-1">The card is live.</h3>
           <p className="text-gray-500 text-sm">
-            Fade says he'll meet you at the window. Drop your email for guidance to follow.
+            Enter your passcode to access today's picks.
           </p>
         </div>
 
-        {submitted ? (
-          <div className="mt-4 bg-green-50 border border-green-200 rounded-lg py-3 px-4">
-            <p className="text-green-800 text-sm font-medium">You're on the list. We'll reach out when we're back.</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder="Enter your email"
-              required
-              className="w-full border border-gray-300 rounded-lg py-3 px-4 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            />
-            <button
-              type="submit"
-              className="w-full bg-gray-900 text-white font-semibold text-sm py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Alert Me When We're Back
-            </button>
-          </form>
-        )}
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={4}
+          value={code}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="Enter code"
+          className="w-full border border-gray-300 rounded-lg py-3 px-4 text-sm text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+        />
         <p className="mt-3 text-xs text-gray-400">
-          Get notified when the next card drops.
+          Don't have a code? <a href="https://fadethechalk.vercel.app/" className="underline text-gray-600">Learn about membership</a>
         </p>
       </div>
     </div>
