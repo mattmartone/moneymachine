@@ -11,6 +11,7 @@ export function SiteModal() {
     if (val === '7413') { setDismissed(true); return; }
     if (val === '666' || val === '6667') {
       window.gtag?.('event', 'gate_bypass', { code: val });
+      window.gtag?.('event', 'page_view', { page_path: '/gate-bypass/' + val });
       setDismissed(true);
       return;
     }
