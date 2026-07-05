@@ -534,10 +534,8 @@ export function Performance() {
                     <th className="py-2.5 px-1 text-[10px] uppercase tracking-wider text-muted font-semibold text-center" title="Model beat random">W</th>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model P/L</th>
                     <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Random P/L</th>
-                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model Win</th>
-                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Rand Win</th>
-                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Model EX</th>
-                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Rand EX</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Win %</th>
+                    <th className="py-2.5 px-2 text-[10px] uppercase tracking-wider text-muted font-semibold text-right">Exacta %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -547,9 +545,9 @@ export function Performance() {
                     const showDivider = prevRow && !prevRow.date?.includes('Jun') && row.date?.includes('Jun');
                     return (
                       <React.Fragment key={idx}>
-                        {idx === 0 && data.length > 0 && (
+                        {idx > 0 && row.date?.includes('Jun') && !data[idx - 1]?.date?.includes('Jun') && (
                           <tr className="bg-gray-900">
-                            <td colSpan={8} className="py-2 px-3 text-center">
+                            <td colSpan={6} className="py-2 px-3 text-center">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
                                 ▲ Claudio Pronto v2.0 — Dirt Only, Vuln Fave Required (Jul 3, 2026)
                               </span>
@@ -568,9 +566,7 @@ export function Performance() {
                             {row.random_net >= 0 ? '+' : '-'}${Math.abs(row.random_net)}
                           </td>
                           <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_win_rate != null ? row.model_win_rate + '%' : '—'}</td>
-                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_win_rate != null ? row.random_win_rate + '%' : '—'}</td>
                           <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.model_exacta_rate != null ? row.model_exacta_rate + '%' : '—'}</td>
-                          <td className="py-2.5 px-2 text-right tabular-nums text-xs text-gray-700">{row.random_exacta_rate != null ? row.random_exacta_rate + '%' : '—'}</td>
                         </tr>
                       </React.Fragment>
                     );

@@ -14,10 +14,10 @@ export default async function handler(req: any, res: any) {
   try {
     const { rows } = await query(`
       SELECT date, races_played, total_wagered, total_collected,
-             model_net, random_avg_net, random_pct_beats,
-             model_win_rate, random_win_rate,
-             model_exacta_rate, random_exacta_rate, notes
-      FROM postmortem_metrics
+             model_net, random_median_net as random_avg_net, random_pct_beaten as random_pct_beats,
+             win_rate as model_win_rate, null as random_win_rate,
+             exacta_rate as model_exacta_rate, null as random_exacta_rate, notes
+      FROM performance_warehouse
       ORDER BY date DESC
     `);
 
