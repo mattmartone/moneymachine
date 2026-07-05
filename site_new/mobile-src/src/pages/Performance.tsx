@@ -134,7 +134,7 @@ export function Performance() {
         <div className="bg-gray-900 text-white rounded-xl px-4 py-3 mb-6 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Active Model</p>
-            <p className="text-sm font-semibold">Claudio Pronto v2.0 <span className="text-gray-400 font-normal">— Exacta-First</span></p>
+            <p className="text-sm font-semibold">Claudio Pronto v2.0 <span className="text-gray-400 font-normal">— Dirt Only, Vulnerable Fave Required</span></p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-400">Live since</p>
@@ -332,7 +332,7 @@ export function Performance() {
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4">
               <p className="text-xs font-semibold text-amber-800 mb-1">Model Update — July 3, 2026</p>
               <p className="text-xs text-amber-700 leading-relaxed">
-                Performance below reflects <strong>Claudio Pronto v1</strong> (win-first, flat staking). As of today we're running <strong>Claudio Pronto v2.0 — Exacta-First</strong>: pool-weighted allocation, win bets only on triple-signal (S4+S5+S9), fixed distance data pipeline. Prior period preserved for comparison.
+                Performance below reflects <strong>Claudio Pronto v1</strong> (included turf, no vulnerability gate). As of Jul 3 we're running <strong>Claudio Pronto v2.0</strong>: dirt only, vulnerable fave required for Commission, fixed distance data pipeline, relative gate with fallback mode. Prior period preserved for comparison.
               </p>
             </div>
             <p className="text-xs text-muted mb-4 leading-relaxed italic">
@@ -551,7 +551,7 @@ export function Performance() {
                           <tr className="bg-gray-900">
                             <td colSpan={8} className="py-2 px-3 text-center">
                               <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
-                                ▲ Claudio Pronto v2.0 — Exacta-First (Jul 3, 2026)
+                                ▲ Claudio Pronto v2.0 — Dirt Only, Vuln Fave Required (Jul 3, 2026)
                               </span>
                             </td>
                           </tr>
