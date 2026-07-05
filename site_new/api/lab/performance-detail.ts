@@ -155,77 +155,24 @@ export default async function handler(req: any, res: any) {
     }
 
     if (filter === 'model') {
-      const parsePP = (entry: string) => parseInt(entry.replace(/^#/, '').split(' ')[0], 10);
-      function factorial(n: number): number { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
-      function permutations(n: number, k: number): number { return factorial(n) / factorial(n - k); }
-
-      const { rows: bets } = await query(`
-        SELECT b.race_id, b.bet_type, b.stake, b.entries_used,
-               r.date,
-               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
-               ew.post_position as win_pp, ep.post_position as place_pp,
-               es.post_position as show_pp, ef.post_position as fourth_pp
-        FROM bets b
-        JOIN races r ON r.id = b.race_id
-        JOIN results res ON res.race_id = r.id
-        LEFT JOIN entries ew ON ew.id = res.win_entry_id
-        LEFT JOIN entries ep ON ep.id = res.place_entry_id
-        LEFT JOIN entries es ON es.id = res.show_entry_id
-        LEFT JOIN entries ef ON ef.id = res.fourth_entry_id
-        WHERE UPPER(b.conviction) IN ${tierFilter}
-          AND r.date IN ${VERIFIED_DATES}
-        ORDER BY r.date
+      const { rows } = await query(`
+        SELECT date, races_played, total_wagered, total_collected, model_net,
+               win_rate, exacta_rate, random_median_net, random_pct_beaten
+        FROM performance_warehouse
+        ORDER BY date DESC
       `);
 
-      const dayMap: Record<string, { wagered: number; collected: number; winBets: number; winHits: number; exBets: number; exHits: number; races: Set<number> }> = {};
-
-      for (const bet of bets) {
-        const dateKey = new Date(bet.date).toISOString().split('T')[0];
-        if (!dayMap[dateKey]) dayMap[dateKey] = { wagered: 0, collected: 0, winBets: 0, winHits: 0, exBets: 0, exHits: 0, races: new Set() };
-        const day = dayMap[dateKey];
-        day.wagered += bet.stake;
-        day.races.add(bet.race_id);
-
-        if (!bet.entries_used?.length) continue;
-        const pps = bet.entries_used.map(parsePP);
-        const n = pps.length;
-
-        if (bet.bet_type === 'win') {
-          day.winBets++;
-          if (pps[0] === bet.win_pp && bet.win_payout > 0) {
-            day.collected += (bet.win_payout / 2) * bet.stake;
-            day.winHits++;
-          }
-        } else if (bet.bet_type === 'exacta') {
-          day.exBets++;
-          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && bet.exacta_payout > 0) {
-            day.collected += bet.exacta_payout * (bet.stake / permutations(n, 2));
-            day.exHits++;
-          }
-        } else if (bet.bet_type === 'trifecta') {
-          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && pps.includes(bet.show_pp) && bet.trifecta_payout > 0) {
-            day.collected += bet.trifecta_payout * (bet.stake / permutations(n, 3));
-          }
-        } else if (bet.bet_type === 'superfecta') {
-          if (pps.includes(bet.win_pp) && pps.includes(bet.place_pp) && pps.includes(bet.show_pp) && bet.fourth_pp && pps.includes(bet.fourth_pp) && bet.superfecta_payout > 0) {
-            day.collected += bet.superfecta_payout * (bet.stake / permutations(n, 4));
-          }
-        }
-      }
-
-      const data = Object.entries(dayMap)
-        .sort(([a], [b]) => b.localeCompare(a))
-        .map(([dateStr, day]) => ({
-          date: new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          model_net: Math.round((day.collected - day.wagered) * 100) / 100,
-          random_net: 0,
-          model_win_rate: day.winBets > 0 ? Math.round((day.winHits / day.winBets) * 100) : null,
-          random_win_rate: null,
-          model_exacta_rate: day.exBets > 0 ? Math.round((day.exHits / day.exBets) * 100) : null,
-          random_exacta_rate: null,
-          races: day.races.size,
-          model_beats: null,
-        }));
+      const data = rows.map((r: any) => ({
+        date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        model_net: Math.round(r.model_net * 100) / 100,
+        random_net: r.random_median_net ? Math.round(r.random_median_net * 100) / 100 : 0,
+        model_win_rate: r.win_rate != null ? Math.round(r.win_rate * 100) : null,
+        random_win_rate: null,
+        model_exacta_rate: r.exacta_rate != null ? Math.round(r.exacta_rate * 100) : null,
+        random_exacta_rate: null,
+        races: r.races_played,
+        model_beats: r.random_pct_beaten || null,
+      }));
 
       return res.status(200).json({ data, type: 'model' });
     }
