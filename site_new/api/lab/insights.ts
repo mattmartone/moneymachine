@@ -27,74 +27,45 @@ export default async function handler(req: any, res: any) {
 
     const insights: string[] = [];
 
-    // 1. Exacta rate comparison (model avg vs random avg)
-    const withExacta = rows.filter((r: any) => r.model_exacta_rate != null && r.random_exacta_rate != null);
+    // 1. Days model beat random (by P/L)
+    const withRandom = rows.filter((r: any) => r.model_net != null && r.random_avg_net != null);
+    if (withRandom.length > 0) {
+      const modelWins = withRandom.filter((r: any) => parseFloat(r.model_net) > parseFloat(r.random_avg_net)).length;
+      insights.push(`Model beats random in ${modelWins} of ${withRandom.length} race days`);
+    }
+
+    // 2. Exacta consistency
+    const withExacta = rows.filter((r: any) => r.model_exacta_rate != null);
     if (withExacta.length > 0) {
-      const avgModelExacta = withExacta.reduce((s: number, r: any) => s + parseFloat(r.model_exacta_rate), 0) / withExacta.length;
-      const avgRandomExacta = withExacta.reduce((s: number, r: any) => s + parseFloat(r.random_exacta_rate), 0) / withExacta.length;
-      if (avgRandomExacta > 0) {
-        const multiplier = (avgModelExacta / avgRandomExacta).toFixed(1);
-        insights.push(`Model hits exactas at ${multiplier}x the rate of random (${Math.round(avgModelExacta * 100)}% vs ${Math.round(avgRandomExacta * 100)}% avg)`);
-      }
+      const avgExacta = withExacta.reduce((s: number, r: any) => s + parseFloat(r.model_exacta_rate), 0) / withExacta.length;
+      insights.push(`Exacta hit rate: ${Math.round(avgExacta * 100)}% avg across ${withExacta.length} days`);
     }
 
-    // 2. Days model beat random (by P/L)
-    const withBoth = rows.filter((r: any) => r.model_net != null && r.random_avg_net != null);
-    if (withBoth.length > 0) {
-      const modelWins = withBoth.filter((r: any) => parseFloat(r.model_net) > parseFloat(r.random_avg_net)).length;
-      insights.push(`Model beat random in ${modelWins} of last ${withBoth.length} race days`);
+    // 3. Lifetime P/L
+    const allDays = rows.filter((r: any) => r.model_net != null);
+    if (allDays.length > 0) {
+      const totalNet = allDays.reduce((s: number, r: any) => s + parseFloat(r.model_net), 0);
+      const totalWagered = allDays.reduce((s: number, r: any) => s + parseFloat(r.total_wagered), 0);
+      const roi = totalWagered > 0 ? Math.round((totalNet / totalWagered) * 100) : 0;
+      insights.push(`Lifetime: ${totalNet >= 0 ? '+' : '-'}$${Math.abs(Math.round(totalNet))} on $${Math.round(totalWagered)} wagered (${roi}% ROI)`);
     }
 
-    // 3. Best day
-    const withNet = rows.filter((r: any) => r.model_net != null);
-    if (withNet.length > 0) {
-      const best = withNet.reduce((best: any, r: any) => parseFloat(r.model_net) > parseFloat(best.model_net) ? r : best, withNet[0]);
+    // 4. Best day
+    if (allDays.length > 0) {
+      const best = allDays.reduce((best: any, r: any) => parseFloat(r.model_net) > parseFloat(best.model_net) ? r : best, allDays[0]);
       const bestDate = new Date(best.date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
       const bestNet = parseFloat(best.model_net);
-      let bestLabel = `Best day: ${bestDate} (${bestNet >= 0 ? '+' : '-'}$${Math.abs(Math.round(bestNet))}`;
-      if (best.model_exacta_rate != null) {
-        bestLabel += `, ${Math.round(parseFloat(best.model_exacta_rate) * 100)}% exacta hit rate`;
-      }
-      bestLabel += ')';
-      insights.push(bestLabel);
+      insights.push(`Best day: ${bestDate} (+$${Math.round(bestNet)})`);
     }
 
-    // 4. Model edge vs random (avg per day over profitable stretch or all time)
-    if (withBoth.length > 0) {
-      // Find the most recent profitable stretch (days where model > random consecutively from most recent)
-      const sorted = [...withBoth].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      let streakDays: any[] = [];
-      for (const r of sorted) {
-        if (parseFloat(r.model_net) > parseFloat(r.random_avg_net)) {
-          streakDays.push(r);
-        } else {
-          break;
-        }
-      }
-
-      if (streakDays.length >= 2) {
-        const edgeSum = streakDays.reduce((s: number, r: any) => s + (parseFloat(r.model_net) - parseFloat(r.random_avg_net)), 0);
-        const avgEdge = Math.round(edgeSum / streakDays.length);
-        const sinceDate = new Date(streakDays[streakDays.length - 1].date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
-        insights.push(`Model edge vs random: +$${avgEdge} avg per day since ${sinceDate}`);
-      } else {
-        // All-time edge
-        const totalEdge = withBoth.reduce((s: number, r: any) => s + (parseFloat(r.model_net) - parseFloat(r.random_avg_net)), 0);
-        const avgEdge = Math.round(totalEdge / withBoth.length);
-        if (avgEdge > 0) {
-          insights.push(`Model edge vs random: +$${avgEdge} avg per race day`);
-        } else {
-          insights.push(`Model edge vs random: -$${Math.abs(avgEdge)} avg per race day`);
-        }
-      }
-    }
-
-    // 5. Exacta is the engine insight (compare win rate vs exacta rate)
-    if (withExacta.length > 0) {
-      const avgModelWin = rows.filter((r: any) => r.model_win_rate != null).reduce((s: number, r: any) => s + parseFloat(r.model_win_rate), 0) / rows.filter((r: any) => r.model_win_rate != null).length;
-      const avgModelExacta = withExacta.reduce((s: number, r: any) => s + parseFloat(r.model_exacta_rate), 0) / withExacta.length;
-      if (avgModelExacta > avgModelWin * 1.5) {
-        insights.push(`Exacta is the engine — win rate lags but exotic consistency compounds`);
+    // 5. Selectivity insight (fewer races = better ROI if true)
+    if (allDays.length >= 3) {
+      const sorted = [...allDays].sort((a: any, b: any) => parseFloat(b.model_net) - parseFloat(a.model_net));
+      const topDays = sorted.slice(0, 3);
+      const avgRaces = topDays.reduce((s: number, r: any) => s + r.races_played, 0) / topDays.length;
+      const allAvgRaces = allDays.reduce((s: number, r: any) => s + r.races_played, 0) / allDays.length;
+      if (avgRaces < allAvgRaces) {
+        insights.push(`Top days average ${Math.round(avgRaces)} races vs ${Math.round(allAvgRaces)} overall — selectivity pays`);
       }
     }
 
