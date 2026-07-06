@@ -97,9 +97,9 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
             </div>
           </div>
 
-          {/* Next post countdown row — collapses away once the user scrolls */}
+          {/* Next post countdown row — collapses away once the user scrolls or all races done */}
           <AnimatePresence initial={false}>
-            {nextRace && !compact &&
+            {nextRace && !compact && timeLeft > 0 &&
             <motion.div
               initial={{
                 height: 0,
