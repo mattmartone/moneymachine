@@ -408,27 +408,24 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
 
   if (!winEntryId || !placeEntryId || !showEntryId) return;
 
-  // Win payoff from API is per $2 — normalize to per-$1
-  const winPayoffPer1 = runners[0].win_payoff ? parseFloat(runners[0].win_payoff) / 2 : null;
+  // Store RAW track payouts per base unit — NOT pre-multiplied by stake
+  // Win: per $2 (as reported by track)
+  const winPayout = runners[0].win_payoff ? parseFloat(runners[0].win_payoff) : null;
 
   const payoffs = apiRace.payoffs || [];
-  let exactaPayoffPer1 = null, trifectaPayoffPer1 = null, superfectaPayoffPer10c = null;
+  let exactaPayout = null, trifectaPayout = null, superfectaPayout = null;
   for (const p of payoffs) {
     const wager = (p.wager_name || '').toLowerCase();
     const amount = parseFloat(p.payoff_amount);
+    const tickets = parseInt(p.number_of_tickets_bet) || 0;
     if (!amount) continue;
-    // API reports payoff per base unit (usually $2 for exacta, $1 for tri, $0.10 for super)
-    if (wager.includes('superfecta')) superfectaPayoffPer10c = amount;
-    else if (wager.includes('trifecta')) trifectaPayoffPer1 = amount;
-    else if (wager.includes('exacta')) exactaPayoffPer1 = amount / 2;
+    // Normalize all exotics to per-$1 base using tickets_bet field
+    // tickets_bet: 200=$2, 100=$1, 50=$0.50, 10=$0.10
+    const baseDollars = tickets > 0 ? tickets / 100 : 1;
+    if (wager.includes('superfecta')) superfectaPayout = amount / baseDollars;
+    else if (wager.includes('trifecta')) trifectaPayout = amount / baseDollars;
+    else if (wager.includes('exacta')) exactaPayout = amount / baseDollars;
   }
-
-  // Calculate actual collected amounts based on real stakes
-  const winStake = race.doubled ? 100 : 50;
-  const winPayout = winPayoffPer1 ? winPayoffPer1 * winStake : null;
-  const exactaPayout = exactaPayoffPer1 ? exactaPayoffPer1 * 5 : null; // $5/combo
-  const trifectaPayout = trifectaPayoffPer1 ? trifectaPayoffPer1 * 1 : null; // $1/combo
-  const superfectaPayout = superfectaPayoffPer10c ? superfectaPayoffPer10c * 1 : null; // $0.10/combo reported per $0.10
 
   await query(
     `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
