@@ -98,7 +98,11 @@ async function morningHunt(date) {
     msg += `_${summaries.length} tracks scouted, ${totalQualifying} races look bettable._\n\n`;
     msg += `*Conditions are ripe at:*\n`;
     for (const t of summaries) {
-      msg += `• *${t.track_name}* (${t.track_id}) — ${t.qualifying} qualifying races\n`;
+      msg += `\n• *${t.track_name}* (${t.track_id}) — ${t.qualifying} qualifying:\n`;
+      for (const r of t.qualifyingRaces) {
+        const purseK = (r.purse / 1000).toFixed(0);
+        msg += `    R${r.race_number}: ${r.conditions} | $${purseK}K | ${r.field_size} horses\n`;
+      }
     }
     msg += `\n_Brisnet cost: $${(summaries.length * 1.50).toFixed(2)}_\n`;
     msg += `\nNo data loaded yet. Want me to wait for files, or are we sitting today?`;
