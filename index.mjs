@@ -94,8 +94,9 @@ async function morningHunt(date) {
     }
   } else {
     // Step 3b: No data — tell Matt what's out there
+    const totalRaces = summaries.reduce((s, t) => s + t.total_races, 0);
     let msg = `*[Street Boss]* 🏇 Morning Hunt — ${date}\n`;
-    msg += `_${summaries.length} tracks scouted, ${totalQualifying} races look bettable._\n\n`;
+    msg += `_${totalRaces} races across ${summaries.length} tracks → ${totalQualifying} bettable._\n\n`;
     msg += `*Conditions are ripe at:*\n`;
     for (const t of summaries) {
       msg += `\n• *${t.track_name}* (${t.track_id}) — ${t.qualifying} qualifying:\n`;
