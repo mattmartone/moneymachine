@@ -37,6 +37,21 @@ app.post('/scan', async (req, res) => {
   }
 });
 
+// Test: can we load brisnet in a browser?
+app.post('/test-browser', async (req, res) => {
+  try {
+    const { testBrisnet } = await import('./lib/browser.mjs');
+    const result = await testBrisnet();
+    if (result.success) {
+      res.json({ status: 'ok', title: result.title, screenshot_length: result.screenshot.length });
+    } else {
+      res.json({ status: 'failed', error: result.error });
+    }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // Manual trigger: run the morning hunt
 app.post('/hunt', async (req, res) => {
   const date = req.query.date || new Date().toISOString().split('T')[0];
