@@ -2,3 +2,10 @@ node_modules/
 .next/
 *.jpg
 .DS_Store
+.env
+.env.*
+!.env.example
+associate/chrome-profile/
+associate/screenshots/
+associate/downloads/
+associate/brisnet-auth.json
