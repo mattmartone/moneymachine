@@ -37,6 +37,13 @@ _Last updated: 2026-07-09_
   - Enable **auto-login** (System Settings → Users & Groups) so the LaunchAgent reloads after reboot. Requires **FileVault OFF**.
   - Note: LaunchAgents only run while the user is logged in. If you'd rather not enable auto-login, convert to a **LaunchDaemon** (the watcher needs no GUI/browser, so it can run at boot without login).
 
+## Street Boss / downstream — the big open item
+
+- **Current reality (verified 2026-07-10):** after ingestion, **nothing runs automatically.** No scoring, no Racing API pull (0/302 entries had live ML odds), no picks. Only the file watcher runs on the Mini.
+- **"Street Boss" is not built yet.** `STREET_BOSS_PLAN.md` is a *plan* for an autonomous Heroku worker. The only Heroku code that exists (`deploy/server.js`) is a **request-driven web dashboard** whose `/api/analyze` shells out to a *local* Claude CLI (`/Users/matt.martone/.local/bin/claude`) — it does NOT watch the DB and wouldn't run autonomously on Heroku as written.
+- **User decision (2026-07-10):** the current Heroku account isn't usable for this; **Matt will set up a personal Heroku account and migrate Street Boss there** so Claude can access it. Do this BEFORE building the autonomous agent.
+- **Then build:** the ingestion→scoring handoff so the day thread narrates "what's happening now / what's next" — pull live odds + scratches → run the model → post ranked plays back in the thread for Matt to pick the Commission. This is the "what now?" gap.
+
 ## Next steps (pick up here)
 
 1. **Full integrated run of the NEW threaded approval** — we proved the approval loop in isolation and the full browser pipeline separately; do one run of `index.mjs` end-to-end that exercises the in-thread ack (browser → cart → Slack ✅ → thread reply).
