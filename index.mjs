@@ -4,6 +4,7 @@ import { query } from './lib/db.mjs';
 import { notify } from './lib/notify.mjs';
 import { scanCard, formatCardAlert } from './lib/racing-api.mjs';
 import { checkScratches } from './lib/scratch-monitor.mjs';
+import { handleSlackFiles } from './lib/file-handler.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,48 @@ app.get('/health', async (req, res) => {
     res.json({ status: 'ok', time: now, version: '2.0.0 — The Spotter' });
   } catch (e) {
     res.status(500).json({ status: 'error', message: e.message });
+  }
+});
+
+// Slack Events API endpoint — receives file_shared events
+app.post('/slack/events', async (req, res) => {
+  const body = req.body;
+
+  // Slack URL verification challenge
+  if (body.challenge) {
+    return res.json({ challenge: body.challenge });
+  }
+
+  // Acknowledge immediately (Slack requires 3s response)
+  res.status(200).send('ok');
+
+  // Process the event
+  const event = body.event;
+  if (!event) return;
+
+  // Handle file_shared or message with files
+  if (event.type === 'message' && event.files && event.files.length > 0) {
+    const files = event.files.filter(f => f.name?.endsWith('.zip') || f.name?.endsWith('.DRF'));
+    if (!files.length) return;
+
+    try {
+      await notify(`📁 Files received in Slack: ${files.map(f => f.name).join(', ')}. Processing...`);
+      const result = await handleSlackFiles(files);
+
+      if (result.totalRaces > 0) {
+        await notify(`✅ Parsed ${result.totalRaces} races, ${result.totalEntries} entries. Pulling Racing API...`);
+
+        // Pull Racing API to enrich
+        const date = new Date().toISOString().split('T')[0];
+        // TODO: pull_racing_api logic here when ported
+
+        await notify(`🏇 Data loaded for today. Ready to score. Run /hunt to see candidates.`);
+      } else {
+        await notify(`⚠️ Files received but no races parsed. Check file format.`);
+      }
+    } catch (e) {
+      await notify(`❌ Error processing files: ${e.message}`);
+    }
   }
 });
 

@@ -1,0 +1,46 @@
+{
+  "title": "Brisnet Purchase Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "brisnetUser": {
+      "title": "Brisnet Username",
+      "type": "string",
+      "description": "Your bfrdata.com login username",
+      "editor": "textfield"
+    },
+    "brisnetPass": {
+      "title": "Brisnet Password",
+      "type": "string",
+      "description": "Your bfrdata.com password",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "tracks": {
+      "title": "Track Codes",
+      "type": "array",
+      "description": "Track codes to purchase (e.g. SAR, GP, MTH, PRM, CBY)",
+      "editor": "stringList"
+    },
+    "raceDate": {
+      "title": "Race Date",
+      "type": "string",
+      "description": "Date to purchase data for (YYYY-MM-DD). Defaults to today.",
+      "editor": "textfield"
+    },
+    "callbackUrl": {
+      "title": "Callback URL",
+      "type": "string",
+      "description": "Street Boss upload endpoint to POST files to after purchase",
+      "editor": "textfield"
+    },
+    "dryRun": {
+      "title": "Dry Run",
+      "type": "boolean",
+      "description": "If true, stops at cart screenshot without purchasing",
+      "default": true,
+      "editor": "checkbox"
+    }
+  },
+  "required": ["brisnetUser", "brisnetPass", "tracks"]
+}

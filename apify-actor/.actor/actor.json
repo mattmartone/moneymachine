@@ -1,0 +1,9 @@
+{
+  "actorSpecification": 1,
+  "name": "brisnet-purchase",
+  "title": "Brisnet PP Data Purchase",
+  "description": "Automates purchasing Brisnet .DRF past performance files for specified tracks and date. Screenshots cart for approval before checkout.",
+  "version": "1.0",
+  "input": "./input_schema.json",
+  "dockerfile": "./Dockerfile"
+}
