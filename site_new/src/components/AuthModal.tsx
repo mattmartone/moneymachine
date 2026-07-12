@@ -18,10 +18,38 @@ export function AuthModal({
     }
   }, [isOpen, initialMode]);
   const [email, setEmail] = useState('');
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   if (!isOpen) return null;
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/pin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, pin })
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('ftc_token', data.token);
+        localStorage.setItem('ftc_user', JSON.stringify(data.user));
+        window.location.href = '/reports';
+      } else {
+        setError(data.error || 'Invalid PIN.');
+      }
+    } catch {
+      setError('Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -29,7 +57,22 @@ export function AuthModal({
       setError('Please enter a valid email address.');
       return;
     }
+    // Check if this email gets PIN auth
     setLoading(true);
+    try {
+      const res = await fetch('/api/auth/check-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.usePin) {
+        setShowPin(true);
+        setLoading(false);
+        return;
+      }
+    } catch {}
+
     try {
       const res = await fetch('/api/auth/send-link', {
         method: 'POST',
@@ -111,35 +154,64 @@ export function AuthModal({
               </p>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {error && (
-                  <div className="text-web-red font-bold text-sm bg-[#ffe6e6] border border-web-red p-2">
-                    * {error}
+              {showPin ? (
+                <form onSubmit={handlePinSubmit} className="space-y-4">
+                  {error && (
+                    <div className="text-web-red font-bold text-sm bg-[#ffe6e6] border border-web-red p-2">
+                      * {error}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-bold mb-1">PIN:</label>
+                    <input
+                      type="password"
+                      value={pin}
+                      onChange={(e) => setPin(e.target.value)}
+                      placeholder="Enter PIN"
+                      autoFocus
+                      className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc] font-mono text-lg tracking-widest"
+                    />
                   </div>
-                )}
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-1 bg-web-gray font-bold shadow-outset active:shadow-inset active:pt-1.5 active:pl-6.5 disabled:opacity-70">
+                      {loading ? 'Verifying...' : 'Sign In'}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {error && (
+                    <div className="text-web-red font-bold text-sm bg-[#ffe6e6] border border-web-red p-2">
+                      * {error}
+                    </div>
+                  )}
 
-                <div>
-                  <label className="block text-sm font-bold mb-1">
-                    Email Address:
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-sm font-bold mb-1">
+                      Email Address:
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full px-2 py-1 bg-white shadow-inset outline-none focus:bg-[#ffffcc]"
+                    />
+                  </div>
 
-                <div className="pt-4">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-1 bg-web-gray font-bold shadow-outset active:shadow-inset active:pt-1.5 active:pl-6.5 disabled:opacity-70">
-                    {loading ? 'Sending...' : mode === 'login' ? 'Send Magic Link' : 'Sign Up — Send Link'}
-                  </button>
-                </div>
-              </form>
+                  <div className="pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-1 bg-web-gray font-bold shadow-outset active:shadow-inset active:pt-1.5 active:pl-6.5 disabled:opacity-70">
+                      {loading ? 'Checking...' : mode === 'login' ? 'Continue' : 'Sign Up'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </>
           )}
         </div>

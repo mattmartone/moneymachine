@@ -23,7 +23,7 @@ interface CommissionRace {
 
 export function Today() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('ftc_token');
+  const token = localStorage.getItem('ftc_token') || 'public';
   const now0 = new Date();
   const today = `${now0.getFullYear()}-${String(now0.getMonth() + 1).padStart(2, '0')}-${String(now0.getDate()).padStart(2, '0')}`;
 
@@ -37,7 +37,6 @@ export function Today() {
   const [perfOpen, setPerfOpen] = useState(true);
 
   useEffect(() => {
-    if (!token) { navigate('/'); return; }
 
     fetch('/api/lab/races', { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
@@ -344,11 +343,12 @@ function RaceRow({ race, commission, trackFilter, status, picks }: {
   const superHit = result ? triHit && (result.fourth_pp ? boxPPs.includes(String(result.fourth_pp)) : false) : false;
   const anyHit = winHit || exHit || triHit || superHit;
 
+  const n = boxPPs.length || 4;
   const collected = result && commission ? (
-    (winHit && result.win_payout ? (result.win_payout / 2) * (winBet?.stake || 25) : 0) +
-    (exHit && result.exacta_payout ? (result.exacta_payout / 2) * 5 : 0) +
-    (triHit && result.trifecta_payout ? (result.trifecta_payout / 0.5) * 1 : 0) +
-    (superHit && result.superfecta_payout ? (result.superfecta_payout / 0.1) * 0.1 : 0)
+    (winHit && result.win_payout ? (result.win_payout / 2) * (winBet?.stake || 50) : 0) +
+    (exHit && result.exacta_payout ? result.exacta_payout * ((exBet?.stake || 60) / (n * (n - 1))) : 0) +
+    (triHit && result.trifecta_payout ? result.trifecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'trifecta')?.stake || 24) / (n * (n - 1) * (n - 2))) : 0) +
+    (superHit && result.superfecta_payout ? result.superfecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'superfecta')?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3))) : 0)
   ) : 0;
 
   const formatTime = (t: string | null) => {
@@ -487,10 +487,10 @@ function RaceRow({ race, commission, trackFilter, status, picks }: {
               <span>Finish: <strong>#{result.win_pp} {result.win_horse}</strong> — #{result.place_pp} {result.place_horse} — #{result.show_pp} {result.show_horse}{result.fourth_pp ? ` — #${result.fourth_pp} ${result.fourth_horse}` : ''}</span>
             </div>
             <div className="flex gap-3 mt-1">
-              <span className={winHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>WIN {winHit && result.win_payout ? `$${((result.win_payout / 2) * (winBet?.stake || 25)).toFixed(2)}` : ''}</span>
-              <span className={exHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>EX {exHit && result.exacta_payout ? `$${((result.exacta_payout / 2) * 5).toFixed(2)}` : ''}</span>
-              <span className={triHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>TRI {triHit && result.trifecta_payout ? `$${((result.trifecta_payout / 0.5) * 1).toFixed(2)}` : ''}</span>
-              <span className={superHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>SUPER {superHit && result.superfecta_payout ? `$${((result.superfecta_payout / 0.1) * 0.1).toFixed(2)}` : ''}</span>
+              <span className={winHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>WIN {winHit && result.win_payout ? `$${((result.win_payout / 2) * (winBet?.stake || 50)).toFixed(2)}` : ''}</span>
+              <span className={exHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>EX {exHit && result.exacta_payout ? `$${(result.exacta_payout * ((exBet?.stake || 60) / (n * (n - 1)))).toFixed(2)}` : ''}</span>
+              <span className={triHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>TRI {triHit && result.trifecta_payout ? `$${(result.trifecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'trifecta')?.stake || 24) / (n * (n - 1) * (n - 2)))).toFixed(2)}` : ''}</span>
+              <span className={superHit ? 'text-green-700 font-bold' : 'text-gray-400 line-through'}>SUPER {superHit && result.superfecta_payout ? `$${(result.superfecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'superfecta')?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3)))).toFixed(2)}` : ''}</span>
             </div>
             <div className="flex justify-between items-center pt-1 border-t border-gray-100 mt-1">
               <span className="text-gray-500">Wagered: ${commission.total_stake.toFixed(2)}</span>

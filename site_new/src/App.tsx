@@ -70,6 +70,7 @@ export function App() {
         <Route path="/users/:id" element={<MemberDetail />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/today" element={<Today />} />
+        <Route path="/mobile" element={<Today />} />
         <Route path="/today/:raceId" element={<RaceDetail />} />
         <Route path="/live-odds" element={<LiveOdds />} />
         <Route path="/races" element={<Races />} />

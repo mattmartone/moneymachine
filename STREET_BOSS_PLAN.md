@@ -1,251 +1,254 @@
 # The Street Boss — Autonomous Decision Engine
 
-## Status: PLANNED (start after Sunday 6/22 race day)
+## Status: READY TO BUILD (prerequisites completed 7/3)
 
 ---
 
 ## What This Is
 
-A Heroku worker that runs the full FTC handicapping model autonomously via Claude API. Loads data, analyzes fields, makes picks, monitors scratches/odds, settles results, reports P/L — all without Matt attached. Queryable from mobile.
+A Heroku worker that runs the full FTC handicapping model autonomously via Claude API. Loads data, analyzes fields, presents candidates for Commission approval, monitors scratches/odds, settles results, reports P/L — all without Matt attached. Queryable from mobile.
 
-This is a research project first. Every race day produces training data. The system must run continuously, accumulate decisions, measure performance against its own operating costs, and self-correct over time. The goal is a closed-loop system that funds itself.
-
----
-
-## Current State — How It Works Today
-
-### What Exists
-
-| Component | Status | What It Does |
-|-----------|--------|-------------|
-| FTC Site (Vercel) | Live | React app, member auth, Today page, Race Detail, Strategies marketplace |
-| Vercel Cron | Live | Runs every 5 min — pulls live odds (T-60), checks scratches (T-50), sends pre-race email (T-35), pulls results (T+15) |
-| Supabase Postgres | Live | Full schema: races, entries, horses, bets, results, strategy_activations, pipeline_events, strategies |
-| Racing API | Active ($63/mo) | Live odds, scratches, post times, results — polled by cron and CLI scripts |
-| Brisnet Parser | Built (CLI) | `parse_drf_full.mjs` — takes .DRF files, inserts races/horses/entries with full PPs, Beyers, positions |
-| Racing API Pull | Built (CLI) | `pull_racing_api.mjs` — enriches DB with jockeys, trainers, post times, ML odds |
-| Results Pull | Built (CLI) | `pull_results.mjs` — fetches results, normalizes payouts, settles bets |
-| Resend Email | Working | Pre-race alerts, member notifications via noreply@org64.com |
-| Model (CLAUDE.md) | Codified (5000+ lines) | Full Phase 1-5 execution sequence, 11 signals, all hard rules, bet construction |
-
-### What Matt Does Manually (Per Race Day)
-
-| Step | Time | Matt's Work |
-|------|------|-------------|
-| Buy Brisnet files | Day before | Go to brisnet.com, purchase .DRF for each track ($1.50 each) |
-| Parse files | Morning | Run `node parse_drf_full.mjs ~/Downloads/SAR0621.DRF` per track |
-| Pull Racing API | Morning | Run `node pull_racing_api.mjs 2026-06-21` |
-| Run analysis | 2-3 hours | Open Claude Code session, provide Brisnet data, run Phase 1-5 conversationally |
-| Insert bets | After analysis | Claude inserts picks into `bets` table during the session |
-| Monitor scratches | Race day | Cron handles this now, but Matt reviews emails and decides override |
-| Settle results | Post-race | Run `node pull_results.mjs 2026-06-21` or check manually |
-| Post-mortem | Evening | Another Claude session analyzing what hit/missed, updating strategy weights |
-
-**Total Matt time per race day: ~4-5 hours active work**
-
-### The Bottleneck
-
-The analysis itself (Phase 1-5) lives entirely in a Claude Code session. It requires:
-- Matt to be at his computer
-- A conversational back-and-forth providing data and confirming picks
-- Manual judgment calls on edge cases (borderline qualifications, ambiguous S1 scoring)
-- Matt's presence for the entire analysis window
-
-The cron handles race-day monitoring well, but the BRAIN — the thing that looks at horses and decides who wins — requires Matt in the loop.
+**Key insight (7/3):** Matt's Commission selection is the alpha (+97% win ROI, 35% hit rate). The model's blind output is +7% win rate. Street Boss operates in **approval mode** — it presents candidates, Matt picks Commission from his phone, THEN it executes.
 
 ---
 
-## Future State — How It Works After This Build
+## What's Been Built (as of 7/3)
 
-### What Changes
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Brisnet Parser | ✅ FIXED | `parse_drf_full.mjs` — field 315 (race distances), was reading field 137 (workouts) |
+| Deterministic Scoring | ✅ DONE | `score_with_trace.mjs` — full Phase 1-5, all 11 signals, relative gate, tiebreaks |
+| Scored Candidates Table | ✅ DONE | Persists ALL candidates (HIGH/MEDIUM/LOW/blocked) with signal breakdown |
+| Relative Gate + Fallback | ✅ DONE | Only blocks uniquely unproven picks; fallback to career Beyer; conviction cap |
+| Distance Ceiling (correct) | ✅ DONE | Parser fix → model sees 3.75x more races |
+| Tiebreak Hierarchy | ✅ DONE | distance_beyer → best_beyer when signal scores tie |
+| Racing API Pull | ✅ DONE | `pull_racing_api.mjs` — ML, post times, jockeys, scratches |
+| Results Pull | ✅ DONE | `pull_results.mjs` — finish order, normalized payouts |
+| Vercel Cron (monitoring) | ✅ LIVE | Odds, scratches, pre-race emails, results every 5 min |
+| Strategy Tagging | ✅ DONE | `ensureStrategyTags()` in cron auto-tags on every cycle |
+| Insights Script | ✅ DONE | `scripts/insights.mjs` — signal combos, day patterns, composite analysis |
+| FTC Site + Mobile | ✅ LIVE | Today page, Performance, modal system, email capture |
 
-| Step | Today | After Street Boss |
-|------|-------|-------------------|
-| Buy Brisnet | Matt manually | Matt manually (until Equibase responds with flat-rate option) |
-| Parse files | Matt runs CLI | Matt drops files → agent auto-ingests |
-| Pull Racing API | Matt runs CLI | Agent pulls automatically at 6 AM |
-| Run analysis (Phase 1-5) | Matt + Claude Code, 2-3 hrs | Agent runs autonomously via Claude API, ~15 min |
-| Insert bets | During session | Agent inserts directly after analysis |
-| Monitor scratches/odds | Vercel cron + Matt reviews | Agent monitors, decides, acts — notifies Matt only when material |
-| Re-analyze on changes | Matt decides, re-runs manually | Agent decides and re-runs when pace map changes |
-| Settle results | Matt runs CLI | Agent settles automatically |
-| Post-mortem | Matt opens another session | Agent runs end-of-day, proposes strategy updates |
-| Ask questions mid-day | Not possible | Matt opens /agent on phone, asks anything |
-| Track costs | Not tracked | Every API call logged, daily P/L includes operating costs |
+### What Matt Still Does Manually
 
-**Total Matt time per race day: ~5 minutes (supply Brisnet files Wednesday, glance at morning email, check phone if curious)**
+| Step | Time | Can Street Boss Do It? |
+|------|------|----------------------|
+| Buy Brisnet files | Day before | ❌ No API (Equibase inquiry pending) |
+| Parse files | 2 min | ✅ Auto-ingest on file drop |
+| Pull Racing API | 1 min | ✅ Scheduled (6 AM) |
+| Score all candidates | 15 min | ✅ `score_with_trace.mjs` runs autonomously |
+| Select Commission (~10) | 5 min | ❌ Matt's judgment = alpha. Slack approval. |
+| Monitor scratches | Race day | ✅ Cron handles; Street Boss re-analyzes |
+| Place bets | 2 min | ❌ Mike places from picks (no ADW API) |
+| Settle results | 1 min | ✅ Auto-settles post-race |
+| Post-mortem | 15 min | ✅ Auto-runs insights + random sim |
 
-### The Closed Loop
+**Matt's total time under Street Boss: ~7 min (buy Brisnet + approve Commission on phone)**
+
+---
+
+## Architecture
 
 ```
-                    ┌─────────────────────────────────────┐
-                    │                                     │
- Brisnet (Wed) ──► │  STREET BOSS (Heroku)               │
-                    │                                     │
-                    │  6 AM: Pull Racing API              │
-                    │  7 AM: Phase 1-4 (deterministic)    │
-                    │  8 AM: Phase 5 (Claude API)         │
-                    │  8:15: Publish picks, email Matt    │
-                    │  Race day: Monitor, decide, act     │
-                    │  Post-race: Settle, measure, learn  │
-                    │  EOD: Report P/L, propose updates   │
-                    │                                     │
-                    │  ← Matt asks from phone anytime     │
-                    │  → Matt gets notified only when     │
-                    │    something material happens       │
-                    │                                     │
-                    └────────────────┬────────────────────┘
-                                    │
-                                    ▼
-                         Track operating costs
-                         Track betting P/L
-                         Net = self-sustaining?
-```
-
-### What Stays Manual (For Now)
-
-1. **Buying Brisnet files** — no API for purchase (waiting on Equibase reply)
-2. **Placing actual bets** — no ADW has an API; Mike still places manually from the picks
-3. **Strategy rule changes** — agent proposes, Matt approves (model updates are deliberate)
-
----
-
-## What Matt Needs to Supply
-
-1. **Claude API key** — the `sk-ant-...` string (for Heroku config var)
-2. **Heroku app name** — what to call it (e.g., `ftc-agent`, `street-boss`, etc.)
-3. **Brisnet .DRF files** — dropped somewhere accessible (uploaded via site or local path)
-4. That's it. Everything else exists in the codebase already.
-
----
-
-## Architecture (Single Heroku Dyno)
-
-```
-MATT'S PHONE (Safari)
+MATT'S PHONE (Slack)
       |
-      v
-FTC SITE (Vercel) → /agent chat UI
-      |
-      v (proxy)
+      v (approve/reject)
 HEROKU DYNO ($7/mo)
-├── Express server (chat API)
-└── Worker loop (autonomous brain)
-      |
-      +→ Claude API (reasoning — Sonnet)
-      +→ Racing API (live odds, scratches, results)
-      +→ Supabase (all state)
-      +→ Resend (emails)
+├── Express server (Slack webhook + chat API)
+├── Worker loop (scheduled phases)
+│     +→ Supabase (all state — bets, races, entries, scored_candidates)
+│     +→ Racing API (odds, scratches, results)
+│     +→ Resend (member emails)
+│     +→ Claude API (Phase 5 synthesis, scratch re-analysis, postmortem)
+└── CLAUDE.md loaded as system prompt for all Claude API calls
+
+FTC SITE (Vercel) → reads from same Supabase
+├── Mobile Today page (Commission picks, results)
+├── Performance (live from bets+results)
+└── /agent chat (proxied to Heroku)
 ```
+
+### System Prompt Strategy
+
+Street Boss loads `CLAUDE.md` content at startup and passes it as the `system` field on Claude API calls. Same methodology, same rules, same voice — just running in the cloud instead of a local terminal session. Updates to CLAUDE.md propagate on next Heroku restart.
 
 ---
 
-## Hybrid Model: Code vs. Claude
+## Two Wagering Modes
 
-**Deterministic (free, in TypeScript):**
-- Phase 1: qualify (field size, maiden, bullring, lone speed)
-- Phase 2: tag running styles, build pace map
-- Phase 3: score signals S2-S11
-- Phase 4: build bets (ceiling sort, top 4, stakes)
-- Scratch classification (consequential = drop, non-consequential = rebuild box)
-- Results settlement
+| Mode | When | Staking | Win Bet? |
+|------|------|---------|----------|
+| **Commission (Matt approves)** | Every race day | 70/30 win-to-exacta, pool-weighted $1K | Yes — Matt's picks hit 35% |
+| **Autonomous (no approval)** | If Matt unavailable | Exacta-only, capped at MEDIUM conviction | Only on S4+S5+S9 triple |
 
-**Claude API (costs ~$1-2/race):**
-- Phase 3: S1 (jockey interpretation)
-- Phase 5: synthesis (narrative, conviction, vulnerability thesis)
-- Re-analysis when pace map fundamentally changes
-- Pre-race email composition
-- Post-mortem + strategy proposals
-- Chat responses
+Default is Commission mode. Autonomous is fallback only.
 
 ---
 
 ## Daily Lifecycle
 
-| Time | Action |
-|------|--------|
-| 6 AM | Pull Racing API (fields, post times) |
-| 7 AM | Phase 1-4 (deterministic) |
-| 8 AM | Phase 5 (Claude) → picks finalized |
-| 8:15 AM | Morning card email to Matt |
-| Race day | Monitor per race: T-60 odds, T-50 scratches, T-35 pre-race email, T+15 results |
-| After last | Post-mortem → P/L report → recap email |
+| Time (ET) | Action | Type |
+|-----------|--------|------|
+| 6:00 AM | Pull Racing API (fields, post times, ML) | Deterministic |
+| 6:05 AM | Parse any new Brisnet files (if Matt dropped them) | Deterministic |
+| 7:00 AM | Run `score_with_trace.mjs` → scored_candidates populated | Deterministic |
+| 7:05 AM | Run `insights.mjs` → day confidence assessment | Deterministic |
+| 7:10 AM | Post to Slack: ranked candidates + day assessment | Deterministic |
+| 7:10-8:00 | **Matt reviews on phone, taps to approve ~10 for Commission** | Human |
+| 8:00 AM | Tag approved as COMMISSION, compute pool-weighted stakes | Deterministic |
+| 8:05 AM | Write bets to DB, publish to site | Deterministic |
+| 8:10 AM | Claude API: write race theories for Commission picks | Claude ($) |
+| 8:15 AM | Send morning card email to members | Deterministic |
+| T-60 | Pull live odds | Cron |
+| T-50 | Check scratches, re-analyze if thesis-critical | Deterministic + Claude ($) |
+| T-35 | Pre-race email to members | Deterministic |
+| T+15 | Pull results, settle bets | Deterministic |
+| After last | Auto-postmortem: P/L, signal analysis, insights, random sim (1000x) | Deterministic + Claude ($) |
+| EOD | Email recap to Matt | Deterministic |
 
 ---
 
-## Decision Logic (When to Re-Run)
+## Slack Approval Flow
 
-**Mechanical (no Claude call):**
-- Non-consequential scratch → rebuild box from next Beyer ceiling
-- Odds move that doesn't change top-scored horse → just update DB
-
-**Triggers Claude re-analysis:**
-- Win pick scratched → drop race (code decides, Claude composes the notification)
-- Surface change → fundamentally different pace analysis
-- Pace map changes (speed horse scratched changes E count materially)
+1. Street Boss posts to Slack channel: ranked candidates with composite, signals, vulnerability, race theory preview
+2. Each candidate has a thumbs-up reaction target
+3. Matt reacts to ~10 he wants for Commission
+4. Street Boss reads reactions, tags COMMISSION, computes stakes, publishes
+5. If no approval by 30 min before first post time → autonomous mode kicks in (exacta-only on top composites)
 
 ---
 
-## Mobile Chat
+## Hybrid Model: Code vs. Claude
 
-Matt opens `/agent` on his phone:
-- "What's the play in Race 7?" → full context response
-- "Why'd you drop Race 3?" → decision log + reasoning
-- "How's the day going?" → running P/L + upcoming races
+**Deterministic (free, TypeScript — already built):**
+- Phase 1-4: qualify, style, pace, signals, win pick, box, conviction
+- Scratch classification (consequential vs non-consequential)
+- Box rebuild on non-consequential scratch
+- Results settlement + P/L computation
+- Strategy tagging
+- Pool-weighted stake allocation
+
+**Claude API (~$0.50-$1/race, Sonnet):**
+- Phase 5: race theory narrative synthesis
+- Scratch re-analysis when pace map fundamentally changes (favorite scratched → new vulnerability assessment)
+- Postmortem observations (pattern recognition across the day)
+- Chat responses from /agent
+- CLAUDE.md = system prompt for all calls
 
 ---
 
-## Cost Tracking
+## What Matt Needs to Supply
 
-Every Claude call logged with tokens + cost. End-of-day report:
+1. **Claude API key** — `sk-ant-...` for Heroku config var
+2. **Heroku app name** — e.g., `street-boss` or `ftc-agent`
+3. **Slack webhook URL** — for the approval channel (or we use existing FTC pipeline channel)
+4. **Brisnet delivery method** — drop .DRF files somewhere Street Boss can grab them (upload endpoint on the site, or a watched S3 bucket)
+5. **One decision confirmed:** Approval mode is default (✅ confirmed 7/3 — your selection is the alpha)
 
-```
-Wagered: $1,411 | Collected: $2,180 | Betting P/L: +$768
-Operating: $12 (Claude $8, API $2, infra $2)
-NET: +$756
-```
+---
 
-Monthly floor: ~$220 (Heroku $7, Racing API $63, Brisnet ~$100, Claude ~$50)
+## Sprints
+
+### Sprint 1: Foundation (Days 1-2)
+**Goal:** Street Boss exists in the cloud and can score a card autonomously.
+
+- [ ] Matt supplies: Claude API key, Heroku app name
+- [ ] Create Heroku app, env vars, Express scaffold, deploy hello world
+- [ ] Port `score_with_trace.mjs` to run as a scheduled job (6 AM trigger)
+- [ ] Add Brisnet file upload endpoint (Matt drops .DRF → auto-parses)
+- [ ] Racing API pull runs on schedule (no manual CLI)
+- [ ] Verify: drop a Brisnet file, next morning scored_candidates is populated
+
+**Deliverable:** Matt drops Brisnet files, wakes up to scored candidates in DB.
+
+---
+
+### Sprint 2: Communication (Days 3-4)
+**Goal:** Street Boss talks to Matt via Slack and takes direction.
+
+- [ ] Matt supplies: Slack webhook URL
+- [ ] Post ranked candidates to Slack each morning (composite, signals, theory preview)
+- [ ] Read Slack reactions → tag approved races as COMMISSION
+- [ ] Fallback: if no approval by T-30, run autonomous mode (exacta-only on top composites)
+- [ ] Wire Claude API for race theory generation (system prompt = CLAUDE.md)
+- [ ] Cost tracking: log every Claude call with tokens + cost
+
+**Deliverable:** Matt approves Commission from his phone in 5 minutes.
+
+---
+
+### Sprint 3: Race Day Intelligence (Days 5-6)
+**Goal:** Street Boss handles live race day decisions without Matt.
+
+- [ ] Scratch re-analysis agent: detect → assess → BET STANDS / DROP / REBUILD → post verdict to Slack
+- [ ] Odds monitoring: if win pick goes below 5/2, kill win bet automatically, alert Matt
+- [ ] Pool-weighted stake allocation: pull pool sizes, distribute $1K bankroll
+- [ ] Auto-settlement: results pulled, bets settled, P/L computed
+- [ ] Postmortem automation: insights script + random sim (`scripts/random_sim.mjs` — 1000 sims, random race AND horse selection from full scored pool, compare vs model net, report % beaten + edge vs median) + recap email
+
+**Deliverable:** Full race day runs with Matt's only input being morning Slack approvals.
+
+---
+
+### Sprint 4: Refinement Session Support (Days 7-8)
+**Goal:** Matt's Claude Code session is pre-loaded and focused.
+
+- [ ] /agent chat endpoint on Heroku (query candidates, ask about pace maps, compare picks)
+- [ ] Pre-session brief: when Matt opens Claude Code, scored_candidates + day assessment already in context
+- [ ] Session handoff: anything Matt changes during the session (overrides, drops, adds) Street Boss picks up and executes
+- [ ] Validate against 6/19 and 6/20 historical data — same picks as manual sessions?
+
+**Deliverable:** Matt's morning session goes from 4 hours to 45 minutes.
+
+---
+
+### Sprint 5: Go Live (Days 9-10)
+**Goal:** Production confidence.
+
+- [ ] Shadow mode: Street Boss runs alongside manual session for 2-3 race days. Compare outputs.
+- [ ] Reconcile: any differences between Street Boss picks and manual picks → tune thresholds
+- [ ] Go live: Matt approves from phone, Street Boss executes, session is refinement only
+- [ ] Monitor: cost per day, accuracy vs manual, edge vs random
+
+**Deliverable:** Race day is 5 min approval + 45 min optional refinement. Everything else autonomous.
+
+---
+
+## Migration Plan
+
+- **Week 1:** Street Boss runs in shadow mode — scores, proposes, but Matt still runs manual session. Compare outputs.
+- **Week 2:** Street Boss proposes via Slack, Matt approves from phone. Manual session as backup only.
+- **Week 3:** Full handoff. Matt supplies Brisnet on Wednesday, approves Commission on race day morning. Done.
 
 ---
 
 ## New DB Tables
 
-- `agent_decisions` — trigger, reasoning, action taken
-- `agent_state` — current phase, heartbeat, next action
-- `agent_conversations` — chat history
-- `agent_costs` — per-call cost log
-- `agent_pl` — daily P/L rollup
+- `agent_decisions` — trigger, reasoning, action taken, timestamp
+- `agent_state` — current phase, heartbeat, next scheduled action
+- `agent_costs` — per-call: model, tokens_in, tokens_out, cost_usd, purpose
+
+(Chat and P/L already covered by existing tables)
 
 ---
 
-## Build Sequence (5 days)
+## Matt's Expectations (collected during build)
 
-1. Create Heroku app + env vars + project scaffold
-2. Port Brisnet parser + Racing API to TypeScript
-3. Implement deterministic Phase 1-4 scoring
-4. Wire Claude API client with cost tracking + Phase 5
-5. Build autonomous loop (phase detection, monitoring, settling)
-6. Build chat endpoint + mobile UI
-7. Create DB tables
-8. Deploy, validate against June 14 data
-9. First live run on next available race day
-
----
-
-## Migration
-
-- Week 1: Heroku runs analysis, Vercel cron still handles monitoring
-- Week 2: Heroku takes over monitoring + settlement
-- Week 3: Vercel cron disabled, Heroku owns everything
-
----
+- ONLY present HIGH conviction races (fave_vulnerable = true + signal score ≥ 3) as Commission candidates. MEDIUM without vulnerable fave = never bet, tracking only.
+- Every action Street Boss takes → Slack notification with action, reason, outcome
+- 9 AM daily card scan → alert Matt which tracks are running + qualifying race count → Matt decides if it's a race day
+- If Brisnet files already uploaded → Street Boss recognizes it's a race day automatically (no need to wait for approval)
+- Street Boss creates the execution tracker page for the day and sends Matt the link
+- Collaboration happens over Slack (Matt approves, asks questions, overrides) — same as terminal collab but on phone
+- Street Boss does everything the manual pipeline does: parse, pull API, scratch, score, present candidates, settle, postmortem
+- The back-and-forth refinement session remains (Matt's judgment = alpha) — Street Boss pre-loads everything so the session is 45 min not 4 hours
 
 ## Success Criteria
 
-- Produces same picks as manual analysis (validated against 6/14 card)
+- Produces same scored_candidates as manual `score_with_trace.mjs` run (validated against 6/19)
 - Handles all scratch scenarios correctly per documented rules
-- Logs every decision with reasoning
-- Costs tracked accurately
-- Chat responds with correct context from mobile
-- Runs a full race day with zero intervention from Matt
+- Slack flow works: candidates posted, reactions read, Commission tagged within 5 min of approval
+- Claude API calls tracked with cost — total stays under $15/race day
+- Race theories read naturally (same quality as manual sessions)
+- Full race day runs with Matt's only action being Slack approvals (~7 min total)
+- Performance page numbers match regardless of whether Street Boss or manual session ran the day

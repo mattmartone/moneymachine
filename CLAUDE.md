@@ -94,34 +94,30 @@ git push origin main
 | Irrelevant horse scratched | BET STANDS. Immaterial to thesis. No action needed. |
 | Dropped race in DB | Keep as COMMISSION with $0 stakes + skip_reason. Shows on card, doesn't affect math. |
 | Commission requires Matt approval | NEVER auto-tag races as COMMISSION. Model proposes, Matt approves. |
+| Commission requires vulnerable fave | NEVER present a race for Commission without fave_vulnerable = true. No vulnerability = no thesis = no bet. MEDIUM picks without vulnerability are tracking only. |
+| Only HIGH conviction for Commission | Only HIGH conviction races (vulnerable + signal score ≥ 3) are eligible for Commission selection. MEDIUMs may be discussed but never bet. |
 
-## Wagering Philosophy: Exacta-First
+## Wagering Philosophy
 
-**The box is the product, not the win pick.** Backtest data (4 days, 162 candidates) shows:
-- Box captures the exacta in 44% of scored races
-- Win pick hits only 7% of the time
-- High-value exactas fire regardless of whether the favorite is vulnerable
-- S4+S9 combo correlates with the best-paying exactas
+**Win-first. Stake sized by pool bucket.** Commission picks hit at 35% win rate with +97% ROI. The win pick is the primary play. Exacta is the sidecar.
 
-**What this means:** The model's edge is in identifying the 4-5 horses most likely to finish 1-2, ranked by distance ceiling Beyer. The win pick is Matt's judgment call on top of that — it's gravy, not the thesis. Staking should reflect this: exotics are the core bet, win is the bonus.
+### Staking
 
-### Staking (Exacta-First, adopted 7/3)
+**No fixed daily bankroll.** Each race's stake is determined by its exacta pool size at T-30 (30 min before post). The day's total wager is the sum of whatever qualifying races support.
 
-**Daily bankroll: $1,000.** Distributed across Commission races weighted by exacta pool size.
+**Pool buckets (exacta pool size → stake level):**
 
-**Allocation method:**
-1. Pull exacta pool totals from Racing API for each Commission race
-2. Compute each race's share: `race_pool / total_pools_across_commission`
-3. Allocate $1,000 proportionally — bigger pools get more money
-4. Mid-range pools ($50K–$300K) are the sweet spot; very large pools (>$300K) are efficient (less edge); very small pools (<$50K) have thin liquidity
+| Pool Bucket | Exacta Pool | Win Stake | Exacta Stake | Total/Race |
+|---|---|---|---|---|
+| Large | $200K+ | $100 | $120 | $220 |
+| Medium | $50K–$200K | $50 | $60 | $110 |
+| Small | Under $50K | Skip or $25 | Skip or $30 | $55 or skip |
 
-**Per-race bet structure:**
-- **Default:** Exacta box only (allocated amount goes entirely to exacta)
-- **Triple signal (S4+S5+S9):** Split 75/25 — 75% to exacta box, 25% to win
+**Per-race split: ~45/55 win-to-exacta.** Matches proven performance ratios.
 
-The triple signal is the only pattern that justifies a win bet. It fires ~10% of the time but carries the highest composite (24.3 avg). All other races: exacta box only, sized by pool.
+**Timing:** Stakes computed at T-30 per race by Street Boss (or manually pre-race). Not allocated as a daily lump sum at morning.
 
-**Floor/cap:** No race gets less than $50 or more than $200 regardless of pool math. If a race would fall below $50, skip it — the pool is too thin.
+**Until Street Boss is live:** Flat stakes ($50 win / $60 exacta) for all Commission races. Pool bucketing is a Street Boss Sprint 3 feature.
 
 ## Box Sizing Rules
 
@@ -129,9 +125,9 @@ Dynamic box sizing based on win pick morning line odds. Higher odds = bigger box
 
 | Win Pick ML | Box Size | Combos | Breakeven (per $1 exacta) |
 |---|---|---|---|
-| 20-1+ | 5 horses | 20 combos | $6.06 ($120 / 20 × $6/combo) |
-| 10-1 to 19-1 | 4 horses | 12 combos | $9.17 ($120 / 12 × $10/combo) |
-| 6-1 to 9-1 | 3 horses | 6 combos | $18.33 ($120 / 6 × $20/combo) |
+| 20-1+ | 5 horses | 20 combos | $6.06 (doubled $66 / 20 × $3.30/combo) |
+| 10-1 to 19-1 | 4 horses | 12 combos | $9.17 (doubled $66 / 12 × $5.50/combo) |
+| 6-1 to 9-1 | 3 horses | 6 combos | $18.33 (doubled $66 / 6 × $11/combo) |
 
 The win pick is ALWAYS in the box. Remaining slots filled by highest distance Beyer (career Beyer fallback) in the field.
 
@@ -383,7 +379,7 @@ DB stores RAW track payouts (what the track pays per base unit), not pre-calcula
 - PIN gate (7413) on calendar and Account page
 
 ### Member Emails
-- Sent via Resend (`re_L3cnNm7K_6Fu7rVh8Num5gULJemTdoK9y`)
+- Sent via Resend (`re_MHPTH9Ce_H8Rd6LRx3tSEnEJY34Ms8YjY`)
 - From: `noreply@org64.com`
 - Rate limit: 5/sec — add delay between sends or retry 429s
 - NEVER send without Matt's approval
@@ -399,6 +395,13 @@ DB stores RAW track payouts (what the track pays per base unit), not pre-calcula
 6. **Auto-update strategy performance after settlement** — after results are logged: query strategy_activations for each settled bet, determine hit/miss, update strategy_performance table (fires, W/P/S/L, win_rate, itm_rate, trend). Should run automatically as part of the settlement flow.
 7. **Payout base normalization at ingestion** — DB stores all payouts normalized to $1 base. When ingesting from API (which reports various bases: $2 ex, $0.50 tri, $0.10 super), divide by base before storing. Track-specific bases: Churchill/PRM = $2 ex/$0.50 tri/$0.10 super; Gulfstream/Laurel = $1 ex; Woodbine = $1 ex/$0.20 tri/$0.20 super. See session 6/20 for full table.
 8. **Faster results service** — Racing API takes 15-30 min to post finals. Find a faster source (direct track feeds, Equibase, scraper) so settlement can happen automatically within minutes.
+15. **Test Equibase Apify scraper as Racing API replacement** — $0.17/day vs $63/month. Returns entries, ML, results, payouts. No PPs/Beyers (still need Brisnet). Evaluate for: morning card scan, settlement/payouts (fixes normalization bug source), entries verification. Keep Racing API only for live odds polling. Apify actor: `jungle_synthesizer/equibase-us-horse-racing-scraper`.
+16. **Brisnet auto-purchase agent** — Headless browser (Playwright on Heroku) that logs into brisnet.com, buys .DRF files for tracks Street Boss recommends, downloads and parses into DB. Closes the last manual step in the loop. Requires: stored credentials, CC on file, bot-resilient navigation. The piece that makes full autonomy possible.
+10. **Street Boss** — Autonomous decision engine. Heroku worker + Claude API runs the full model without Matt. Plan in `STREET_BOSS_PLAN.md`. Prerequisites: parser fix (DONE), relative gate (DONE), scored_candidates (DONE). Remaining: wire Phase 2-5 as deterministic TypeScript, add Claude API for edge cases, Slack approval loop for Commission, cost tracking.
+11. **Scratch re-analysis agent** — Autonomous scratch → re-analyze pace/Beyer/field → BET STANDS / DROP / REBUILD → Slack verdict. Last manual bottleneck in live execution.
+12. **Restore 6/25-6/28 Commission bets** — Corrupted during 7/3 pipeline migration. Need to reconstruct from NJ4Bets platform export or session records.
+13. **Re-run random simulations** — Compute from bets+results (not postmortem_metrics). 1000 sims per day. Needed for model vs random comparison and green/red dots on performance page.
+14. **Pool-weighted allocation** — Code the $1K daily bankroll distribution logic into the scorer based on exacta pool sizes from Racing API.
 
 ## Principles
 

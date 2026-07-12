@@ -55,6 +55,9 @@ function surfaceName(code) {
 }
 
 async function run() {
+  const { rows: aliasRows } = await pool.query('SELECT alias, canonical_name FROM track_aliases');
+  const trackLookup = Object.fromEntries(aliasRows.map(r => [r.alias, r.canonical_name]));
+
   const races = new Map();
   const entries = [];
 
@@ -99,7 +102,7 @@ async function run() {
 
     if (!races.has(raceKey)) {
       races.set(raceKey, {
-        track: track === 'SA' ? 'Santa Anita' : track,
+        track: trackLookup[track] || track,
         date,
         race_number: raceNum,
         conditions,

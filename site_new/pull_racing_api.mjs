@@ -23,21 +23,14 @@ function parseOdds(oddsStr) {
   return oddsStr;
 }
 
-const TRACK_NAMES = {
-  'SA':'Santa Anita', 'LRL':'Laurel Park', 'SAR':'Saratoga', 'CD':'Churchill Downs',
-  'DMR':'Del Mar', 'GP':'Gulfstream Park', 'AQU':'Aqueduct', 'BEL':'Belmont',
-  'BAQ':'Belmont at the Big A', 'KEE':'Keeneland', 'PIM':'Pimlico', 'MTH':'Monmouth Park',
-  'WO':'Woodbine', 'OP':'Oaklawn Park', 'TAM':'Tampa Bay', 'FG':'Fair Grounds',
-  'PRX':'Parx Racing', 'CT':'Charles Town', 'PEN':'Penn National', 'TUP':'Turf Paradise',
-  'GG':'Golden Gate', 'LA':'Los Alamitos', 'LS':'Lone Star Park', 'DEL':'Delaware Park',
-  'CBY':'Canterbury Park', 'IND':'Horseshoe Indianapolis', 'BTP':'Belterra Park',
-  'DED':'Delta Downs', 'EVD':'Evangeline Downs', 'HAW':'Hawthorne', 'TDN':'Thistledown',
-  'HOU':'Sam Houston', 'FMT':'Fair Meadows', 'FL':'Finger Lakes', 'PID':'Presque Isle Downs',
-  'MNR':'Mountaineer Park', 'PRM':'Prairie Meadows', 'ARP':'Arapahoe Park', 'ALB':'Albuquerque',
-  'LEG':'Legacy Downs', 'LAD':'Louisiana Downs'
-};
+let TRACK_NAMES = {};
+async function loadTrackNames() {
+  const { rows } = await pool.query('SELECT alias, canonical_name FROM track_aliases');
+  TRACK_NAMES = Object.fromEntries(rows.map(r => [r.alias, r.canonical_name]));
+}
 
 async function run() {
+  await loadTrackNames();
   const date = process.argv[2] || new Date().toISOString().split('T')[0];
   const trackFilter = process.argv[3] ? process.argv[3].split(',') : null;
 

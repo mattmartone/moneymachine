@@ -114,7 +114,17 @@ async function scoreRace(raceId) {
   if (!race) { await tracer.complete(); return null; }
 
   const raceYards = race.distance_yards;
-  const isTurf = race.surface === 'Turf' || race.surface === 't';
+  const isTurf = race.surface === 'Turf' || race.surface === 't' || (race.surface || '').toLowerCase().includes('turf');
+
+  // TURF GATE — hard kill, no turf races
+  if (isTurf) {
+    await writeScoredCandidate(pool, {
+      raceId, date: DATE, status: 'blocked', blockedReason: 'turf',
+      conviction: 'BLOCKED', fieldSize: race.field_size, runId: RUN_ID
+    });
+    await tracer.complete({ conviction: 'BLOCKED' });
+    return { raceId, status: 'blocked', track: race.track, raceNumber: race.race_number };
+  }
 
   // STEP 2: Load Entries
   const entries = await tracer.step('data', 'Load Entries', null, async () => {
@@ -377,17 +387,19 @@ async function scoreRace(raceId) {
     };
   });
 
-  // STEP 14: Box Construction (distance Beyer preferred, career Beyer fallback)
+  // STEP 14: Box Construction (distance Beyer preferred, career Beyer fallback, sized by ML)
+  const pickML = parseOdds(winPick?.morning_line_odds);
+  const maxBoxSize = pickML >= 20 ? 5 : pickML >= 10 ? 4 : 3;
   const byBeyer = [...allEntries].sort((a, b) => ((b.distanceBeyer || b.best_beyer || 0) - (a.distanceBeyer || a.best_beyer || 0)));
-  let box = byBeyer.slice(0, 4);
-  if (fave && !box.find(e => e.post_position === fave.post_position)) box.push(fave);
-  if (winPick && !box.find(e => e.post_position === winPick.post_position)) box.push(winPick);
-  box = box.slice(0, 5);
+  let box = byBeyer.slice(0, maxBoxSize);
+  if (fave && !box.find(e => e.post_position === fave.post_position)) { box.pop(); box.push(fave); }
+  if (winPick && !box.find(e => e.post_position === winPick.post_position)) { box.pop(); box.push(winPick); }
+  box = box.slice(0, maxBoxSize);
 
   await tracer.step('conclusion', 'Box Construction', 'info', async () => {
     return {
-      input: { method: 'distance_beyer_with_career_fallback' },
-      logic: 'Top 4 by distance Beyer (career Beyer fallback), ensure fave + win pick included, cap at 5',
+      input: { method: 'distance_beyer_with_career_fallback', ml: pickML, max_box: maxBoxSize },
+      logic: `Top ${maxBoxSize} by distance Beyer (career fallback). ML ${winPick?.morning_line_odds} → ${maxBoxSize}-horse box. Fave + win pick required.`,
       result: box.map(e => ({ pp: e.post_position, name: e.horse_name, dist_beyer: e.distanceBeyer, overall_beyer: e.best_beyer, ml: e.morning_line_odds })),
       status: 'passed',
       message: `Box: ${box.map(e => `PP${e.post_position} ${e.horse_name} (${e.distanceBeyer || e.best_beyer || '?'}${e.distanceBeyer ? '' : '*'})`).join(', ')}`
@@ -663,10 +675,19 @@ async function run() {
   console.log(`Blocked: ${results.filter(r => r.status === 'blocked').length}`);
   console.log(`Warning: ${results.filter(r => r.status === 'warning').length}`);
 
-  const commission = results.filter(r => r.conviction === 'HIGH' || r.conviction === 'MEDIUM');
-  console.log(`\nCommission candidates (HIGH + MEDIUM): ${commission.length}`);
+  const commission = results.filter(r => r.conviction === 'HIGH');
+  const medium = results.filter(r => r.conviction === 'MEDIUM');
+  console.log(`\nCommission eligible (HIGH — vulnerable fave + score ≥ 3): ${commission.length}`);
   for (const r of commission.sort((a, b) => (b.composite || 0) - (a.composite || 0))) {
     console.log(`  ${r.track} R${r.raceNumber} [${r.conviction}] composite:${r.composite?.toFixed(1)} → ${r.winPick?.name} (${r.winPick?.ml})`);
+  }
+
+  if (medium.length > 0) {
+    console.log(`\nTracking only (MEDIUM — no vulnerable fave): ${medium.length}`);
+    for (const r of medium.sort((a, b) => (b.composite || 0) - (a.composite || 0)).slice(0, 5)) {
+      console.log(`  ${r.track} R${r.raceNumber} [${r.conviction}] composite:${r.composite?.toFixed(1)} → ${r.winPick?.name} (${r.winPick?.ml})`);
+    }
+    if (medium.length > 5) console.log(`  ... and ${medium.length - 5} more`);
   }
 
   const { rows: [scCount] } = await pool.query(`SELECT count(*) as total, count(*) FILTER (WHERE status = 'scored') as scored, count(*) FILTER (WHERE status = 'blocked') as blocked FROM scored_candidates WHERE date = $1`, [DATE]);

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 interface Horse {
   post_position: number;
@@ -15,20 +15,24 @@ interface RaceTheoryProps {
 }
 
 const STYLE_COLORS: Record<string, string> = {
-  'E': '#FF3333',
-  'E/P': '#FF8C00',
-  'P': '#4488FF',
-  'S': '#22AA44',
+  'E': '#FF4444',
+  'E/P': '#FF9933',
+  'P': '#5599FF',
+  'S': '#33CC66',
 };
 
 const STYLE_LABELS: Record<string, string> = {
-  'E': 'Speed',
-  'E/P': 'Presser',
-  'P': 'Stalker',
-  'S': 'Closer',
+  'E': 'SPD',
+  'E/P': 'PRESS',
+  'P': 'STALK',
+  'S': 'CLOSE',
 };
 
+const STAGES = ['GATE', '1ST TURN', 'FAR TURN', 'STRETCH', 'WIRE'];
+
 export function RaceTheory({ entries, surface, winPickPP, favePP }: RaceTheoryProps) {
+  const [stage, setStage] = useState(0);
+
   const liveEntries = useMemo(
     () => entries.filter(e => !e.scratched && e.running_style),
     [entries]
@@ -40,247 +44,210 @@ export function RaceTheory({ entries, surface, winPickPP, favePP }: RaceTheoryPr
   );
 
   const thesis = useMemo(() => {
-    if (paceCount === 0) return 'No speed — wire job or stalker controls';
-    if (paceCount === 1) return 'Lone speed — possible wire job';
-    if (paceCount === 2) return `Pace duel — ${paceCount} speed clash, closers inherit`;
-    return `${paceCount}-way speed war — closers and stalkers live`;
+    if (paceCount === 0) return 'No speed — stalker or presser controls';
+    if (paceCount === 1) return 'Lone speed — wire job threat';
+    if (paceCount === 2) return 'Pace duel — closers inherit';
+    return `${paceCount}-way speed war — closers live`;
   }, [paceCount]);
 
-  const isDirt = !surface || surface.toLowerCase().includes('dirt');
+  // Cycle through stages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStage(s => (s + 1) % STAGES.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // SVG dimensions
-  const W = 360;
-  const H = 200;
-  const CX = W / 2;
-  const CY = H / 2 + 5;
-  const RX = 140;
-  const RY = 60;
-
-  // Build elliptical path (clockwise, starting from right side = gate)
-  const trackPath = `M ${CX + RX} ${CY} A ${RX} ${RY} 0 1 0 ${CX + RX - 0.01} ${CY}`;
-
-  // Each style has different timing through the race
-  // keyTimes controls speed: 0=gate, ~0.3=first turn, ~0.6=far turn, ~0.85=stretch, 1=wire
-  // Values are cumulative distances along the path (0 to 1)
-  const getMotionParams = (style: string | null) => {
+  // Calculate position rank (1 = leading) for each horse at each stage
+  const getPositionScore = (style: string | null, stageIdx: number): number => {
+    // Higher score = further ahead (leading)
+    // Score 0-100, determines bar width and rank order
     switch (style) {
       case 'E':
         if (paceCount >= 2) {
-          // Speed in duel: blazes early, dies in stretch
-          return {
-            keyTimes: '0;0.15;0.40;0.70;0.85;1',
-            keyPoints: '0;0.25;0.50;0.70;0.80;0.85',
-          };
+          // Speed in duel: leads early, collapses late
+          return [88, 90, 78, 50, 35][stageIdx];
         }
         // Lone speed: leads gate to wire
-        return {
-          keyTimes: '0;0.15;0.40;0.70;0.85;1',
-          keyPoints: '0;0.25;0.50;0.72;0.88;0.97',
-        };
+        return [90, 92, 90, 88, 85][stageIdx];
       case 'E/P':
-        // Presser: sits just off speed, kicks in stretch
-        return {
-          keyTimes: '0;0.15;0.40;0.70;0.85;1',
-          keyPoints: '0;0.20;0.45;0.68;0.85;0.95',
-        };
+        return [72, 75, 78, 82, 80][stageIdx];
       case 'P':
-        // Stalker: mid-pack, one run on the turn
-        return {
-          keyTimes: '0;0.15;0.40;0.70;0.85;1',
-          keyPoints: '0;0.15;0.38;0.62;0.82;0.93',
-        };
+        if (paceCount >= 2) {
+          // Stalker benefits from pace duel
+          return [50, 55, 68, 80, 88][stageIdx];
+        }
+        return [50, 55, 62, 72, 78][stageIdx];
       case 'S':
         if (paceCount >= 2) {
-          // Closer with pace to run into: drops back, explodes in stretch
-          return {
-            keyTimes: '0;0.15;0.40;0.70;0.85;1',
-            keyPoints: '0;0.10;0.30;0.55;0.80;0.96',
-          };
+          // Closer with pace to run into: way back early, explodes
+          return [25, 30, 50, 78, 95][stageIdx];
         }
-        // Closer with no pace: drops back, can't make up ground
-        return {
-          keyTimes: '0;0.15;0.40;0.70;0.85;1',
-          keyPoints: '0;0.10;0.28;0.48;0.68;0.82',
-        };
+        // Closer with no pace: stuck behind
+        return [25, 28, 38, 55, 62][stageIdx];
       default:
-        return {
-          keyTimes: '0;0.15;0.40;0.70;0.85;1',
-          keyPoints: '0;0.15;0.40;0.60;0.78;0.90',
-        };
+        return [50, 52, 55, 58, 60][stageIdx];
     }
   };
 
-  // Offset from rail by post position (outside posts = wider)
-  const getOffset = (pp: number, total: number) => {
-    const norm = (pp - 1) / Math.max(total - 1, 1);
-    return norm * 8 + 2; // 2-10px off rail
-  };
+  // Sort entries by position at current stage (leading first)
+  const rankedEntries = useMemo(() => {
+    return [...liveEntries]
+      .map(e => ({
+        ...e,
+        score: getPositionScore(e.running_style, stage),
+      }))
+      .sort((a, b) => b.score - a.score);
+  }, [liveEntries, stage, paceCount]);
+
+  const isTurf = surface?.toLowerCase().includes('turf');
 
   return (
-    <div className="bg-gray-900 border-2 border-gray-700 p-3 my-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-mono text-xs text-gray-400 font-bold uppercase tracking-wider">Race Theory</span>
-        <span className="font-mono text-[10px] text-gray-500">{liveEntries.length} horses</span>
+    <div className="bg-[#0a0a14] border border-[#1a1a2e] rounded-lg p-4 my-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+          <span className="font-mono text-[10px] text-gray-500 uppercase tracking-widest font-bold">Race Theory</span>
+        </div>
+        <span className="font-mono text-[10px] text-gray-600">{isTurf ? 'TURF' : 'DIRT'} • {liveEntries.length} runners</span>
       </div>
 
-      <div className="font-mono text-sm text-white font-bold mb-3 text-center">
-        {thesis}
+      {/* Thesis */}
+      <div className="text-center mb-4">
+        <div className="font-mono text-sm text-white font-bold tracking-wide">{thesis}</div>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ maxHeight: '220px' }}>
-        {/* Track surface — outer fill */}
-        <ellipse
-          cx={CX} cy={CY} rx={RX + 12} ry={RY + 12}
-          fill={isDirt ? '#2A1F0A' : '#0A2A0F'}
-          stroke="none"
-        />
-        {/* Infield */}
-        <ellipse
-          cx={CX} cy={CY} rx={RX - 12} ry={RY - 12}
-          fill={isDirt ? '#1A1408' : '#062008'}
-          stroke="none"
-        />
-        {/* Track racing surface */}
-        <ellipse
-          cx={CX} cy={CY} rx={RX} ry={RY}
-          fill="none"
-          stroke={isDirt ? '#6B4E1F' : '#2D5A27'}
-          strokeWidth="22"
-          opacity="0.5"
-        />
-        {/* Inner rail */}
-        <ellipse
-          cx={CX} cy={CY} rx={RX - 11} ry={RY - 11}
-          fill="none"
-          stroke={isDirt ? '#A07830' : '#3D8B37'}
-          strokeWidth="1"
-          opacity="0.7"
-        />
-        {/* Outer rail */}
-        <ellipse
-          cx={CX} cy={CY} rx={RX + 11} ry={RY + 11}
-          fill="none"
-          stroke={isDirt ? '#A07830' : '#3D8B37'}
-          strokeWidth="1"
-          opacity="0.7"
-        />
+      {/* Stage indicator */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        {STAGES.map((s, i) => (
+          <div key={s} className="flex flex-col items-center">
+            <div
+              className="w-2 h-2 rounded-full mb-1 transition-all duration-300"
+              style={{
+                backgroundColor: i === stage ? '#fff' : i < stage ? '#444' : '#222',
+                boxShadow: i === stage ? '0 0 6px rgba(255,255,255,0.5)' : 'none',
+              }}
+            />
+            <span
+              className="font-mono transition-colors duration-300"
+              style={{
+                fontSize: '8px',
+                color: i === stage ? '#fff' : '#444',
+                fontWeight: i === stage ? 'bold' : 'normal',
+              }}
+            >
+              {s}
+            </span>
+          </div>
+        ))}
+      </div>
 
-        {/* Quarter poles */}
-        {[0.25, 0.5, 0.75].map(pct => {
-          const angle = -pct * Math.PI * 2;
-          const x = CX + RX * Math.cos(angle);
-          const y = CY + RY * Math.sin(angle);
-          return (
-            <circle key={pct} cx={x} cy={y} r="2" fill="#666" opacity="0.5" />
-          );
-        })}
-
-        {/* Finish line */}
-        <line
-          x1={CX + RX + 11} y1={CY}
-          x2={CX + RX - 11} y2={CY}
-          stroke="#FFFFFF" strokeWidth="2" opacity="0.6"
+      {/* Progress bar for current stage */}
+      <div className="h-0.5 bg-[#1a1a2e] rounded-full mb-4 overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-gray-600 to-white rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${((stage + 1) / STAGES.length) * 100}%` }}
         />
+      </div>
 
-        {/* Track labels */}
-        <text x={CX + RX + 16} y={CY - 8} fill="#888" fontSize="7" fontFamily="monospace" textAnchor="start">GATE/</text>
-        <text x={CX + RX + 16} y={CY + 2} fill="#888" fontSize="7" fontFamily="monospace" textAnchor="start">WIRE</text>
-        <text x={CX} y={CY + RY + 22} fill="#555" fontSize="7" fontFamily="monospace" textAnchor="middle">BACKSTRETCH</text>
-        <text x={CX} y={CY - RY - 14} fill="#555" fontSize="7" fontFamily="monospace" textAnchor="middle">HOME STRETCH</text>
-
-        {/* Hidden path for animateMotion */}
-        <path id="race-track" d={trackPath} fill="none" stroke="none" />
-
-        {/* Horse dots with animateMotion */}
-        {liveEntries.map((entry) => {
-          const color = STYLE_COLORS[entry.running_style || ''] || '#888';
+      {/* Position bars */}
+      <div className="space-y-1">
+        {rankedEntries.map((entry, rank) => {
           const isWinPick = entry.post_position === winPickPP;
           const isFave = entry.post_position === favePP;
-          const motion = getMotionParams(entry.running_style);
-          const offset = getOffset(entry.post_position, liveEntries.length);
-
-          // Build individual offset path (slightly larger ellipse for outer posts)
-          const oRX = RX + offset - 5;
-          const oRY = RY + offset - 5;
-          const horsePath = `M ${CX + oRX} ${CY} A ${oRX} ${oRY} 0 1 0 ${CX + oRX - 0.01} ${CY}`;
-
-          const r = isWinPick ? 5 : isFave ? 4.5 : 3.5;
+          const color = STYLE_COLORS[entry.running_style || ''] || '#666';
+          const styleLabel = STYLE_LABELS[entry.running_style || ''] || '?';
 
           return (
-            <g key={entry.post_position}>
-              <path id={`track-${entry.post_position}`} d={horsePath} fill="none" stroke="none" />
-              <circle
-                r={r}
-                fill={color}
-                stroke={isWinPick ? '#FFD700' : isFave ? '#FF4444' : 'rgba(255,255,255,0.3)'}
-                strokeWidth={isWinPick ? 2 : isFave ? 1.5 : 0.5}
-                opacity="0.95"
+            <div
+              key={entry.post_position}
+              className="flex items-center gap-2 transition-all duration-700 ease-in-out"
+              style={{
+                opacity: rank < 5 ? 1 : 0.4,
+                transform: `translateY(0)`,
+              }}
+            >
+              {/* Rank number */}
+              <div className="w-4 shrink-0 text-right">
+                <span className="font-mono text-[10px] text-gray-500 font-bold">{rank + 1}</span>
+              </div>
+
+              {/* Horse name + PP */}
+              <div className="w-[120px] shrink-0 flex items-center gap-1.5 overflow-hidden">
+                {isWinPick && <div className="w-1.5 h-1.5 rounded-full bg-[#FFD700] shrink-0" />}
+                {isFave && !isWinPick && <div className="w-1.5 h-1.5 rounded-full bg-[#FF4444] shrink-0" />}
+                <span
+                  className="font-mono text-[10px] truncate font-bold"
+                  style={{ color: isWinPick ? '#FFD700' : isFave ? '#FF6666' : '#ccc' }}
+                >
+                  {entry.horse_name}
+                </span>
+              </div>
+
+              {/* Bar */}
+              <div className="flex-1 h-5 bg-[#111] rounded-sm overflow-hidden relative">
+                <div
+                  className="h-full rounded-sm transition-all duration-700 ease-in-out flex items-center justify-end pr-1.5"
+                  style={{
+                    width: `${entry.score}%`,
+                    backgroundColor: color,
+                    opacity: 0.85,
+                    boxShadow: isWinPick ? '0 0 8px rgba(255,215,0,0.3)' : isFave ? '0 0 8px rgba(255,68,68,0.2)' : 'none',
+                  }}
+                >
+                  <span className="font-mono text-[8px] text-white font-bold opacity-80">{styleLabel}</span>
+                </div>
+              </div>
+
+              {/* PP badge */}
+              <div
+                className="w-5 h-5 rounded-sm flex items-center justify-center shrink-0"
+                style={{
+                  backgroundColor: isWinPick ? '#FFD700' : isFave ? '#FF4444' : '#1a1a2e',
+                  border: `1px solid ${isWinPick ? '#FFD700' : isFave ? '#FF4444' : '#333'}`,
+                }}
               >
-                <animateMotion
-                  dur="8s"
-                  repeatCount="indefinite"
-                  keyTimes={motion.keyTimes}
-                  keyPoints={motion.keyPoints}
-                  calcMode="spline"
-                  keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"
+                <span
+                  className="font-mono text-[9px] font-bold"
+                  style={{ color: isWinPick || isFave ? '#000' : '#666' }}
                 >
-                  <mpath href={`#track-${entry.post_position}`} />
-                </animateMotion>
-              </circle>
-              {/* PP label follows the dot */}
-              {(isWinPick || isFave) && (
-                <text
-                  fill={isWinPick ? '#FFD700' : '#FF6666'}
-                  fontSize="7"
-                  fontFamily="monospace"
-                  fontWeight="bold"
-                  textAnchor="middle"
-                  dy="-8"
-                >
-                  <animateMotion
-                    dur="8s"
-                    repeatCount="indefinite"
-                    keyTimes={motion.keyTimes}
-                    keyPoints={motion.keyPoints}
-                    calcMode="spline"
-                    keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"
-                  >
-                    <mpath href={`#track-${entry.post_position}`} />
-                  </animateMotion>
-                  #{entry.post_position}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
-        {Object.entries(STYLE_COLORS).map(([style, color]) => {
-          const count = liveEntries.filter(e => e.running_style === style).length;
-          if (count === 0) return null;
-          return (
-            <div key={style} className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-              <span className="font-mono text-[10px] text-gray-400">
-                {STYLE_LABELS[style]} ({count})
-              </span>
+                  {entry.post_position}
+                </span>
+              </div>
             </div>
           );
         })}
-        {winPickPP && (
-          <div className="flex items-center gap-1 ml-2">
-            <div className="w-3 h-3 rounded-full border-2 border-[#FFD700] bg-transparent" />
-            <span className="font-mono text-[10px] text-[#FFD700]">PICK</span>
-          </div>
-        )}
-        {favePP && (
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full border-2 border-[#FF4444] bg-transparent" />
-            <span className="font-mono text-[10px] text-[#FF6666]">FAVE</span>
-          </div>
-        )}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#1a1a2e]">
+        <div className="flex items-center gap-3">
+          {Object.entries(STYLE_COLORS).map(([style, color]) => {
+            const count = liveEntries.filter(e => e.running_style === style).length;
+            if (count === 0) return null;
+            return (
+              <div key={style} className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }} />
+                <span className="font-mono text-[9px] text-gray-500">{STYLE_LABELS[style]}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2">
+          {winPickPP && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#FFD700]" />
+              <span className="font-mono text-[9px] text-[#FFD700]">PICK</span>
+            </div>
+          )}
+          {favePP && (
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#FF4444]" />
+              <span className="font-mono text-[9px] text-[#FF6666]">FAVE</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
