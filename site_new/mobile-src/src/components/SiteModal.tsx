@@ -63,7 +63,7 @@ export function SiteModal() {
             </p>
             <p className="text-white text-lg font-bold mt-2">$99/mo</p>
             <a
-              href="https://fadethechalk.vercel.app/"
+              href="/api/shop/milano"
               className="mt-3 inline-block w-full bg-white text-gray-900 font-semibold text-sm py-2.5 px-6 rounded-lg text-center hover:bg-gray-100 transition-colors"
             >
               Join the Milano
@@ -73,7 +73,7 @@ export function SiteModal() {
 
         {!rejected && (
           <p className="mt-3 text-xs text-gray-400">
-            Don't have a code? <a href="https://fadethechalk.vercel.app/" className="underline text-gray-600">Learn about membership</a>
+            Don't have a code? <a href="/api/shop/milano" className="underline text-gray-600">Join the Milano — $99/mo</a>
           </p>
         )}
       </div>
