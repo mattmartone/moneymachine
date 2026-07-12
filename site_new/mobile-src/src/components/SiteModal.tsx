@@ -26,20 +26,17 @@ export function SiteModal() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
-        <img
-          src="/claudio.png"
-          alt="Claudio Pronto"
-          className="w-36 h-36 rounded-full mx-auto mb-4 object-cover"
-        />
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-          Message from the Admin
-        </p>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Claudio Pronto
-        </h2>
+        <div className="w-full aspect-video rounded-xl overflow-hidden mb-4">
+          <iframe
+            src="https://www.youtube.com/embed/AzlHwIQYaxk?autoplay=1&mute=1&rel=0"
+            className="w-full h-full"
+            frameBorder="0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        </div>
 
-        <div className="py-4 text-center">
-          <h3 className="text-gray-900 text-lg font-light mb-1">The card is live.</h3>
+        <div className="py-2 text-center">
           <p className="text-gray-500 text-sm">
             Enter your passcode to access today's picks.
           </p>
