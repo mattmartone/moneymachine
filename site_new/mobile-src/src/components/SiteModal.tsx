@@ -25,7 +25,7 @@ export function SiteModal() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md md:max-w-2xl w-full p-6 text-center">
         <div className="w-full aspect-video rounded-xl overflow-hidden mb-4">
           <iframe
             src="https://www.youtube.com/embed/AzlHwIQYaxk?autoplay=1&mute=1&rel=0"
