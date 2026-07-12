@@ -15,7 +15,7 @@ export function SiteModal() {
       setDismissed(true);
       return;
     }
-    if (val.length === 4 && val !== '7581') {
+    if (val.length >= 3 && val !== '758' && val !== '7581') {
       setRejected(true);
     }
   };
