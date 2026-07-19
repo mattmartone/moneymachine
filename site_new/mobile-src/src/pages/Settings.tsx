@@ -3,7 +3,7 @@ import { Check, Moon, Sun, Lock } from 'lucide-react';
 import { useTheme } from '../components/ThemeProvider';
 import { THEMES } from '../theme';
 
-const ACCOUNT_PIN = '7413';
+const ACCOUNT_PINS = ['7413', '666'];
 
 export function Settings() {
   const { theme, setTheme } = useTheme();
@@ -28,8 +28,8 @@ export function Settings() {
             onChange={(e) => {
               setPinError(false);
               setPinInput(e.target.value);
-              if (e.target.value.length === 4) {
-                if (e.target.value === ACCOUNT_PIN) {
+              if (e.target.value.length >= 3) {
+                if (ACCOUNT_PINS.includes(e.target.value)) {
                   setUnlocked(true);
                 } else {
                   setPinError(true);

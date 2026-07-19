@@ -3,7 +3,7 @@ declare global { interface Window { gtag?: (...args: any[]) => void; } }
 
 export function SiteModal() {
   const [code, setCode] = useState('');
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(true);
   const [rejected, setRejected] = useState(false);
 
   const handleChange = (val: string) => {
