@@ -5,6 +5,7 @@ import { notify } from './lib/notify.mjs';
 import { scanCard, formatCardAlert } from './lib/racing-api.mjs';
 import { checkScratches } from './lib/scratch-monitor.mjs';
 import { handleSlackFiles } from './lib/file-handler.mjs';
+import { handleChat } from './lib/chat.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +60,24 @@ app.post('/slack/events', async (req, res) => {
       }
     } catch (e) {
       await notify(`❌ Error processing files: ${e.message}`);
+    }
+    return;
+  }
+
+  // Handle chat — @mentions or replies in a thread Street Boss is in
+  if (event.type === 'message' && event.text && !event.bot_id) {
+    const isMention = event.text.includes('<@U0BAZ94LLJV>');
+    const isThreadReply = !!event.thread_ts;
+
+    if (!isMention && !isThreadReply) return;
+
+    const text = event.text.replace(/<@[A-Z0-9]+>\s*/g, '').trim();
+    if (!text) return;
+
+    try {
+      await handleChat(text, event.channel, event.thread_ts || event.ts);
+    } catch (e) {
+      console.error('[CHAT] Error:', e.message);
     }
   }
 });
