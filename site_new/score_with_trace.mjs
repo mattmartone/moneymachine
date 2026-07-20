@@ -12,6 +12,9 @@ const pool = new Pool({
 const DATE = process.argv[2] || new Date().toISOString().split('T')[0];
 const SLOW = process.argv.includes('--slow');
 const CANDIDATES_ONLY = process.argv.includes('--candidates-only');
+// Place-bet trial (adopted 2026-07-20): bet the win pick to place, stake-matched to the win.
+// Default ON; set ADD_PLACE_BET=false to disable without a code change.
+const ADD_PLACE_BET = process.env.ADD_PLACE_BET !== 'false';
 const RUN_ID = generateRunId();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -495,10 +498,10 @@ async function scoreRace(raceId) {
   await tracer.step('conclusion', 'Stake Sizing', 'warning', async () => {
     return {
       input: { vulnerable, field_size: allEntries.length, fave_dist_beyer: fave?.distanceBeyer, pick_dist_beyer: winPick?.distanceBeyer },
-      logic: 'Base $50, doubled if vulnerable+10horses, halved if ceiling gap ≥8',
-      result: { win: winStake, exacta: 60, doubled, reduced: !!stakeNote },
+      logic: 'Base $50, doubled if vulnerable+10horses, halved if ceiling gap ≥8. Place matches win stake.',
+      result: { win: winStake, exacta: 60, place: ADD_PLACE_BET ? winStake : 0, doubled, reduced: !!stakeNote },
       status: stakeNote ? 'warning' : 'passed',
-      message: stakeNote || `Win $${winStake}${doubled ? ' (doubled)' : ''} + Exacta $60`
+      message: (stakeNote || `Win $${winStake}${doubled ? ' (doubled)' : ''} + Exacta $60`) + (ADD_PLACE_BET ? ` + Place $${winStake}` : '')
     };
   });
 
@@ -549,7 +552,8 @@ async function scoreRace(raceId) {
     faveVulnerable: vulnerable, favePP: fave?.post_position,
     faveName: fave?.horse_name, faveStyle: fave?.running_style,
     vulnerabilityReason: vulnReason || null,
-    proposedWinStake: winStake, proposedExactaStake: 60, doubled,
+    proposedWinStake: winStake, proposedExactaStake: 60,
+    proposedPlaceStake: ADD_PLACE_BET ? winStake : 0, doubled,
     raceTheory: theory, runId: RUN_ID
   });
 
@@ -567,31 +571,40 @@ async function scoreRace(raceId) {
         [raceId, boxPPs, 60, false, conviction]
       );
 
-      // Tag strategy activations
+      // Place bet on the win pick (trial adopted 2026-07-20): single horse, stake-matched to win.
+      let placeBet = null;
+      if (ADD_PLACE_BET) {
+        const { rows: [pb] } = await pool.query(
+          `INSERT INTO bets (race_id, bet_type, entries_used, stake, doubled, conviction) VALUES ($1, 'place', $2, $3, $4, $5) RETURNING id`,
+          [raceId, [winPP], winStake, doubled, conviction]
+        );
+        placeBet = pb;
+      }
+
+      // Tag strategy activations. The win pick IS the place pick, so both bets share the same tags.
       const activations = [];
-      if (doubled) {
-        await pool.query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 38, $2)`, [winBet.id, `Vulnerable fave (${vulnReason}) + ${allEntries.length} horses`]);
-        activations.push('Doubled — Vulnerable Fave + Big Field');
-      }
-      if (vulnerable) {
-        await pool.query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, 1, $2)`, [winBet.id, vulnReason]);
-        activations.push('Spot the Vulnerable Favorite');
-      }
+      const stratTags = [];
+      if (doubled) stratTags.push({ id: 38, rationale: `Vulnerable fave (${vulnReason}) + ${allEntries.length} horses`, label: 'Doubled — Vulnerable Fave + Big Field' });
+      if (vulnerable) stratTags.push({ id: 1, rationale: vulnReason, label: 'Spot the Vulnerable Favorite' });
       for (const sig of (winPick.signalsFired || [])) {
         const stratMap = { S1: 6, S4: 3, S5: 10, S6: 7, S9: 4, S11: 25 };
         const stratId = stratMap[sig.id];
-        if (stratId) {
-          await pool.query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, $2, $3)`, [winBet.id, stratId, sig.desc]);
-          activations.push(sig.id);
+        if (stratId) stratTags.push({ id: stratId, rationale: sig.desc, label: sig.id });
+      }
+      const taggedBetIds = [winBet.id, ...(placeBet ? [placeBet.id] : [])];
+      for (const betId of taggedBetIds) {
+        for (const t of stratTags) {
+          await pool.query(`INSERT INTO strategy_activations (bet_id, strategy_id, rationale) VALUES ($1, $2, $3)`, [betId, t.id, t.rationale]);
         }
       }
+      for (const t of stratTags) activations.push(t.label);
 
       return {
         input: { race_id: raceId, conviction },
-        logic: 'Insert win + exacta bets. No trifectas (6/21 rule). Tag strategy activations.',
-        result: { win_bet_id: winBet.id, exacta_bet_id: exBet.id, win_stake: winStake, exacta_stake: 60, box: boxPPs, activations },
+        logic: 'Insert win + exacta (+ place) bets. No trifectas (6/21 rule). Tag strategy activations.',
+        result: { win_bet_id: winBet.id, exacta_bet_id: exBet.id, place_bet_id: placeBet?.id || null, win_stake: winStake, exacta_stake: 60, place_stake: placeBet ? winStake : 0, box: boxPPs, activations },
         status: 'passed',
-        message: `Win $${winStake} + Exacta $60 written (bet IDs ${winBet.id}, ${exBet.id})${activations.length ? ' | Strategies: ' + activations.join(', ') : ''}`
+        message: `Win $${winStake} + Exacta $60${placeBet ? ` + Place $${winStake}` : ''} written (bet IDs ${winBet.id}, ${exBet.id}${placeBet ? `, ${placeBet.id}` : ''})${activations.length ? ' | Strategies: ' + activations.join(', ') : ''}`
       };
     });
   } else {

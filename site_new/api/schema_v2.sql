@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS strategies (
 CREATE TABLE IF NOT EXISTS bets (
     id SERIAL PRIMARY KEY,
     race_id INTEGER NOT NULL REFERENCES races(id),
-    bet_type TEXT NOT NULL CHECK (bet_type IN ('win', 'exacta', 'trifecta', 'superfecta')),
+    bet_type TEXT NOT NULL CHECK (bet_type IN ('win', 'place', 'exacta', 'trifecta', 'superfecta')),
     entries_used INTEGER[] NOT NULL,
     stake REAL NOT NULL,
     doubled BOOLEAN DEFAULT false,
@@ -148,6 +148,8 @@ CREATE TABLE IF NOT EXISTS results (
     place_entry_id INTEGER REFERENCES entries(id),
     show_entry_id INTEGER REFERENCES entries(id),
     win_payout REAL,
+    place_payout REAL,       -- our win pick's PLACE payoff (per $2); set when we place-bet the win pick
+    show_payout REAL,        -- our win pick's SHOW payoff (per $2); captured for future use, no show bets yet
     exacta_payout REAL,
     trifecta_payout REAL,
     superfecta_payout REAL,

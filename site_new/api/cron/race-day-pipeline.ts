@@ -412,6 +412,13 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
   // Win: per $2 (as reported by track)
   const winPayout = runners[0].win_payoff ? parseFloat(runners[0].win_payoff) : null;
 
+  // Our win pick's PLACE/SHOW payoff (per $2) — for the place bet on the win pick.
+  // Meaningful only when the pick finished 1st/2nd (place) or top 3 (show); null otherwise.
+  const winPickPayoffPP = parsePP(race.win_pick);
+  const winPickRunner = runners.find((r: any) => String(parseInt(r.program_number)) === winPickPayoffPP);
+  const placePayout = winPickRunner?.place_payoff ? parseFloat(winPickRunner.place_payoff) : null;
+  const showPayout = winPickRunner?.show_payoff ? parseFloat(winPickRunner.show_payoff) : null;
+
   const payoffs = apiRace.payoffs || [];
   let exactaPayout = null, trifectaPayout = null, superfectaPayout = null;
   for (const p of payoffs) {
@@ -428,15 +435,16 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
   }
 
   await query(
-    `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+    `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, place_payout, show_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
      ON CONFLICT (race_id) DO UPDATE SET
        win_entry_id = EXCLUDED.win_entry_id, place_entry_id = EXCLUDED.place_entry_id,
        show_entry_id = EXCLUDED.show_entry_id, fourth_entry_id = EXCLUDED.fourth_entry_id,
-       win_payout = EXCLUDED.win_payout, exacta_payout = EXCLUDED.exacta_payout,
+       win_payout = EXCLUDED.win_payout, place_payout = EXCLUDED.place_payout, show_payout = EXCLUDED.show_payout,
+       exacta_payout = EXCLUDED.exacta_payout,
        trifecta_payout = EXCLUDED.trifecta_payout, superfecta_payout = EXCLUDED.superfecta_payout,
        settled_at = NOW()`,
-    [race.id, winEntryId, placeEntryId, showEntryId, fourthEntryId, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
+    [race.id, winEntryId, placeEntryId, showEntryId, fourthEntryId, winPayout, placePayout, showPayout, exactaPayout, trifectaPayout, superfectaPayout]
   );
 
   // Check our bets and settle each one
@@ -446,6 +454,7 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
   const fourthStr = fourthPP ? String(fourthPP) : null;
 
   const winHit = winPickPP === wpp;
+  const placeHit = winPickPP === wpp || winPickPP === ppp; // win pick ran 1st or 2nd
   const exHit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
   const triHit = exHit && boxPPs.includes(spp);
   const superHit = triHit && fourthStr && boxPPs.includes(fourthStr);
@@ -453,6 +462,7 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
   // Settle individual bets in the bets table
   const betSettlements = [
     { type: 'win', hit: winHit, collected: winHit ? winPayout : 0 },
+    { type: 'place', hit: placeHit, collected: placeHit ? placePayout : 0 },
     { type: 'exacta', hit: exHit, collected: exHit ? exactaPayout : 0 },
     { type: 'trifecta', hit: triHit, collected: triHit ? trifectaPayout : 0 },
     { type: 'superfecta', hit: superHit, collected: superHit ? superfectaPayout : 0 },
@@ -483,6 +493,8 @@ async function settleRace(race: CommissionRace, meetIds: Record<string, string>)
   let raceCollected = 0;
   if (winHit) { betLines.push(`Win: +$${winPayout?.toFixed(0)}`); raceCollected += winPayout || 0; }
   else betLines.push(`Win: miss`);
+  if (placeHit) { betLines.push(`Place: +$${placePayout?.toFixed(0)}`); raceCollected += placePayout || 0; }
+  else betLines.push(`Place: miss`);
   if (exHit) { betLines.push(`Exacta: +$${exactaPayout?.toFixed(0)}`); raceCollected += exactaPayout || 0; }
   else betLines.push(`Exacta: miss`);
   if (triHit) { betLines.push(`Tri: +$${trifectaPayout?.toFixed(0)}`); raceCollected += trifectaPayout || 0; }
@@ -549,7 +561,7 @@ async function ensureStrategyTags() {
     JOIN races r ON r.id = b.race_id
     WHERE r.date = CURRENT_DATE
       AND UPPER(b.conviction) IN ('COMMISSION', 'HIGH', 'MEDIUM', 'CAPO')
-      AND b.bet_type = 'win'
+      AND b.bet_type IN ('win', 'place')
       AND NOT EXISTS (SELECT 1 FROM strategy_activations sa WHERE sa.bet_id = b.id)
   `);
 

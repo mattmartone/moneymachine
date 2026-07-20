@@ -111,6 +111,8 @@ interface ApiResults {
   fourth_pp: number;
   fourth_horse: string;
   win_payout: number;
+  place_payout: number;
+  show_payout: number;
   exacta_payout: number;
   trifecta_payout: number;
   superfecta_payout: number;
@@ -256,6 +258,13 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           horses: entries.map((e) => lookupHorse(e.pp)),
           cost: pick.stake,
         });
+      } else if (pick.bet_type === 'place') {
+        wagers.push({
+          type: 'Place',
+          bet: entries.map((e) => `#${e.pp}`).join(','),
+          horses: entries.map((e) => lookupHorse(e.pp)),
+          cost: pick.stake,
+        });
       } else if (pick.bet_type === 'exacta') {
         entries.forEach((e) => {
           if (!allBoxPPs.includes(e.pp)) allBoxPPs.push(e.pp);
@@ -299,6 +308,9 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
 
         if (pick.bet_type === 'win' && results.win_payout > 0 && pps[0] === results.win_pp) {
           collected += (results.win_payout / 2) * pick.stake;
+        } else if (pick.bet_type === 'place' && results.place_payout > 0 &&
+          (pps[0] === results.win_pp || pps[0] === results.place_pp)) {
+          collected += (results.place_payout / 2) * pick.stake;
         } else if (pick.bet_type === 'exacta' && results.exacta_payout > 0 &&
           pps.includes(results.win_pp) && pps.includes(results.place_pp)) {
           collected += results.exacta_payout * (pick.stake / permutations(n, 2));
@@ -350,6 +362,11 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           if (hit && results.win_payout > 0) {
             wagerPaid = (results.win_payout / 2) * pick.stake;
           }
+        } else if (pick.bet_type === 'place') {
+          hit = pps[0] === results.win_pp || pps[0] === results.place_pp;
+          if (hit && results.place_payout > 0) {
+            wagerPaid = (results.place_payout / 2) * pick.stake;
+          }
         } else if (pick.bet_type === 'exacta') {
           hit = pps.includes(results.win_pp) && pps.includes(results.place_pp);
           if (hit && results.exacta_payout > 0) {
@@ -373,6 +390,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
 
         const wagerIdx = wagers.findIndex((w) => {
           if (pick.bet_type === 'win') return w.type === 'Win';
+          if (pick.bet_type === 'place') return w.type === 'Place';
           if (pick.bet_type === 'exacta') return w.type === 'Exacta Box';
           if (pick.bet_type === 'trifecta') return w.type === 'Trifecta Box';
           if (pick.bet_type === 'superfecta') return w.type === 'Superfecta Box';
@@ -382,6 +400,8 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           wagers[wagerIdx].paid = wagerPaid;
           if (pick.bet_type === 'win') {
             wagers[wagerIdx].trackPays = results.win_payout > 0 ? `$${results.win_payout.toFixed(2)} on $2` : undefined;
+          } else if (pick.bet_type === 'place') {
+            wagers[wagerIdx].trackPays = results.place_payout > 0 ? `$${results.place_payout.toFixed(2)} on $2` : undefined;
           } else if (pick.bet_type === 'exacta') {
             wagers[wagerIdx].trackPays = results.exacta_payout > 0 ? `$${results.exacta_payout.toFixed(2)} on $1` : undefined;
           } else if (pick.bet_type === 'trifecta') {

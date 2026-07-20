@@ -41,7 +41,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const { rows: results } = await query(
-      `SELECT r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
+      `SELECT r.race_id, r.win_payout, r.place_payout, r.show_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
               ew.post_position AS win_pp, ep.post_position AS place_pp, es.post_position AS show_pp,
               ef.post_position AS fourth_pp
        FROM results r

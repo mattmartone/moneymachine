@@ -150,7 +150,7 @@ When API gives payouts, use the `base_amount` field (but verify — sometimes re
 
 After Matt selects Commission and Capo picks, execute these IN ORDER before the card is "live":
 
-1. **Write bets to DB** — Insert exacta + win for each selected race. Exacta-first split: Standard $80 exacta + $30 win ($110 total). Doubled: $120 exacta + $60 win ($180 total). Box size is dynamic based on win pick odds — see Box Sizing Rules.
+1. **Write bets to DB** — Insert exacta + win + place for each selected race. Exacta-first split: Standard $80 exacta + $30 win ($110 total). Doubled: $120 exacta + $60 win ($180 total). Box size is dynamic based on win pick odds — see Box Sizing Rules. **Place bet** is added on the win pick, stake-matched to the win (see "Place Bet on the Win Pick") — `score_with_trace.mjs` writes it automatically unless `ADD_PLACE_BET=false`.
 2. **Pull post times** — From Racing API `post_time_long` field (Unix ms timestamp). Convert to ET. Write to `races.post_time`. Field: `entriesData.races[].post_time_long` (NOT `post_time` which is often null).
 3. **Write race theories** — For each scored race, write the theory text to `races.race_theory`. Match by track + win_pick PP + Beyer.
 4. **Tag strategy activations** — Every bet gets at minimum "Beyer Ceiling Box" (strategy_id 33). Vulnerable fave races also get "Spot the Vulnerable Favorite" (strategy_id 1). Win picks with top Beyer get S6 (7) and S9 (4).
@@ -176,7 +176,7 @@ API normalization formula: `normalizeExoticPayout(amount, tickets_bet, target_ba
 Cross-check every stored result's win_pp/place_pp/show_pp against Racing API `runners[0]/[1]/[2].program_number`. A wrong PP = wrong P/L silently. This caught CD R2 on 6/26 (DB had PP1, actual winner was PP8).
 
 ### Step 4: Verify Bet Stakes
-Standard: Win $50, Exacta $60. Doubled: Win $100, Exacta $120. Any $0 stake must have `skip_reason` set on the race. Non-standard stakes need explanation or correction.
+Standard: Win $50, Place $50, Exacta $60. Doubled: Win $100, Place $100, Exacta $120. Place matches the win stake (trial). Any $0 stake must have `skip_reason` set on the race. Non-standard stakes need explanation or correction.
 
 ### Step 5: Verify Skipped Races
 Every dropped race must have: all bet stakes = 0, `skip_reason` populated on the races row. The site displays "SKIPPED" based on `skip_reason` presence.
@@ -250,6 +250,25 @@ A doubled race gets Win $100 + Exacta $120 (both doubled, not just win). The dou
 **Standard stake:** Win $50, Exacta $60.
 **Doubled stake:** Win $100, Exacta $120.
 
+## Place Bet on the Win Pick (trial, adopted 2026-07-20)
+
+Every Commission win pick also gets a **place bet, stake-matched to the win** ($50 standard /
+$100 doubled, and halved with the win on a ceiling-gap reduction). It is **additional** outlay
+on top of win + exacta — not reallocated from the bankroll. Rationale: our win picks finish in
+the money 57% of the time but win only 23% ([[place-bet-trial]] — see
+`sessions/2026-07-20_place_show_study.md`, +43% ROI backtest). The place bet monetizes the
+frequent 2nd-place finishes.
+
+- **Bet shape:** `bet_type='place'`, `entries_used=[<win pick PP>]` (single horse), `stake` = win stake.
+- **Toggle:** on by default. Set `ADD_PLACE_BET=false` when running `score_with_trace.mjs` to
+  disable without a code change (trial is reversible).
+- **Settlement:** place HIT when the win pick finishes **1st or 2nd**;
+  `collected = (place_payout / 2) × stake`. `results.place_payout` stores the win pick's own
+  place payoff (per $2), captured from the Racing API runner object at settlement.
+- **No show bets** yet — `results.show_payout` is captured for a possible future trial only.
+- After the 2–4 week trial, compare actual place net/ROI (after real tote impact) vs. the +43%
+  projection before making it permanent.
+
 ## Model vs Random Performance Reporting
 
 After every race day postmortem, save performance data to `postmortem_metrics` table. The site displays this as a comparison table.
@@ -283,12 +302,14 @@ collected = track_payout_per_base × (our_per_combo_cost / base_amount)
 
 **Standard combo costs:**
 - Win: full stake ($25/$50/$100)
+- Place: full stake — `collected = (place_payout / 2) × stake`
 - Exacta box: $5/combo
 - Trifecta box: $1/combo  
 - Superfecta box: $0.10/combo
 
 **HIT/MISS rules (box is unordered):**
 - Win: our pick finished 1st
+- Place: our win pick finished 1st OR 2nd
 - Exacta: 1st AND 2nd finishers are both in entries_used
 - Trifecta: 1st, 2nd, AND 3rd are all in entries_used
 - Superfecta: 1st, 2nd, 3rd, AND 4th are all in entries_used

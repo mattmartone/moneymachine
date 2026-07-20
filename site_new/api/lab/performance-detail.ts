@@ -25,7 +25,7 @@ export default async function handler(req: any, res: any) {
         SELECT b.id as bet_id, b.bet_type, b.stake, b.entries_used, b.doubled, b.conviction,
                r.id as race_id, r.track, r.race_number, r.post_time,
                s.name as strategy_name, sa.rationale,
-               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               res.win_payout, res.place_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
                res.settled_at,
                ew.post_position as win_pp, ep.post_position as place_pp,
                es.post_position as show_pp, ef.post_position as fourth_pp
@@ -57,6 +57,8 @@ export default async function handler(req: any, res: any) {
 
         if (bet.bet_type === 'win' && pps[0] === winPP && bet.win_payout > 0) {
           return { collected: (bet.win_payout / 2) * bet.stake, hit: true };
+        } else if (bet.bet_type === 'place' && (pps[0] === winPP || pps[0] === placePP) && bet.place_payout > 0) {
+          return { collected: (bet.place_payout / 2) * bet.stake, hit: true };
         } else if (bet.bet_type === 'exacta' && pps.includes(winPP) && pps.includes(placePP) && bet.exacta_payout > 0) {
           return { collected: bet.exacta_payout * (bet.stake / permutations(n, 2)), hit: true };
         } else if (bet.bet_type === 'trifecta' && pps.includes(winPP) && pps.includes(placePP) && pps.includes(showPP) && bet.trifecta_payout > 0) {
@@ -194,7 +196,7 @@ export default async function handler(req: any, res: any) {
       // Calculate collected per bet type
       const { rows: settledBets } = await query(`
         SELECT b.bet_type, b.stake, b.entries_used,
-               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               res.win_payout, res.place_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
                ew.post_position as win_pp, ep.post_position as place_pp,
                es.post_position as show_pp, ef.post_position as fourth_pp
         FROM bets b
@@ -212,6 +214,7 @@ export default async function handler(req: any, res: any) {
 
       const collectedByType: Record<string, { collected: number; wins: number }> = {
         win: { collected: 0, wins: 0 },
+        place: { collected: 0, wins: 0 },
         exacta: { collected: 0, wins: 0 },
         trifecta: { collected: 0, wins: 0 },
         superfecta: { collected: 0, wins: 0 },
@@ -240,6 +243,12 @@ export default async function handler(req: any, res: any) {
             const collected = (bet.win_payout / 2) * bet.stake;
             collectedByType.win.collected += collected;
             collectedByType.win.wins++;
+          }
+        } else if (bet.bet_type === 'place') {
+          if ((pps[0] === winPP || pps[0] === placePP) && bet.place_payout > 0) {
+            const collected = (bet.place_payout / 2) * bet.stake;
+            collectedByType.place.collected += collected;
+            collectedByType.place.wins++;
           }
         } else if (bet.bet_type === 'exacta') {
           if (pps.includes(winPP) && pps.includes(placePP) && bet.exacta_payout > 0) {
@@ -284,7 +293,7 @@ export default async function handler(req: any, res: any) {
     if (filter === 'strategies') {
       const { rows: stratBets } = await query(`
         SELECT s.name as strategy_name, b.race_id, b.bet_type, b.stake, b.entries_used,
-               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               res.win_payout, res.place_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
                ew.post_position as win_pp, ep.post_position as place_pp,
                es.post_position as show_pp, ef.post_position as fourth_pp
         FROM strategy_activations sa
@@ -397,7 +406,7 @@ export default async function handler(req: any, res: any) {
 
       const { rows: personBets } = await query(`
         SELECT ${groupCol} as person, b.bet_type, b.stake, b.entries_used,
-               res.win_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+               res.win_payout, res.place_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
                ew.post_position as win_pp, ep.post_position as place_pp,
                es.post_position as show_pp, ef.post_position as fourth_pp
         FROM bets b

@@ -301,6 +301,8 @@ interface RaceResult {
   fourth_horse: string | null;
   fourth_pp: number | null;
   win_payout: number | null;
+  place_payout: number | null;
+  show_payout: number | null;
   exacta_payout: number | null;
   trifecta_payout: number | null;
   superfecta_payout: number | null;
@@ -334,18 +336,21 @@ function RaceRow({ race, commission, trackFilter, status, picks }: {
 
   const winBet = picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'win');
   const exBet = picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'exacta');
+  const placeBet = picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'place');
   const boxPPs = (exBet?.entries_used || []).map((e: string) => parsePP(e));
   const winPickFromBet = winBet?.entries_used?.[0] ? parsePP(winBet.entries_used[0]) : null;
 
   const winHit = result && winPickFromBet ? String(result.win_pp) === winPickFromBet : false;
+  const placeHit = result && winPickFromBet ? (String(result.win_pp) === winPickFromBet || String(result.place_pp) === winPickFromBet) : false;
   const exHit = result ? boxPPs.includes(String(result.win_pp)) && boxPPs.includes(String(result.place_pp)) : false;
   const triHit = result ? exHit && boxPPs.includes(String(result.show_pp)) : false;
   const superHit = result ? triHit && (result.fourth_pp ? boxPPs.includes(String(result.fourth_pp)) : false) : false;
-  const anyHit = winHit || exHit || triHit || superHit;
+  const anyHit = winHit || placeHit || exHit || triHit || superHit;
 
   const n = boxPPs.length || 4;
   const collected = result && commission ? (
     (winHit && result.win_payout ? (result.win_payout / 2) * (winBet?.stake || 50) : 0) +
+    (placeHit && result.place_payout && placeBet ? (result.place_payout / 2) * placeBet.stake : 0) +
     (exHit && result.exacta_payout ? result.exacta_payout * ((exBet?.stake || 60) / (n * (n - 1))) : 0) +
     (triHit && result.trifecta_payout ? result.trifecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'trifecta')?.stake || 24) / (n * (n - 1) * (n - 2))) : 0) +
     (superHit && result.superfecta_payout ? result.superfecta_payout * ((picks?.find((p: any) => String(p.race_id) === String(race.id) && p.bet_type === 'superfecta')?.stake || 2.4) / (n * (n - 1) * (n - 2) * (n - 3))) : 0)

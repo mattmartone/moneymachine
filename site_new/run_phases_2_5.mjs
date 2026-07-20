@@ -277,7 +277,7 @@ async function analyzeRace(raceId) {
     vulnReason,
     winPick: winPick ? { pp: winPick.post_position, name: winPick.horse_name, ml: winPick.morning_line_odds, style: winPick.running_style, score: winPick.signalScore, signals: winPick.signalsFired, beyer: winPick.best_beyer, recentLife: winPick.recentLife, troubled: winPick.troubledTrip } : null,
     box: box.map(e => ({ pp: e.post_position, name: e.horse_name, beyer: e.best_beyer, ml: e.morning_line_odds })),
-    stakes: { win: finalWinStake, exacta: doubled ? 120 : (box.length <= 4 ? 60 : (box.length === 5 ? 100 : 60)), trifecta: box.length <= 4 ? 24 : 60, superfecta: box.length <= 4 ? 2.40 : 12 },
+    stakes: { win: finalWinStake, place: (process.env.ADD_PLACE_BET !== 'false') ? finalWinStake : 0, exacta: doubled ? 120 : (box.length <= 4 ? 60 : (box.length === 5 ? 100 : 60)), trifecta: box.length <= 4 ? 24 : 60, superfecta: box.length <= 4 ? 2.40 : 12 },
     doubled,
     stakeReduced,
     cosaNostro,

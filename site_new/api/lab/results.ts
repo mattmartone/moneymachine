@@ -23,7 +23,7 @@ export default async function handler(req: any, res: any) {
 
     try {
       const { rows } = await query(
-        `SELECT r.id, r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
+        `SELECT r.id, r.race_id, r.win_payout, r.place_payout, r.show_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
                 hw.name AS win_horse, ew.post_position AS win_pp,
                 hp.name AS place_horse, ep.post_position AS place_pp,
                 hs.name AS show_horse, es.post_position AS show_pp,
@@ -59,7 +59,7 @@ export default async function handler(req: any, res: any) {
       return res.status(403).json({ error: 'Admin only' });
     }
 
-    const { race_id, win_pp, place_pp, show_pp, win_payout, exacta_payout, trifecta_payout, superfecta_payout } = req.body;
+    const { race_id, win_pp, place_pp, show_pp, win_payout, place_payout, show_payout, exacta_payout, trifecta_payout, superfecta_payout } = req.body;
     if (!race_id) return res.status(400).json({ error: 'race_id required' });
 
     try {
@@ -78,18 +78,20 @@ export default async function handler(req: any, res: any) {
       const show_entry_id = await lookupEntry(show_pp);
 
       await query(
-        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, place_payout, show_payout, exacta_payout, trifecta_payout, superfecta_payout)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          ON CONFLICT (race_id) DO UPDATE SET
            win_entry_id = EXCLUDED.win_entry_id,
            place_entry_id = EXCLUDED.place_entry_id,
            show_entry_id = EXCLUDED.show_entry_id,
            win_payout = EXCLUDED.win_payout,
+           place_payout = EXCLUDED.place_payout,
+           show_payout = EXCLUDED.show_payout,
            exacta_payout = EXCLUDED.exacta_payout,
            trifecta_payout = EXCLUDED.trifecta_payout,
            superfecta_payout = EXCLUDED.superfecta_payout,
            settled_at = NOW()`,
-        [race_id, win_entry_id, place_entry_id, show_entry_id, win_payout || null, exacta_payout || null, trifecta_payout || null, superfecta_payout || null]
+        [race_id, win_entry_id, place_entry_id, show_entry_id, win_payout || null, place_payout || null, show_payout || null, exacta_payout || null, trifecta_payout || null, superfecta_payout || null]
       );
 
       return res.status(200).json({ success: true });

@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
   let results: Record<number, any> = {};
   if (raceIds.length > 0) {
     const { rows: resultRows } = await query(
-      `SELECT r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout,
+      `SELECT r.race_id, r.win_payout, r.place_payout, r.show_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout,
               ew.post_position AS win_pp, hw.name AS win_horse,
               ep.post_position AS place_pp, hp.name AS place_horse,
               es.post_position AS show_pp, hs.name AS show_horse,
@@ -59,6 +59,7 @@ export default async function handler(req: any, res: any) {
     const raceBets = bets.filter((b: any) => b.race_id === bet.race_id);
     const winBet = raceBets.find((b: any) => b.bet_type === 'win');
     const exBet = raceBets.find((b: any) => b.bet_type === 'exacta');
+    const placeBet = raceBets.find((b: any) => b.bet_type === 'place');
     const triBet = raceBets.find((b: any) => b.bet_type === 'trifecta');
     const superBet = raceBets.find((b: any) => b.bet_type === 'superfecta');
     const result = results[bet.race_id];
@@ -84,12 +85,14 @@ export default async function handler(req: any, res: any) {
       const exHit = boxPPs.includes(wpp) && boxPPs.includes(ppp);
       const triHit = exHit && boxPPs.includes(spp);
       const superHit = triHit && !!fpp && boxPPs.includes(fpp);
+      const placeHit = winPickPP === wpp || winPickPP === ppp; // win pick ran 1st or 2nd
 
       const winCollected = winHit && result.win_payout ? (parseFloat(result.win_payout) / 2) * (winBet?.stake || 0) : 0;
+      const placeCollected = placeHit && result.place_payout ? (parseFloat(result.place_payout) / 2) * (placeBet?.stake || 0) : 0;
       const exCollected = exHit && result.exacta_payout && n > 1 ? parseFloat(result.exacta_payout) * ((exBet?.stake || 0) / (n * (n - 1))) : 0;
       const triCollected = triHit && result.trifecta_payout && n > 2 ? parseFloat(result.trifecta_payout) * ((triBet?.stake || 0) / (n * (n - 1) * (n - 2))) : 0;
       const superCollected = superHit && result.superfecta_payout && n > 3 ? parseFloat(result.superfecta_payout) * ((superBet?.stake || 0) / (n * (n - 1) * (n - 2) * (n - 3))) : 0;
-      const collected = winCollected + exCollected + triCollected + superCollected;
+      const collected = winCollected + placeCollected + exCollected + triCollected + superCollected;
       raceNet = collected - totalStake;
 
       function row(name: string, hit: boolean, stake: number, col: number, raw: string | null) {
@@ -116,6 +119,7 @@ export default async function handler(req: any, res: any) {
             </thead>
             <tbody>
               ${row('Win', winHit, winBet?.stake || 0, winCollected, result.win_payout ? '$' + parseFloat(result.win_payout).toFixed(2) + ' on $2' : null)}
+              ${placeBet ? row('Place', placeHit, placeBet?.stake || 0, placeCollected, result.place_payout ? '$' + parseFloat(result.place_payout).toFixed(2) + ' on $2' : null) : ''}
               ${row('Exacta', exHit, exBet?.stake || 0, exCollected, result.exacta_payout ? '$' + parseFloat(result.exacta_payout).toFixed(2) + ' on $1' : null)}
               ${row('Trifecta', triHit, triBet?.stake || 0, triCollected, result.trifecta_payout ? '$' + parseFloat(result.trifecta_payout).toFixed(2) + ' on $1' : null)}
               ${row('Super', superHit, superBet?.stake || 0, superCollected, result.superfecta_payout ? '$' + parseFloat(result.superfecta_payout).toFixed(2) + ' on $0.10' : null)}

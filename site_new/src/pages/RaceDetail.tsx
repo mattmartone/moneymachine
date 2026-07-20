@@ -46,6 +46,8 @@ interface RaceResult {
   fourth_horse: string | null;
   fourth_pp: number | null;
   win_payout: number | null;
+  place_payout: number | null;
+  show_payout: number | null;
   exacta_payout: number | null;
   trifecta_payout: number | null;
   superfecta_payout: number | null;
@@ -76,7 +78,7 @@ export function RaceDetail() {
   const [postTimeEdit, setPostTimeEdit] = useState('');
   const [saving, setSaving] = useState(false);
   const [raceResult, setRaceResult] = useState<RaceResult | null>(null);
-  const [resultForm, setResultForm] = useState({ win_pp: '', place_pp: '', show_pp: '', win_payout: '', exacta_payout: '', trifecta_payout: '', superfecta_payout: '' });
+  const [resultForm, setResultForm] = useState({ win_pp: '', place_pp: '', show_pp: '', win_payout: '', place_payout: '', show_payout: '', exacta_payout: '', trifecta_payout: '', superfecta_payout: '' });
   const [resultSaving, setResultSaving] = useState(false);
   const [fetchingResults, setFetchingResults] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -671,6 +673,13 @@ export function RaceDetail() {
                             <td className="text-center font-bold text-green-700">${raceResult.win_payout.toFixed(2)}</td>
                           </tr>
                         )}
+                        {raceResult.place_payout && (
+                          <tr>
+                            <td className="text-left font-bold">PLACE ($2)</td>
+                            <td className="text-left">win pick</td>
+                            <td className="text-center font-bold text-green-700">${raceResult.place_payout.toFixed(2)}</td>
+                          </tr>
+                        )}
                         {raceResult.exacta_payout && (
                           <tr>
                             <td className="text-left font-bold">EXACTA ($1)</td>
@@ -714,6 +723,12 @@ export function RaceDetail() {
                         hit = pickPP === wpp;
                         if (hit && raceResult.win_payout) {
                           collected = raceResult.win_payout * (bet.stake / 2);
+                        }
+                      } else if (betKey === 'place' && bet.entries_used?.length) {
+                        const pickPP = parsePP(bet.entries_used[0]);
+                        hit = pickPP === wpp || pickPP === ppp;
+                        if (hit && raceResult.place_payout) {
+                          collected = raceResult.place_payout * (bet.stake / 2);
                         }
                       } else if (betKey === 'exacta' && bet.entries_used?.length) {
                         const boxPPs = bet.entries_used.map(parsePP);
@@ -841,6 +856,8 @@ export function RaceDetail() {
                             place_pp: raceResult.place_pp?.toString() || '',
                             show_pp: raceResult.show_pp?.toString() || '',
                             win_payout: raceResult.win_payout?.toString() || '',
+                            place_payout: raceResult.place_payout?.toString() || '',
+                            show_payout: raceResult.show_payout?.toString() || '',
                             exacta_payout: raceResult.exacta_payout?.toString() || '',
                             trifecta_payout: raceResult.trifecta_payout?.toString() || '',
                             superfecta_payout: raceResult.superfecta_payout?.toString() || '',
