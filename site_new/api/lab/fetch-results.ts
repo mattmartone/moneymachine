@@ -1,9 +1,9 @@
 import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
-const API_USER = 'DPoVaGs2XRopMmiHUcJDkHtC';
-const API_PASS = 'YQJDPUITg7LCEP0Ascpu5t1S';
+const JWT_SECRET = process.env.JWT_SECRET || '';
+const API_USER = process.env.RACING_API_USER;
+const API_PASS = process.env.RACING_API_PASS;
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
 
 const TRACK_IDS: Record<string, string> = {

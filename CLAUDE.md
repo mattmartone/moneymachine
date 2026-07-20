@@ -39,7 +39,7 @@ Builder agent for the Fade the Chalk product. Owns all code, site, and deploymen
 - `site_new/serve_execution.mjs` — Local execution tracker (localhost:6291)
 
 ### Database (Supabase)
-- **Connection:** `postgres://postgres.bazvhjajajkpkqqvyelg:Cbl49UHWAQNJ8Lyf@aws-1-us-east-1.pooler.supabase.com:5432/postgres` (SSL, NODE_TLS_REJECT_UNAUTHORIZED=0)
+- **Connection:** `process.env.DATABASE_URL` (SSL, NODE_TLS_REJECT_UNAUTHORIZED=0). Never hardcode the connection string. Local scripts read it from the gitignored `site_new/.env` — run them with `node --env-file=.env <script>.mjs`. The password was rotated after a public exposure (see below).
 - **Key tables:** races, entries, horses, bets, results, strategies, strategy_activations, users, scratch_alerts, reports
 - **Key functions:** `get_ml_gaps(date)`, `get_funnel(date)`
 - **Key columns:** `races.qualified`, `races.skip_reason`, `races.race_theory`, `bets.conviction` (COMMISSION = active plays)
@@ -400,7 +400,7 @@ DB stores RAW track payouts (what the track pays per base unit), not pre-calcula
 - PIN gate (7413) on calendar and Account page
 
 ### Member Emails
-- Sent via Resend (`re_MHPTH9Ce_H8Rd6LRx3tSEnEJY34Ms8YjY`)
+- Sent via Resend (API key in `process.env.RESEND_API_KEY` — never hardcode)
 - From: `noreply@org64.com`
 - Rate limit: 5/sec — add delay between sends or retry 429s
 - NEVER send without Matt's approval

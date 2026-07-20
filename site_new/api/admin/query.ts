@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
   }
 
   const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${process.env.ADMIN_SECRET || 'ftc-admin'}`) {
+  if (authHeader !== `Bearer ${process.env.ADMIN_SECRET || ''}`) {
     return res.status(401).json({ error: 'Not authorized' });
   }
 

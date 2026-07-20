@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
 import { put } from '@vercel/blob';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const config = {

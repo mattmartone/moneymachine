@@ -1,9 +1,9 @@
 import { query } from '../db.js';
 
-const API_USER = 'DPoVaGs2XRopMmiHUcJDkHtC';
-const API_PASS = 'YQJDPUITg7LCEP0Ascpu5t1S';
+const API_USER = process.env.RACING_API_USER;
+const API_PASS = process.env.RACING_API_PASS;
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
-const RESEND_KEY = 're_L3cnNm7K_6Fu7rVh8Num5gULJemTdoK9y';
+const RESEND_KEY = process.env.RESEND_API_KEY;
 const MATT_EMAIL = 'mwmartone@gmail.com';
 
 const MEET_IDS: Record<string, string> = {

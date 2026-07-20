@@ -3,7 +3,7 @@ import { logComm } from '../lib/logComm.js';
 import jwt from 'jsonwebtoken';
 import { Resend } from 'resend';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: any, res: any) {

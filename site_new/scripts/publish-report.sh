@@ -18,7 +18,7 @@ FILENAME=$(basename "$PDF_PATH")
 FILEDATA=$(base64 -i "$PDF_PATH")
 
 SITE_URL="${FTC_URL:-https://fadethechalk.vercel.app}"
-ADMIN_SECRET="${ADMIN_SECRET:-ftc-admin}"
+ADMIN_SECRET="${ADMIN_SECRET:?set ADMIN_SECRET in env}"
 
 echo "Publishing: $TITLE ($TRACK, $DATE)"
 echo "File: $FILENAME ($(wc -c < "$PDF_PATH" | tr -d ' ') bytes)"

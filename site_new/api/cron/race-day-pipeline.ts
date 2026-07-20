@@ -1,7 +1,7 @@
 import { query } from '../db.js';
 
-const RACING_API_USER = process.env.RACING_API_USER || 'DPoVaGs2XRopMmiHUcJDkHtC';
-const RACING_API_PASS = process.env.RACING_API_PASS || 'YQJDPUITg7LCEP0Ascpu5t1S';
+const RACING_API_USER = process.env.RACING_API_USER || process.env.RACING_API_USER;
+const RACING_API_PASS = process.env.RACING_API_PASS || process.env.RACING_API_PASS;
 const RESEND_KEY = process.env.RESEND_API_KEY || 'dummy';
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
 const CRON_SECRET = process.env.CRON_SECRET || '';

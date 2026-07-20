@@ -2,7 +2,7 @@ import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 import Stripe from 'stripe';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', { apiVersion: '2024-06-20' });
 
 const PACKS = [

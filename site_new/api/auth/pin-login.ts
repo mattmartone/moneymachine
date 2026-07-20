@@ -1,7 +1,7 @@
 import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || '';
 const VALID_PINS = ['7413', '666'];
 const PIN_EMAILS = ['mwmartone@gmail.com'];
 

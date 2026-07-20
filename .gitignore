@@ -3,3 +3,10 @@ node_modules/
 *.jpg
 .DS_Store
 .vercel
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.local.mjs
+secrets.local.*

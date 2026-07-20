@@ -30,7 +30,7 @@ export function Db() {
   const runQuery = async (sql: string, params?: any[]) => {
     const res = await fetch('/api/admin/query', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.ADMIN_SECRET || 'ftc-admin'}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.ADMIN_SECRET || ''}` },
       body: JSON.stringify({ sql, params })
     });
     return res.json();
