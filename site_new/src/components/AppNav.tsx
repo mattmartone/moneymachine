@@ -61,7 +61,6 @@ export function AppNav() {
       <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex gap-6">
         <Link to="/today" className="web-link">TODAY</Link>
         <Link to="/reports" className="web-link">DASHBOARD</Link>
-        <Link to="/strategies" className="web-link">STRATEGIES MARKETPLACE</Link>
         <Link to="/lab" className="web-link">MY LAB</Link>
         <Link to="/contact" className="web-link">CONTACT</Link>
         {isAdmin && <Link to="/users" className="web-link text-web-red">MEMBERS</Link>}

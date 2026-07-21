@@ -10,7 +10,6 @@ import { Footer } from './components/Footer';
 import { Verify } from './pages/Verify';
 import { Onboard } from './pages/Onboard';
 import { Reports } from './pages/Reports';
-import { Strategies } from './pages/Strategies';
 import { Contact } from './pages/Contact';
 import { Users } from './pages/Users';
 import { Board } from './pages/Board';
@@ -58,7 +57,6 @@ export function App() {
         <Route path="/verify" element={<Verify />} />
         <Route path="/onboard" element={<Onboard />} />
         <Route path="/reports" element={<Reports />} />
-        <Route path="/strategies" element={<Strategies />} />
         <Route path="/board" element={<Board />} />
         <Route path="/board/:id" element={<Post />} />
         <Route path="/lab" element={<Lab />} />

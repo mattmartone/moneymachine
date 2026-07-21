@@ -290,12 +290,11 @@ export function Lab() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-sans font-bold text-sm">MARKETPLACE FAVORITES</h4>
-                <a href="/strategies" className="font-sans text-xs font-bold text-[#000080] underline">Browse Marketplace →</a>
               </div>
 
               {favorites.length === 0 ? (
                 <div className="border border-gray-300 p-4 text-center font-serif text-sm text-gray-500">
-                  No favorites yet. Browse the <a href="/strategies" className="text-[#000080] underline">Strategies Marketplace</a> and save the ones you like.
+                  No favorites saved.
                 </div>
               ) : (
                 <div className="space-y-2">
