@@ -557,7 +557,7 @@ export function Performance() {
                         {showPlaceBanner && (
                           <tr className="bg-gray-900">
                             <td colSpan={6} className="py-2 px-3 text-center">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-300">
                                 ▲ Place-Bet Trial — Place Bet Added on Every Win Pick, ROI Optimization (Jul 20, 2026)
                               </span>
                             </td>
