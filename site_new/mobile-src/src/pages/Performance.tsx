@@ -543,8 +543,26 @@ export function Performance() {
                     const isFirstV1 = idx > 0 && row.date && row.date.includes('Jun');
                     const prevRow = idx > 0 ? data[idx - 1] : null;
                     const showDivider = prevRow && !prevRow.date?.includes('Jun') && row.date?.includes('Jun');
+                    // Place-bet trial started Jul 20, 2026. Banner marks the boundary:
+                    // rows on/before Jul 19 are pre-place-bet. Renders above the first such row.
+                    const beforePlaceBet = (d?: string) => {
+                      if (!d) return false;
+                      const [m, dd] = d.split(' ');
+                      const mi = ({ Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 } as Record<string, number>)[m] ?? 0;
+                      return mi < 6 || (mi === 6 && parseInt(dd) < 20);
+                    };
+                    const showPlaceBanner = beforePlaceBet(row.date) && !beforePlaceBet(data[idx - 1]?.date);
                     return (
                       <React.Fragment key={idx}>
+                        {showPlaceBanner && (
+                          <tr className="bg-gray-900">
+                            <td colSpan={6} className="py-2 px-3 text-center">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                ▲ Place-Bet Trial — Place Bet Added on Every Win Pick, ROI Optimization (Jul 20, 2026)
+                              </span>
+                            </td>
+                          </tr>
+                        )}
                         {idx > 0 && row.date?.includes('Jun') && !data[idx - 1]?.date?.includes('Jun') && (
                           <tr className="bg-gray-900">
                             <td colSpan={6} className="py-2 px-3 text-center">
