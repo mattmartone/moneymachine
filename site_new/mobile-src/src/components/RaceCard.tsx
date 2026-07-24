@@ -75,11 +75,6 @@ export function RaceCard({ race }: RaceCardProps) {
                 <span className="text-3xl font-bold text-gray-900 tabular-nums leading-none">
                   {race.raceNumber}
                 </span>
-                {race.doubleBet && (
-                  <span className="ml-3 text-sm font-extrabold text-white bg-green-600 px-2.5 py-1 rounded-md tracking-wide shadow-sm">
-                    2X
-                  </span>
-                )}
               </div>
               <span className="text-xs text-muted tabular-nums mt-1">
                 {race.postTime}
@@ -346,6 +341,11 @@ export function RaceCard({ race }: RaceCardProps) {
           <span className="text-[11px] uppercase tracking-wider text-muted font-semibold">
             Wagering plan
           </span>
+          {race.doubleBet && (
+            <span className="text-[11px] uppercase tracking-wider text-green-600 font-bold">
+              Doubled
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
