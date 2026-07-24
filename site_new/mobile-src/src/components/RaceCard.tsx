@@ -76,7 +76,7 @@ export function RaceCard({ race }: RaceCardProps) {
                   {race.raceNumber}
                 </span>
                 {race.doubleBet && (
-                  <span className="ml-2 text-[9px] font-extrabold text-white bg-green-600 px-1.5 py-0.5 rounded">
+                  <span className="ml-3 text-sm font-extrabold text-white bg-green-600 px-2.5 py-1 rounded-md tracking-wide shadow-sm">
                     2X
                   </span>
                 )}
