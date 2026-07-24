@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/monmouth", "destination": "/api/monmouth" },
     { "source": "/execution", "destination": "/api/execution" },
     { "source": "/new-mobile", "destination": "/api/new-mobile" },
     { "source": "/mobile", "destination": "/mobile/index.html" },
