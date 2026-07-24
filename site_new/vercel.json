@@ -9,5 +9,14 @@
     { "source": "/mobile/(.*)", "destination": "/mobile/index.html" },
     { "source": "/((?!mobile|execution).*)", "destination": "/index.html" }
   ],
-  "crons": []
+  "crons": [
+    {
+      "path": "/api/cron/race-day-pipeline",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/scratch-monitor",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
