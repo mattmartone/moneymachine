@@ -221,6 +221,19 @@ function buildSingleRaceHtml(raceNum: number, race: any, t: any, postTime: strin
       ${nextRace ? `<a href="/monmouth?date=${date}&race=${nextRace}" class="nav-btn">R${nextRace} &rarr;</a>` : '<span></span>'}
     </div>
   </div>
+  <script>
+    let startX = 0;
+    let startY = 0;
+    document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx)) return;
+      const current = ${raceNum};
+      if (dx < 0 && current < 6) window.location.href = '/monmouth?date=${date}&race=' + (current + 1);
+      if (dx > 0 && current > 1) window.location.href = '/monmouth?date=${date}&race=' + (current - 1);
+    });
+  </script>
 </body>
 </html>`;
 }
