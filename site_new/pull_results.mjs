@@ -3,12 +3,12 @@ const { Pool } = pg;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: 'postgres://postgres.bazvhjajajkpkqqvyelg:LMczMTBYFGH6w9yn@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
   ssl: true
 });
 
-const API_USER = process.env.RACING_API_USER;
-const API_PASS = process.env.RACING_API_PASS;
+const API_USER = 'Vy3tbvnI66ZOQKUBdokAI7FY';
+const API_PASS = 'mkuaEi2qrgZpraYMoLj3a6fg';
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
 
 async function apiFetch(path) {
@@ -145,33 +145,19 @@ async function run() {
 
       const fourthEntryId = fourthEntry.rows[0]?.id || null;
 
-      // Our win pick's PLACE/SHOW payoff (per $2) — for the place bet on the win pick.
-      // Looked up from the bets we placed on this race; null if we didn't bet it or the pick ran out of the money.
-      let placePayout = null, showPayout = null;
-      const { rows: pickRows } = await pool.query(
-        `SELECT entries_used FROM bets WHERE race_id = $1 AND bet_type IN ('win','place') LIMIT 1`, [raceId]
-      );
-      if (pickRows[0]?.entries_used?.length) {
-        const pickPP = parseInt(String(pickRows[0].entries_used[0]).replace(/^#/, '').split(' ')[0]);
-        const pickRunner = runners.find(r => parseInt(r.program_number) === pickPP);
-        placePayout = pickRunner?.place_payoff ? parseFloat(pickRunner.place_payoff) : null;
-        showPayout = pickRunner?.show_payoff ? parseFloat(pickRunner.show_payoff) : null;
-      }
-
       await pool.query(
-        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, place_payout, show_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+        `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, fourth_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          ON CONFLICT (race_id) DO UPDATE SET
            win_entry_id = EXCLUDED.win_entry_id, place_entry_id = EXCLUDED.place_entry_id,
            show_entry_id = EXCLUDED.show_entry_id, fourth_entry_id = EXCLUDED.fourth_entry_id,
-           win_payout = EXCLUDED.win_payout, place_payout = EXCLUDED.place_payout, show_payout = EXCLUDED.show_payout,
-           exacta_payout = EXCLUDED.exacta_payout,
+           win_payout = EXCLUDED.win_payout, exacta_payout = EXCLUDED.exacta_payout,
            trifecta_payout = EXCLUDED.trifecta_payout, superfecta_payout = EXCLUDED.superfecta_payout,
            settled_at = NOW()`,
-        [raceId, winEntry.rows[0].id, placeEntry.rows[0].id, showEntry.rows[0].id, fourthEntryId, winPayout, placePayout, showPayout, exactaPayout, trifectaPayout, superfectaPayout]
+        [raceId, winEntry.rows[0].id, placeEntry.rows[0].id, showEntry.rows[0].id, fourthEntryId, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
       );
 
-      console.log(`  R${raceNum}: ✅ PP${winPP}-PP${placePP}-PP${showPP} | Win $${winPayout || '?'} | Plc $${placePayout?.toFixed(2) || '—'} | Ex $${exactaPayout?.toFixed(2) || '?'} | Tri $${trifectaPayout?.toFixed(2) || '?'} | Super $${superfectaPayout?.toFixed(2) || '?'}`);
+      console.log(`  R${raceNum}: ✅ PP${winPP}-PP${placePP}-PP${showPP} | Win $${winPayout || '?'} | Ex $${exactaPayout?.toFixed(2) || '?'} | Tri $${trifectaPayout?.toFixed(2) || '?'} | Super $${superfectaPayout?.toFixed(2) || '?'}`);
       inserted++;
     }
   }

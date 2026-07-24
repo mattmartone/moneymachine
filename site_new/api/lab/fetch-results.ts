@@ -1,9 +1,9 @@
 import { query } from '../db.js';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
-const API_USER = process.env.RACING_API_USER;
-const API_PASS = process.env.RACING_API_PASS;
+const JWT_SECRET = process.env.JWT_SECRET || 'ftc-dev-secret';
+const API_USER = 'Vy3tbvnI66ZOQKUBdokAI7FY';
+const API_PASS = 'mkuaEi2qrgZpraYMoLj3a6fg';
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
 
 const TRACK_IDS: Record<string, string> = {
@@ -118,32 +118,19 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    // Our win pick's PLACE/SHOW payoff (per $2) for the place bet on the win pick
-    let placePayout = null, showPayout = null;
-    const { rows: pickRows } = await query(
-      `SELECT entries_used FROM bets WHERE race_id = $1 AND bet_type IN ('win','place') LIMIT 1`, [race_id]
-    );
-    if (pickRows[0]?.entries_used?.length) {
-      const pickPP = parseInt(String(pickRows[0].entries_used[0]).replace(/^#/, '').split(' ')[0]);
-      const pickRunner = runners.find((r: any) => parseInt(r.program_number) === pickPP);
-      placePayout = pickRunner?.place_payoff ? parseFloat(pickRunner.place_payoff) : null;
-      showPayout = pickRunner?.show_payoff ? parseFloat(pickRunner.show_payoff) : null;
-    }
-
     await query(
-      `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, place_payout, show_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+      `INSERT INTO results (race_id, win_entry_id, place_entry_id, show_entry_id, win_payout, exacta_payout, trifecta_payout, superfecta_payout, settled_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
        ON CONFLICT (race_id) DO UPDATE SET
          win_entry_id = EXCLUDED.win_entry_id, place_entry_id = EXCLUDED.place_entry_id,
          show_entry_id = EXCLUDED.show_entry_id, win_payout = EXCLUDED.win_payout,
-         place_payout = EXCLUDED.place_payout, show_payout = EXCLUDED.show_payout,
          exacta_payout = EXCLUDED.exacta_payout, trifecta_payout = EXCLUDED.trifecta_payout,
          superfecta_payout = EXCLUDED.superfecta_payout, settled_at = NOW()`,
-      [race_id, winEntryId, placeEntryId, showEntryId, winPayout, placePayout, showPayout, exactaPayout, trifectaPayout, superfectaPayout]
+      [race_id, winEntryId, placeEntryId, showEntryId, winPayout, exactaPayout, trifectaPayout, superfectaPayout]
     );
 
     const { rows: resultRows } = await query(
-      `SELECT r.id, r.race_id, r.win_payout, r.place_payout, r.show_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
+      `SELECT r.id, r.race_id, r.win_payout, r.exacta_payout, r.trifecta_payout, r.superfecta_payout, r.settled_at,
               hw.name AS win_horse, ew.post_position AS win_pp,
               hp.name AS place_horse, ep.post_position AS place_pp,
               hs.name AS show_horse, es.post_position AS show_pp

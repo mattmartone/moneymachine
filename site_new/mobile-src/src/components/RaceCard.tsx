@@ -75,6 +75,11 @@ export function RaceCard({ race }: RaceCardProps) {
                 <span className="text-3xl font-bold text-gray-900 tabular-nums leading-none">
                   {race.raceNumber}
                 </span>
+                {race.doubleBet && (
+                  <span className="ml-2 text-[9px] font-extrabold text-white bg-green-600 px-1.5 py-0.5 rounded">
+                    2X
+                  </span>
+                )}
               </div>
               <span className="text-xs text-muted tabular-nums mt-1">
                 {race.postTime}
@@ -200,12 +205,21 @@ export function RaceCard({ race }: RaceCardProps) {
                 <span
                   key={idx}
                   className="bg-surface border border-border text-gray-700 text-xs px-2.5 py-1 rounded-full font-medium shadow-sm">
-                  
+
                       {strategy}
                     </span>
                 )}
                 </div>
               </div>
+
+              {race.compositeScore && (
+              <div className="flex items-center gap-3 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">Composite Score</span>
+                  <span className="text-lg font-bold tabular-nums text-primary">{race.compositeScore.toFixed(1)}</span>
+                </div>
+              </div>
+              )}
 
               {race.wagers.length > 0 ?
             <div className="pt-2">

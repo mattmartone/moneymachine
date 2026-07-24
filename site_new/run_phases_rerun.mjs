@@ -243,18 +243,9 @@ async function analyzeRace(raceId) {
     box.push(winPick);
   }
 
-  // Stake sizing — Doubled requires ALL THREE:
-  // 1. Vulnerable favorite (pace thesis)
-  // 2. Win pick within 5 Beyer points of distance ceiling
-  // 3. Price (ML >= 6/1)
-  const boxTopBeyer = Math.max(...box.map(e => e.best_beyer || 0));
-  const winPickBeyer = winPick?.best_beyer || 0;
-  const winPickML = parseOdds(winPick?.morning_line_odds) || 0;
-  const withinCeiling = winPickBeyer > 0 && (boxTopBeyer - winPickBeyer) <= 5;
-  const hasPrice = winPickML >= 6;
-  const doubled = vulnerable && withinCeiling && hasPrice;
+  // Stake sizing
+  const doubled = vulnerable && entries.length >= 10;
   const winStake = winPick ? (doubled ? 100 : 50) : 0;
-  const exactaStake = doubled ? 120 : 60;
 
   // Check Cosa Nostra rule: if win pick scores 3+ AND is 7/2+, bet regardless of fave protection
   const cosaNostro = winPick && winPick.signalScore >= 3 && parseOdds(winPick.morning_line_odds) >= 3.5;
@@ -277,7 +268,7 @@ async function analyzeRace(raceId) {
     vulnReason,
     winPick: winPick ? { pp: winPick.post_position, name: winPick.horse_name, ml: winPick.morning_line_odds, style: winPick.running_style, score: winPick.signalScore, signals: winPick.signalsFired, beyer: winPick.best_beyer, recentLife: winPick.recentLife, troubled: winPick.troubledTrip } : null,
     box: box.map(e => ({ pp: e.post_position, name: e.horse_name, beyer: e.best_beyer, ml: e.morning_line_odds })),
-    stakes: { win: finalWinStake, exacta: doubled ? 120 : (box.length <= 4 ? 60 : (box.length === 5 ? 100 : 60)), trifecta: box.length <= 4 ? 24 : 60, superfecta: box.length <= 4 ? 2.40 : 12 },
+    stakes: { win: finalWinStake, exacta: box.length <= 4 ? 60 : (box.length === 5 ? 100 : 60), trifecta: box.length <= 4 ? 24 : 60, superfecta: box.length <= 4 ? 2.40 : 12 },
     doubled,
     stakeReduced,
     cosaNostro,
@@ -286,15 +277,14 @@ async function analyzeRace(raceId) {
 }
 
 async function run() {
-  const dateArg = process.argv[2] || new Date().toISOString().split('T')[0];
   // Get all qualified race IDs (from Phase 1 — non-bullring, non-maiden, non-short-field, non-lone-speed)
   const { rows: races } = await pool.query(`
     SELECT r.id, r.track, r.race_number, r.conditions, r.distance, r.surface, r.field_size
     FROM races r
-    WHERE r.date = $1
-      AND r.track IN ('Churchill Downs', 'Gulfstream Park', 'Belmont at the Big A', 'Laurel Park', 'Prairie Meadows', 'Penn National', 'Woodbine', 'Emerald Downs', 'Canterbury Park', 'Monmouth Park', 'Colonial Downs', 'Hawthorne', 'Delaware Park')
+    WHERE r.date = '2026-06-19'
+      AND r.track IN ('Lone Star Park', 'Prairie Meadows', 'Emerald Downs')
     ORDER BY r.track, r.race_number
-  `, [dateArg]);
+  `);
 
   // Filter: re-apply gates on the Racing API versions (clean data with ML)
   const qualified = [];
@@ -307,15 +297,6 @@ async function run() {
     if (entries.length <= 5) continue;
     const cond = (race.conditions || '').toUpperCase();
     if (cond.includes('MAIDEN')) continue;
-
-    // Hard gate: purse minimum $25K (cheap claimers don't run to Beyers)
-    const { rows: purseRow } = await pool.query('SELECT purse, surface FROM races WHERE id = $1', [race.id]);
-    const purse = purseRow[0]?.purse || 0;
-    if (purse < 25000) continue;
-
-    // Hard gate: dirt only (turf = -22.6% ROI, pace thesis doesn't hold)
-    const surface = (purseRow[0]?.surface || '').toLowerCase();
-    if (surface.includes('turf') || (surface === 't' && !surface.includes('dirt'))) continue;
 
     // Lone speed gate
     let fave = null, lowestOdds = Infinity;

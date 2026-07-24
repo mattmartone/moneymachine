@@ -3,12 +3,12 @@ const { Pool } = pg;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: 'postgres://postgres.bazvhjajajkpkqqvyelg:LMczMTBYFGH6w9yn@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
   ssl: true
 });
 
-const API_USER = process.env.RACING_API_USER;
-const API_PASS = process.env.RACING_API_PASS;
+const API_USER = 'Vy3tbvnI66ZOQKUBdokAI7FY';
+const API_PASS = 'mkuaEi2qrgZpraYMoLj3a6fg';
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
 
 async function apiFetch(path) {

@@ -1,9 +1,9 @@
 import { query } from '../db.js';
 
-const API_USER = process.env.RACING_API_USER;
-const API_PASS = process.env.RACING_API_PASS;
+const API_USER = 'Vy3tbvnI66ZOQKUBdokAI7FY';
+const API_PASS = 'mkuaEi2qrgZpraYMoLj3a6fg';
 const BASE_URL = 'https://api.theracingapi.com/v1/north-america';
-const RESEND_KEY = process.env.RESEND_API_KEY;
+const RESEND_KEY = 're_L3cnNm7K_6Fu7rVh8Num5gULJemTdoK9y';
 
 const MEET_IDS: Record<string, string> = {
   ALB: 'ALB_1782000000000',

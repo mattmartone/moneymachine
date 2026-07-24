@@ -4,7 +4,7 @@ const { Pool } = pg;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: 'postgres://postgres.bazvhjajajkpkqqvyelg:LMczMTBYFGH6w9yn@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
   ssl: true
 });
 
