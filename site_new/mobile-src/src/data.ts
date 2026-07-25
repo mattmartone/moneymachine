@@ -389,14 +389,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           }
         }
 
-        const wagerIdx = wagers.findIndex((w) => {
-          if (pick.bet_type === 'win') return w.type === 'Win';
-          if (pick.bet_type === 'place') return w.type === 'Place';
-          if (pick.bet_type === 'exacta') return w.type === 'Exacta Box';
-          if (pick.bet_type === 'trifecta') return w.type === 'Trifecta Box';
-          if (pick.bet_type === 'superfecta') return w.type === 'Superfecta Box';
-          return false;
-        });
+        const wagerIdx = i < wagers.length ? i : -1;
         if (wagerIdx >= 0) {
           wagers[wagerIdx].paid = wagerPaid;
           if (pick.bet_type === 'win') {
