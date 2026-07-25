@@ -184,36 +184,51 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     picksByRace.set(pick.race_id, existing);
   }
 
-  // Get unique race IDs and fetch results + entries for all
+  // Use inline results/entries from the today endpoint (single query, no N+1)
   const raceIds = Array.from(picksByRace.keys());
   const resultsMap = new Map<number, ApiResults>();
   const entriesMap = new Map<number, FieldEntry[]>();
-  await Promise.all(
-    raceIds.map(async (raceId) => {
-      try {
-        const [resRes, entRes] = await Promise.all([
-          fetch(`/api/lab/results?race_id=${raceId}`, { headers: API_HEADERS }),
-          fetch(`/api/lab/entries?race_id=${raceId}`, { headers: API_HEADERS }),
-        ]);
-        if (resRes.ok) {
-          const data = await resRes.json();
-          if (data.results) resultsMap.set(raceId, data.results);
-        }
-        if (entRes.ok) {
-          const data = await entRes.json();
-          if (data.entries) {
-            entriesMap.set(raceId, data.entries.map((e: any) => ({
-              pp: e.post_position,
-              name: e.horse_name,
-              ml: e.morning_line_odds || '',
-              live: e.live_odds || undefined,
-              scratched: e.scratched || false,
-            })));
+
+  const inlineResults = picksData.results || {};
+  const inlineEntries = picksData.entries || {};
+
+  for (const raceId of raceIds) {
+    if (inlineResults[raceId]) {
+      resultsMap.set(raceId, inlineResults[raceId]);
+    }
+    if (inlineEntries[raceId]) {
+      entriesMap.set(raceId, inlineEntries[raceId].map((e: any) => ({
+        pp: e.post_position,
+        name: e.horse_name,
+        ml: e.morning_line_odds || '',
+        live: e.live_odds || undefined,
+        scratched: e.scratched || false,
+      })));
+    }
+  }
+
+  // Fallback: fetch individually for any missing (shouldn't happen but safe)
+  const missingResults = raceIds.filter(id => !resultsMap.has(id));
+  const missingEntries = raceIds.filter(id => !entriesMap.has(id));
+  if (missingResults.length || missingEntries.length) {
+    await Promise.all([
+      ...missingResults.map(async (raceId) => {
+        try {
+          const res = await fetch(`/api/lab/results?race_id=${raceId}`, { headers: API_HEADERS });
+          if (res.ok) { const data = await res.json(); if (data.results) resultsMap.set(raceId, data.results); }
+        } catch {}
+      }),
+      ...missingEntries.map(async (raceId) => {
+        try {
+          const res = await fetch(`/api/lab/entries?race_id=${raceId}`, { headers: API_HEADERS });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.entries) entriesMap.set(raceId, data.entries.map((e: any) => ({ pp: e.post_position, name: e.horse_name, ml: e.morning_line_odds || '', live: e.live_odds || undefined, scratched: e.scratched || false })));
           }
-        }
-      } catch {}
-    })
-  );
+        } catch {}
+      }),
+    ]);
+  }
 
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;

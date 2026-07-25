@@ -46,13 +46,44 @@ export default async function handler(req: any, res: any) {
       [today]
     );
 
+    const raceIds = [...new Set(rows.map((r: any) => r.race_id))];
+    const { rows: resultsRows } = raceIds.length ? await query(
+      `SELECT res.race_id, res.win_payout, res.place_payout, res.show_payout, res.exacta_payout, res.trifecta_payout, res.superfecta_payout,
+              ew.post_position AS win_pp, hw.name AS win_horse,
+              ep.post_position AS place_pp, hp.name AS place_horse,
+              es.post_position AS show_pp, hs.name AS show_horse,
+              ef.post_position AS fourth_pp, hf.name AS fourth_horse
+       FROM results res
+       LEFT JOIN entries ew ON ew.id = res.win_entry_id LEFT JOIN horses hw ON hw.id = ew.horse_id
+       LEFT JOIN entries ep ON ep.id = res.place_entry_id LEFT JOIN horses hp ON hp.id = ep.horse_id
+       LEFT JOIN entries es ON es.id = res.show_entry_id LEFT JOIN horses hs ON hs.id = es.horse_id
+       LEFT JOIN entries ef ON ef.id = res.fourth_entry_id LEFT JOIN horses hf ON hf.id = ef.horse_id
+       WHERE res.race_id = ANY($1)`,
+      [raceIds]
+    ) : { rows: [] };
+    const resultsMap: Record<number, any> = {};
+    for (const r of resultsRows) resultsMap[r.race_id] = r;
+
+    const { rows: entriesRows } = raceIds.length ? await query(
+      `SELECT e.race_id, e.post_position, h.name AS horse_name, e.morning_line_odds, e.live_odds, e.scratched
+       FROM entries e JOIN horses h ON h.id = e.horse_id
+       WHERE e.race_id = ANY($1)
+       ORDER BY e.race_id, e.post_position`,
+      [raceIds]
+    ) : { rows: [] };
+    const entriesMap: Record<number, any[]> = {};
+    for (const e of entriesRows) {
+      if (!entriesMap[e.race_id]) entriesMap[e.race_id] = [];
+      entriesMap[e.race_id].push(e);
+    }
+
     const { rows: videoRows } = await query(
       `SELECT youtube_id, title FROM videos WHERE date <= $1 ORDER BY date DESC LIMIT 1`,
       [today]
     );
     const video = videoRows.length ? videoRows[0] : null;
 
-    return res.status(200).json({ picks: rows, video });
+    return res.status(200).json({ picks: rows, results: resultsMap, entries: entriesMap, video });
   } catch (err: any) {
     console.error('today picks error:', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
