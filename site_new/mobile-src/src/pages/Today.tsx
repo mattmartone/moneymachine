@@ -298,11 +298,13 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
             )}
           </motion.div>
         </div>
+        {selectedDate === '2026-07-24' && (
         <div className="flex justify-center py-6">
           <a href="/monmouth?date=2026-07-24&race=1" className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
             Monmouth Park — At the Track
           </a>
         </div>
+        )}
       </main>
     </div>);
 
