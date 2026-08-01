@@ -283,6 +283,7 @@ function buildOverviewHtml(raceCards: string, date: string, totalRaces: number):
 </head>
 <body>
   <div class="container">
+    <div style="margin-bottom: 16px;"><a href="/mobile/" style="font-size: 12px; font-weight: 600; color: #6b7280; text-decoration: none; padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 6px;">&larr; Commission Bets</a></div>
     <div class="page-header">
       <div class="page-title">Saratoga</div>
       <div class="page-subtitle">${date} — ${totalRaces} dirt races • Full card analysis</div>
