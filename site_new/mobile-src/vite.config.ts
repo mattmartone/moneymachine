@@ -11,6 +11,14 @@ export default defineConfig({
         target: 'https://fadethechalk.vercel.app',
         changeOrigin: true,
       },
+      '/saratoga': {
+        target: 'https://fadethechalk.vercel.app',
+        changeOrigin: true,
+      },
+      '/monmouth': {
+        target: 'https://fadethechalk.vercel.app',
+        changeOrigin: true,
+      },
     },
   },
 })

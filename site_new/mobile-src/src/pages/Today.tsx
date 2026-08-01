@@ -305,6 +305,13 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
           </a>
         </div>
         )}
+        {selectedDate === '2026-08-01' && (
+        <div className="flex justify-center py-6">
+          <a href="/saratoga?date=2026-08-01" className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
+            Saratoga — Full Card Analysis
+          </a>
+        </div>
+        )}
       </main>
     </div>);
 
