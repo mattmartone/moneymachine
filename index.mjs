@@ -44,17 +44,27 @@ app.post('/slack/events', async (req, res) => {
     if (!files.length) return;
 
     try {
-      await notify(`📁 Files received in Slack: ${files.map(f => f.name).join(', ')}. Processing...`);
+      await notify(`📁 ${files.length} files received. Processing...`);
       const result = await handleSlackFiles(files);
 
       if (result.totalRaces > 0) {
-        await notify(`✅ Parsed ${result.totalRaces} races, ${result.totalEntries} entries. Pulling Racing API...`);
+        let msg = `✅ *Brisnet Load Complete*\n\n`;
+        msg += `*Tracks loaded:*\n`;
+        for (const t of result.trackResults) {
+          msg += `• ${t.trackName} — ${t.races} races, ${t.entries} entries\n`;
+        }
+        msg += `\n*Totals:* ${result.totalRaces} races | ${result.totalEntries} entries\n`;
+        msg += `\n*Next steps:*\n`;
+        msg += `1. Racing API pull (ML odds, post times, jockeys)\n`;
+        msg += `2. Score qualifying races\n`;
+        msg += `3. Present HIGH candidates for Commission\n`;
+        msg += `\nSay *"hunt"* or *"scan"* to kick off scoring.`;
 
-        // Pull Racing API to enrich
-        const date = new Date().toISOString().split('T')[0];
-        // TODO: pull_racing_api logic here when ported
-
-        await notify(`🏇 Data loaded for today. Ready to score. Run /hunt to see candidates.`);
+        await fetch(process.env.SLACK_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: `*[Street Boss]* ${msg}` })
+        });
       } else {
         await notify(`⚠️ Files received but no races parsed. Check file format.`);
       }
@@ -74,8 +84,11 @@ app.post('/slack/events', async (req, res) => {
     const text = event.text.replace(/<@[A-Z0-9]+>\s*/g, '').trim();
     if (!text) return;
 
+    console.log(`[CHAT] Received: "${text.substring(0, 80)}" | mention:${isMention} thread:${isThreadReply}`);
+
     try {
       await handleChat(text, event.channel, event.thread_ts || event.ts);
+      console.log('[CHAT] Reply sent');
     } catch (e) {
       console.error('[CHAT] Error:', e.message);
     }
