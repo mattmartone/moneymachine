@@ -203,6 +203,7 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     <div class="nav-bar">
       ${prevRace ? `<a href="${prevRace}" class="nav-btn">&larr; Prev</a>` : '<span></span>'}
       <a href="/saratoga?date=${date}" class="nav-btn">All Races</a>
+      <a href="/mobile/" class="nav-btn">Commission</a>
       ${nextRace ? `<a href="${nextRace}" class="nav-btn">Next &rarr;</a>` : '<span></span>'}
     </div>
     <div class="race-hero">
@@ -234,6 +235,7 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     <div class="nav-bar">
       ${prevRace ? `<a href="${prevRace}" class="nav-btn">&larr; Prev</a>` : '<span></span>'}
       <a href="/saratoga?date=${date}" class="nav-btn">All Races</a>
+      <a href="/mobile/" class="nav-btn">Commission</a>
       ${nextRace ? `<a href="${nextRace}" class="nav-btn">Next &rarr;</a>` : '<span></span>'}
     </div>
   </div>
