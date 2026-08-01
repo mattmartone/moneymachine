@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { rows: races } = await query(`
-      SELECT r.id, r.race_number, r.distance, r.surface, r.conditions, r.post_time, r.purse, r.field_size, r.race_theory
+      SELECT r.id, r.race_number, r.distance, r.surface, r.conditions, r.post_time, r.purse, r.field_size, r.race_theory, r.projected_finish
       FROM races r WHERE r.date = $1 AND r.track = 'Saratoga' AND r.surface = 'Dirt'
       ${race ? 'AND r.race_number = ' + race : ''}
       ORDER BY r.race_number
@@ -44,23 +44,41 @@ export default async function handler(req: any, res: any) {
       const postTime = raceData.post_time ? formatTime(raceData.post_time) : '—';
       const prevRace = findAdjacentRace(races, race, -1, date);
       const nextRace = findAdjacentRace(races, race, 1, date);
+      const projFinish: string[] = raceData.projected_finish || [];
 
       let fieldRows = '';
       for (const e of raceEntries) {
-        const isPick = sc && e.post_position === sc.win_pick_pp;
-        const inBox = sc && sc.box_pps && sc.box_pps.includes(e.post_position);
-        const isFave = sc && e.post_position === sc.fave_pp;
+        const finishPos = projFinish.indexOf(String(e.post_position));
+        const posLabel = finishPos >= 0 ? finishPos + 1 : null;
+        const rowClass = posLabel === 1 ? 'first-row' : posLabel === 2 ? 'second-row' : posLabel === 3 ? 'third-row' : posLabel === 4 ? 'fourth-row' : '';
         fieldRows += `
-          <tr class="${isPick ? 'pick-row' : inBox ? 'box-row' : isFave ? 'fave-row' : ''} ${e.scratched ? 'scratched-row' : ''}">
+          <tr class="${rowClass} ${e.scratched ? 'scratched-row' : ''}">
             <td class="pp">${e.post_position}</td>
-            <td class="horse">${e.name}${isPick ? ' <span class="pick-badge">PICK</span>' : inBox ? ' <span class="box-badge">BOX</span>' : ''}${isFave && !isPick && !inBox ? ' <span class="fave-badge">FAVE</span>' : ''}${e.scratched ? ' <span class="scr-badge">SCR</span>' : ''}</td>
+            <td class="horse">${e.name}${posLabel ? ' <span class="pos-badge pos-' + posLabel + '">' + posLabel + getOrdinal(posLabel) + '</span>' : ''}${e.scratched ? ' <span class="scr-badge">SCR</span>' : ''}</td>
             <td class="ml">${e.morning_line_odds || '—'}</td>
             <td class="beyer">${e.best_beyer || '—'}${e.last_beyer && e.best_beyer !== e.last_beyer ? '/' + e.last_beyer : ''}</td>
             <td class="style">${e.running_style || '—'}</td>
           </tr>`;
       }
 
-      const html = buildSingleRaceHtml(race, raceData, sc, postTime, fieldRows, prevRace, nextRace, totalRaces, date);
+      // Build projected outcome section
+      let projectedHtml = '';
+      if (projFinish.length >= 2) {
+        const finishEntries = projFinish.slice(0, 4).map((pp, i) => {
+          const entry = raceEntries.find((e: any) => String(e.post_position) === pp);
+          return entry ? { pos: i + 1, name: entry.name, pp: entry.post_position, ml: entry.morning_line_odds } : null;
+        }).filter(Boolean);
+        projectedHtml = finishEntries.map((e: any) => `
+          <div class="proj-horse proj-${e.pos}">
+            <span class="proj-pos">${e.pos}${getOrdinal(e.pos)}</span>
+            <span class="proj-name">${e.name}</span>
+            <span class="proj-pp">PP${e.pp}</span>
+            <span class="proj-ml">${e.ml}</span>
+          </div>
+        `).join('');
+      }
+
+      const html = buildSingleRaceHtml(race, raceData, sc, postTime, fieldRows, prevRace, nextRace, totalRaces, date, projectedHtml);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(html);
     } else {
@@ -98,6 +116,10 @@ export default async function handler(req: any, res: any) {
   }
 }
 
+function getOrdinal(n: number): string {
+  return n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th';
+}
+
 function formatTime(timeStr: string): string {
   const [h, m] = timeStr.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
@@ -112,7 +134,7 @@ function findAdjacentRace(races: any[], current: number, direction: number, date
   return adjacent ? `/saratoga?date=${date}&race=${adjacent}` : null;
 }
 
-function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: string, fieldRows: string, prevRace: string | null, nextRace: string | null, totalRaces: number, date: string): string {
+function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: string, fieldRows: string, prevRace: string | null, nextRace: string | null, totalRaces: number, date: string, projectedHtml: string = ''): string {
   const isCommission = sc && sc.conviction === 'HIGH';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -134,6 +156,18 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .race-hero-info { font-size: 12px; color: #9ca3af; margin-top: 4px; }
     .race-hero-composite { font-size: 24px; font-weight: 800; margin-top: 12px; }
     .commission-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: #16a34a; color: #fff; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+    .projected-card { background: #1a1a1a; border-radius: 12px; padding: 16px; margin-bottom: 16px; color: #fff; }
+    .projected-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; margin-bottom: 12px; }
+    .proj-horse { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .proj-horse:last-child { border-bottom: none; }
+    .proj-pos { font-size: 14px; font-weight: 800; min-width: 36px; }
+    .proj-1 .proj-pos { color: #4ade80; }
+    .proj-2 .proj-pos { color: #facc15; }
+    .proj-3 .proj-pos { color: #fb923c; }
+    .proj-4 .proj-pos { color: #94a3b8; }
+    .proj-name { font-size: 14px; font-weight: 700; flex: 1; }
+    .proj-pp { font-size: 11px; color: #9ca3af; }
+    .proj-ml { font-size: 12px; color: #6b7280; font-weight: 600; }
     .theory-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .theory-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; margin-bottom: 8px; }
     .theory-text { font-size: 13px; color: #374151; line-height: 1.7; }
@@ -148,13 +182,18 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .field-table .ml { color: #6b7280; }
     .field-table .beyer { font-weight: 700; }
     .field-table .style { color: #6b7280; font-size: 11px; }
-    .pick-row { background: #f0fdf4; }
-    .pick-row .horse { font-weight: 700; }
-    .box-row { background: #fefce8; }
-    .fave-row { background: #fef2f2; }
-    .fave-badge { font-size: 8px; font-weight: 700; background: #fee2e2; color: #dc2626; padding: 2px 5px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
+    .first-row { background: #f0fdf4; }
+    .first-row .horse { font-weight: 700; }
+    .second-row { background: #fefce8; }
+    .third-row { background: #fff7ed; }
+    .fourth-row { background: #f8fafc; }
+    .pos-badge { font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
+    .pos-1 { background: #1a1a1a; color: #4ade80; }
+    .pos-2 { background: #1a1a1a; color: #facc15; }
+    .pos-3 { background: #1a1a1a; color: #fb923c; }
+    .pos-4 { background: #1a1a1a; color: #94a3b8; }
     .scratched-row { opacity: 0.35; text-decoration: line-through; }
-    .pick-badge { font-size: 8px; font-weight: 800; background: #1a1a1a; color: #fff; padding: 2px 6px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
+    .scr-badge { font-size: 8px; font-weight: 700; background: #fee2e2; color: #991b1b; padding: 1px 4px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
     .box-badge { font-size: 8px; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 5px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
     .scr-badge { font-size: 8px; font-weight: 700; background: #fee2e2; color: #991b1b; padding: 1px 4px; border-radius: 3px; vertical-align: middle; margin-left: 4px; }
   </style>
@@ -173,6 +212,12 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
       ${sc ? `<div class="race-hero-composite">${sc.composite_score.toFixed(1)}</div>` : ''}
       ${isCommission ? '<div class="commission-tag">Commission Play</div>' : ''}
     </div>
+    ${projectedHtml ? `
+    <div class="projected-card">
+      <div class="projected-title">PREDICTED OUTCOME</div>
+      ${projectedHtml}
+    </div>
+    ` : ''}
     ${race.race_theory ? `
     <div class="theory-card">
       <div class="theory-title">RACE THEORY</div>
