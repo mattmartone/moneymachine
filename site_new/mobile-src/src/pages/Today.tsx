@@ -222,9 +222,9 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
           </button>
         </div>
 
-        {selectedDate === '2026-08-01' && (
+        {(selectedDate === '2026-08-01' || selectedDate === '2026-08-02') && (
         <div className="flex justify-center py-4">
-          <a href="/saratoga?date=2026-08-01" className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
+          <a href={`/saratoga?date=${selectedDate}`} className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
             Saratoga — Full Card Analysis
           </a>
         </div>
@@ -313,9 +313,9 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
           </a>
         </div>
         )}
-        {selectedDate === '2026-08-01' && (
+        {(selectedDate === '2026-08-01' || selectedDate === '2026-08-02') && (
         <div className="flex justify-center py-6">
-          <a href="/saratoga?date=2026-08-01" className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
+          <a href={`/saratoga?date=${selectedDate}`} className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
             Saratoga — Full Card Analysis
           </a>
         </div>

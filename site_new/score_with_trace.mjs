@@ -173,6 +173,19 @@ async function scoreRace(raceId) {
 
   if (allEntries.length === 0) { await tracer.complete(); return null; }
 
+  // GATE: No FTS-Heavy Maidens (Strategy #47)
+  if ((race.conditions || '').toUpperCase().includes('MAIDEN')) {
+    const unraced = allEntries.filter(e => !e.best_beyer && !e.running_style);
+    if (unraced.length > allEntries.length * 0.5) {
+      await writeScoredCandidate(pool, {
+        raceId, date: DATE, status: 'blocked', blockedReason: `fts_heavy_maiden (${unraced.length}/${allEntries.length} unraced)`,
+        conviction: 'BLOCKED', fieldSize: allEntries.length, runId: RUN_ID
+      });
+      await tracer.complete({ conviction: 'BLOCKED' });
+      return { raceId, status: 'blocked', track: race.track, raceNumber: race.race_number };
+    }
+  }
+
   // STEP 4: Running Style Classification
   const styleResults = await tracer.step('analysis', 'Running Style Classification', 'info', async () => {
     const perHorse = [];
@@ -247,6 +260,16 @@ async function scoreRace(raceId) {
       message: vulnerable ? `YES — ${vulnReason}` : 'NO — favorite is protected'
     };
   });
+
+  // GATE: Traffic Trap Field Minimum (Strategy #45)
+  if (vulnReason.startsWith('Trigger A') && allEntries.length < 8) {
+    await writeScoredCandidate(pool, {
+      raceId, date: DATE, status: 'blocked', blockedReason: `traffic_trap_field_too_small (${allEntries.length} < 8)`,
+      conviction: 'BLOCKED', fieldSize: allEntries.length, runId: RUN_ID
+    });
+    await tracer.complete({ conviction: 'BLOCKED' });
+    return { raceId, status: 'blocked', track: race.track, raceNumber: race.race_number };
+  }
 
   // STEP 8: DISTANCE CEILING (compute per-horse distance Beyers — gate evaluated after win pick selection)
   await tracer.step('analysis', 'Distance Ceiling', 'info', async () => {
@@ -394,6 +417,18 @@ async function scoreRace(raceId) {
   let box = byBeyer.slice(0, maxBoxSize);
   if (fave && !box.find(e => e.post_position === fave.post_position)) { box.pop(); box.push(fave); }
   if (winPick && !box.find(e => e.post_position === winPick.post_position)) { box.pop(); box.push(winPick); }
+  // Strategy #43: Fittest Speed In Box — strongest E-type must be in the box
+  const eTypes = allEntries.filter(e => e.running_style === 'E' || e.running_style === 'E/P');
+  if (eTypes.length > 0) {
+    const fittestE = eTypes.sort((a, b) => (b.best_beyer || 0) - (a.best_beyer || 0))[0];
+    if (!box.find(e => e.post_position === fittestE.post_position)) {
+      const lowestInBox = box.sort((a, b) => (a.distanceBeyer || a.best_beyer || 0) - (b.distanceBeyer || b.best_beyer || 0))[0];
+      if (lowestInBox && lowestInBox.post_position !== winPick?.post_position && lowestInBox.post_position !== fave?.post_position) {
+        box = box.filter(e => e.post_position !== lowestInBox.post_position);
+        box.push(fittestE);
+      }
+    }
+  }
   box = box.slice(0, maxBoxSize);
 
   await tracer.step('conclusion', 'Box Construction', 'info', async () => {
@@ -507,9 +542,33 @@ async function scoreRace(raceId) {
   const distBeyer = fallbackMode ? Math.round((winPick?.best_beyer || 0) * 0.9) : (winPick?.distanceBeyer || 0);
   const mlOdds = parseOdds(winPick?.morning_line_odds);
   const oddsBonus = mlOdds >= 10 ? 2 : mlOdds >= 6 ? 1 : 0;
-  const composite = (signalScore * 2) + (distBeyer / 10) + oddsBonus;
+  let composite = (signalScore * 2) + (distBeyer / 10) + oddsBonus;
+
+  // Strategy #41: Stale Beyer Penalty
+  if (winPick && winPick.days_since_last && winPick.best_beyer && winPick.last_beyer) {
+    const dayOff = winPick.days_since_last;
+    const beyerGap = winPick.best_beyer - winPick.last_beyer;
+    if (dayOff >= 60 && beyerGap >= 15) composite -= 4;
+    else if (dayOff >= 45 && beyerGap >= 10) composite -= 2;
+  }
+
+  // Strategy #42: Pace Duel Fave Has Best Speed Figure — cap at MEDIUM (fave is less vulnerable)
+  let paceDuelFaveBestSpeed = false;
+  if (paceScenario === 'pace_duel' && fave) {
+    const eTypeEntries = allEntries.filter(e => e.running_style === 'E' || e.running_style === 'E/P');
+    const maxEBeyer = Math.max(...eTypeEntries.map(e => e.best_beyer || 0));
+    if ((fave.best_beyer || 0) >= maxEBeyer && maxEBeyer > 0) paceDuelFaveBestSpeed = true;
+  }
+
+  // Strategy #35: Elite Connections Override
+  if (fave && fave.trainer) {
+    const eliteTrainers = ['Pletcher', 'Asmussen', 'Cox', 'Baffert', 'Brown Chad', 'Mott'];
+    if (eliteTrainers.some(t => (fave.trainer || '').includes(t))) composite -= 2;
+  }
+
   let conviction = (vulnerable && winPick && signalScore >= 3) ? 'HIGH' : (winPick && signalScore >= 2) ? 'MEDIUM' : 'LOW';
   if (fallbackMode && conviction === 'HIGH') conviction = 'MEDIUM';
+  if (paceDuelFaveBestSpeed && conviction === 'HIGH') conviction = 'MEDIUM';
 
   await tracer.step('conclusion', 'Conviction Level', 'info', async () => {
     return {
