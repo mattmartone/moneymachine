@@ -70,9 +70,8 @@ export default async function handler(req: any, res: any) {
         }).filter(Boolean);
         projectedHtml = finishEntries.map((e: any) => `
           <div class="proj-horse proj-${e.pos}">
-            <span class="proj-pos">${e.pos}${getOrdinal(e.pos)}</span>
+            <span class="proj-pos">#${e.pp}</span>
             <span class="proj-name">${e.name}</span>
-            <span class="proj-pp">PP${e.pp}</span>
             <span class="proj-ml">${e.ml}</span>
           </div>
         `).join('');
@@ -160,7 +159,7 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .projected-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; margin-bottom: 12px; }
     .proj-horse { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .proj-horse:last-child { border-bottom: none; }
-    .proj-pos { font-size: 14px; font-weight: 800; min-width: 36px; }
+    .proj-pos { font-size: 20px; font-weight: 800; min-width: 40px; }
     .proj-1 .proj-pos { color: #4ade80; }
     .proj-2 .proj-pos { color: #facc15; }
     .proj-3 .proj-pos { color: #fb923c; }
