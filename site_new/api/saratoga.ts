@@ -77,7 +77,44 @@ export default async function handler(req: any, res: any) {
         `).join('');
       }
 
-      const html = buildSingleRaceHtml(race, raceData, sc, postTime, fieldRows, prevRace, nextRace, totalRaces, date, projectedHtml);
+      // Build actual results section
+      let resultsHtml = '';
+      const { rows: resRows } = await query(`
+        SELECT res.win_payout, res.exacta_payout, res.place_payout,
+               ew.post_position as win_pp, hw.name as win_name,
+               ep.post_position as place_pp, hp.name as place_name,
+               es.post_position as show_pp, hs.name as show_name
+        FROM results res
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id LEFT JOIN horses hw ON hw.id = ew.horse_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id LEFT JOIN horses hp ON hp.id = ep.horse_id
+        LEFT JOIN entries es ON es.id = res.show_entry_id LEFT JOIN horses hs ON hs.id = es.horse_id
+        WHERE res.race_id = $1
+      `, [raceData.id]);
+
+      if (resRows.length > 0) {
+        const r = resRows[0];
+        const placeOnPP = projFinish[0] ? Number(projFinish[0]) : null;
+        const boxPPs = projFinish.slice(0, 4).map(Number);
+        const placeHit = placeOnPP && (placeOnPP === r.win_pp || placeOnPP === r.place_pp);
+        const exactaHit = boxPPs.includes(r.win_pp) && boxPPs.includes(r.place_pp);
+
+        resultsHtml = `
+          <div class="results-card ${placeHit || exactaHit ? 'results-hit' : 'results-miss'}">
+            <div class="results-title">ACTUAL RESULT</div>
+            <div class="results-finish">
+              <div class="result-horse result-1"><span class="result-pos">1st</span><span class="result-name">#${r.win_pp} ${r.win_name}</span><span class="result-pay">$${r.win_payout}</span></div>
+              <div class="result-horse result-2"><span class="result-pos">2nd</span><span class="result-name">#${r.place_pp} ${r.place_name}</span></div>
+              <div class="result-horse result-3"><span class="result-pos">3rd</span><span class="result-name">#${r.show_pp} ${r.show_name}</span></div>
+            </div>
+            ${r.exacta_payout ? '<div class="result-exotic">Exacta (' + r.win_pp + '-' + r.place_pp + '): $' + r.exacta_payout + '</div>' : ''}
+            <div class="result-verdict">
+              ${placeHit ? '<span class="verdict-hit">PLACE HIT</span>' : '<span class="verdict-miss">PLACE MISS</span>'}
+              ${exactaHit ? '<span class="verdict-hit">EXACTA HIT</span>' : '<span class="verdict-miss">EXACTA MISS</span>'}
+            </div>
+          </div>`;
+      }
+
+      const html = buildSingleRaceHtml(race, raceData, sc, postTime, fieldRows, prevRace, nextRace, totalRaces, date, projectedHtml, resultsHtml);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(html);
     } else {
@@ -133,7 +170,7 @@ function findAdjacentRace(races: any[], current: number, direction: number, date
   return adjacent ? `/saratoga?date=${date}&race=${adjacent}` : null;
 }
 
-function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: string, fieldRows: string, prevRace: string | null, nextRace: string | null, totalRaces: number, date: string, projectedHtml: string = ''): string {
+function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: string, fieldRows: string, prevRace: string | null, nextRace: string | null, totalRaces: number, date: string, projectedHtml: string = '', resultsHtml: string = ''): string {
   const isCommission = sc && sc.conviction === 'HIGH';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -155,6 +192,19 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .race-hero-info { font-size: 12px; color: #9ca3af; margin-top: 4px; }
     .race-hero-composite { font-size: 24px; font-weight: 800; margin-top: 12px; }
     .commission-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: #16a34a; color: #fff; padding: 3px 10px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+    .results-card { border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .results-hit { background: #f0fdf4; border: 2px solid #16a34a; }
+    .results-miss { background: #fef2f2; border: 2px solid #ef4444; }
+    .results-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700; margin-bottom: 12px; }
+    .results-finish { margin-bottom: 10px; }
+    .result-horse { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .result-pos { font-size: 12px; font-weight: 700; color: #6b7280; min-width: 28px; }
+    .result-name { font-size: 14px; font-weight: 700; flex: 1; }
+    .result-pay { font-size: 13px; font-weight: 600; color: #16a34a; }
+    .result-exotic { font-size: 12px; color: #6b7280; padding: 8px 0; border-top: 1px solid #e5e7eb; }
+    .result-verdict { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+    .verdict-hit { font-size: 11px; font-weight: 800; background: #16a34a; color: #fff; padding: 3px 8px; border-radius: 4px; }
+    .verdict-miss { font-size: 11px; font-weight: 800; background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 4px; }
     .projected-card { background: #1a1a1a; border-radius: 12px; padding: 16px; margin-bottom: 16px; color: #fff; }
     .projected-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; margin-bottom: 12px; }
     .proj-horse { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -212,6 +262,7 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
       ${sc ? `<div class="race-hero-composite">${sc.composite_score.toFixed(1)}</div>` : ''}
       ${isCommission ? '<div class="commission-tag">Commission Play</div>' : ''}
     </div>
+    ${resultsHtml}
     ${projectedHtml ? `
     <div class="projected-card">
       <div class="projected-title">PREDICTED OUTCOME</div>
