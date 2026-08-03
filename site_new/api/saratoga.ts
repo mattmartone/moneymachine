@@ -157,7 +157,7 @@ export default async function handler(req: any, res: any) {
       // Compute day summary across all races
       let dayWagered = 0, dayCollected = 0;
       const { rows: allResults } = await query(`
-        SELECT r.race_number, r.projected_finish, r.surface, res.win_payout, res.exacta_payout, res.place_payout,
+        SELECT r.race_number, r.projected_finish, r.surface, r.skip_reason, res.win_payout, res.exacta_payout, res.place_payout,
                ew.post_position as win_pp, ep.post_position as place_pp
         FROM races r
         LEFT JOIN results res ON res.race_id = r.id
@@ -170,6 +170,7 @@ export default async function handler(req: any, res: any) {
       for (const ar of allResults) {
         const isTurfRace = ar.surface === 'Turf' || ar.surface === 't' || (ar.surface || '').toLowerCase().includes('turf');
         if (isTurfRace) continue;
+        if (ar.skip_reason) continue;
         const proj = ar.projected_finish || [];
         if (proj.length < 2) continue;
         const placeStake = 50, exactaStake = 100;
