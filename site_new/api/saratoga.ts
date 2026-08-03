@@ -110,24 +110,29 @@ export default async function handler(req: any, res: any) {
         const placeNet = placeCollected - placeStake;
         const exactaNet = exactaCollected - exactaStake;
 
+        const placePays = placeHit && r.place_payout ? '$' + r.place_payout + '/$2' : '—';
+        const exactaPays = exactaHit && r.exacta_payout ? '$' + r.exacta_payout + '/$1' : '—';
+
         resultsHtml = `
           <div class="results-card ${net >= 0 ? 'results-hit' : 'results-miss'}">
             <div class="results-title">RESULT</div>
             <div class="results-finish-line">#${r.win_pp} ${r.win_name} → #${r.place_pp} ${r.place_name} → #${r.show_pp} ${r.show_name}</div>
             <table class="results-table">
               <thead>
-                <tr><th>Bet</th><th>Wagered</th><th>Collected</th><th>Net</th></tr>
+                <tr><th>Bet</th><th>Wagered</th><th>Pays</th><th>Collected</th><th>Net</th></tr>
               </thead>
               <tbody>
                 <tr class="${placeHit ? 'row-hit' : 'row-miss'}">
                   <td>Place #${placeOnPP}</td>
                   <td>$${placeStake}</td>
+                  <td>${placePays}</td>
                   <td>$${placeCollected.toFixed(2)}</td>
                   <td class="${placeNet >= 0 ? 'total-positive' : 'total-negative'}">${placeNet >= 0 ? '+' : ''}$${placeNet.toFixed(2)}</td>
                 </tr>
                 <tr class="${exactaHit ? 'row-hit' : 'row-miss'}">
                   <td>Exacta ${boxPPs.join('-')}</td>
                   <td>$${exactaStake}</td>
+                  <td>${exactaPays}</td>
                   <td>$${exactaCollected.toFixed(2)}</td>
                   <td class="${exactaNet >= 0 ? 'total-positive' : 'total-negative'}">${exactaNet >= 0 ? '+' : ''}$${exactaNet.toFixed(2)}</td>
                 </tr>
@@ -136,6 +141,7 @@ export default async function handler(req: any, res: any) {
                 <tr class="total-row">
                   <td><strong>Total</strong></td>
                   <td><strong>$${totalWagered}</strong></td>
+                  <td></td>
                   <td><strong>$${totalCollected.toFixed(2)}</strong></td>
                   <td class="${net >= 0 ? 'total-positive' : 'total-negative'}"><strong>${net >= 0 ? '+' : ''}$${net.toFixed(2)}</strong></td>
                 </tr>
