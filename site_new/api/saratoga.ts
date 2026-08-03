@@ -11,7 +11,7 @@ export default async function handler(req: any, res: any) {
   try {
     const { rows: races } = await query(`
       SELECT r.id, r.race_number, r.distance, r.surface, r.conditions, r.post_time, r.purse, r.field_size, r.race_theory, r.projected_finish
-      FROM races r WHERE r.date = $1 AND r.track = 'Saratoga' AND r.surface = 'Dirt'
+      FROM races r WHERE r.date = $1 AND r.track = 'Saratoga'
       ${race ? 'AND r.race_number = ' + race : ''}
       ORDER BY r.race_number
     `, [date]);
@@ -19,7 +19,7 @@ export default async function handler(req: any, res: any) {
     const { rows: entries } = await query(`
       SELECT r.race_number, e.post_position, h.name, e.morning_line_odds, e.best_beyer, e.last_beyer, e.running_style, e.scratched, e.jockey
       FROM entries e JOIN horses h ON h.id = e.horse_id JOIN races r ON r.id = e.race_id
-      WHERE r.date = $1 AND r.track = 'Saratoga' AND r.surface = 'Dirt'
+      WHERE r.date = $1 AND r.track = 'Saratoga'
       ${race ? 'AND r.race_number = ' + race : ''}
       ORDER BY r.race_number, e.post_position
     `, [date]);
@@ -157,17 +157,19 @@ export default async function handler(req: any, res: any) {
       // Compute day summary across all races
       let dayWagered = 0, dayCollected = 0;
       const { rows: allResults } = await query(`
-        SELECT r.race_number, r.projected_finish, res.win_payout, res.exacta_payout, res.place_payout,
+        SELECT r.race_number, r.projected_finish, r.surface, res.win_payout, res.exacta_payout, res.place_payout,
                ew.post_position as win_pp, ep.post_position as place_pp
         FROM races r
         LEFT JOIN results res ON res.race_id = r.id
         LEFT JOIN entries ew ON ew.id = res.win_entry_id
         LEFT JOIN entries ep ON ep.id = res.place_entry_id
-        WHERE r.date = $1 AND r.track = 'Saratoga' AND r.surface = 'Dirt'
+        WHERE r.date = $1 AND r.track = 'Saratoga'
         ORDER BY r.race_number
       `, [date]);
 
       for (const ar of allResults) {
+        const isTurfRace = ar.surface === 'Turf' || ar.surface === 't' || (ar.surface || '').toLowerCase().includes('turf');
+        if (isTurfRace) continue;
         const proj = ar.projected_finish || [];
         if (proj.length < 2) continue;
         const placeStake = 50, exactaStake = 100;
@@ -193,20 +195,23 @@ export default async function handler(req: any, res: any) {
         const postTime = r.post_time ? formatTime(r.post_time) : '—';
         const isCommission = sc && sc.conviction === 'HIGH';
         const purseK = (r.purse / 1000).toFixed(0);
+        const isTurf = r.surface === 'Turf' || r.surface === 't' || (r.surface || '').toLowerCase().includes('turf');
 
         raceCards += `
           <a href="/saratoga?date=${date}&race=${r.race_number}" class="race-card-link">
-          <div class="race-card ${isCommission ? 'commission-race' : ''}">
+          <div class="race-card ${isCommission ? 'commission-race' : ''} ${isTurf ? 'turf-race' : ''}">
             <div class="race-header">
               <div class="race-id">
                 <span class="race-num">R${r.race_number}</span>
                 <span class="race-time">${postTime} ET</span>
               </div>
-              <div class="race-info">${r.distance} Dirt • ${r.conditions} • $${purseK}K</div>
-              ${sc ? '<span class="composite-badge">' + sc.composite_score.toFixed(1) + '</span>' : ''}
+              <div class="race-info">${r.distance} ${isTurf ? 'Turf' : 'Dirt'} • ${r.conditions} • $${purseK}K</div>
+              ${isTurf ? '<span class="skip-badge">TURF — SKIPPED</span>' : ''}
+              ${!isTurf && sc ? '<span class="composite-badge">' + sc.composite_score.toFixed(1) + '</span>' : ''}
               ${isCommission ? '<span class="commission-badge">COMMISSION</span>' : ''}
             </div>
-            ${r.race_theory ? '<div class="race-theory-preview">' + r.race_theory.substring(0, 120) + '...</div>' : ''}
+            ${!isTurf && r.race_theory ? '<div class="race-theory-preview">' + r.race_theory.substring(0, 120) + '...</div>' : ''}
+            ${isTurf ? '<div class="race-theory-preview">Turf race — model does not apply. Closers benefit from trips, Beyers less predictive on turf.</div>' : ''}
           </div>
           </a>`;
       }
@@ -399,6 +404,8 @@ function buildOverviewHtml(raceCards: string, date: string, totalRaces: number, 
     .race-card-link { text-decoration: none; color: inherit; }
     .race-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
     .commission-race { border: 2px solid #16a34a; }
+    .turf-race { opacity: 0.6; }
+    .skip-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: #6b7280; color: #fff; padding: 3px 8px; border-radius: 4px; }
     .race-header { padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .race-id { display: flex; flex-direction: column; }
     .race-num { font-size: 18px; font-weight: 800; }
