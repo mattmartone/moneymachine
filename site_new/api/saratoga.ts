@@ -148,6 +148,39 @@ export default async function handler(req: any, res: any) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(html);
     } else {
+      // Compute day summary across all races
+      let dayWagered = 0, dayCollected = 0;
+      const { rows: allResults } = await query(`
+        SELECT r.race_number, r.projected_finish, res.win_payout, res.exacta_payout, res.place_payout,
+               ew.post_position as win_pp, ep.post_position as place_pp
+        FROM races r
+        LEFT JOIN results res ON res.race_id = r.id
+        LEFT JOIN entries ew ON ew.id = res.win_entry_id
+        LEFT JOIN entries ep ON ep.id = res.place_entry_id
+        WHERE r.date = $1 AND r.track = 'Saratoga' AND r.surface = 'Dirt'
+        ORDER BY r.race_number
+      `, [date]);
+
+      for (const ar of allResults) {
+        const proj = ar.projected_finish || [];
+        if (proj.length < 2) continue;
+        const placeStake = 50, exactaStake = 100;
+        dayWagered += placeStake + exactaStake;
+        if (ar.win_pp) {
+          const placeOnPP = Number(proj[0]);
+          const boxPPs = proj.slice(0, 4).map(Number);
+          const placeHit = placeOnPP === ar.win_pp || placeOnPP === ar.place_pp;
+          const exactaHit = boxPPs.includes(ar.win_pp) && boxPPs.includes(ar.place_pp);
+          if (placeHit && ar.place_payout) dayCollected += (ar.place_payout / 2) * placeStake;
+          else if (placeHit && ar.win_payout) dayCollected += (ar.win_payout / 2) * placeStake * 0.7;
+          if (exactaHit && ar.exacta_payout) {
+            const combos = boxPPs.length * (boxPPs.length - 1);
+            dayCollected += ar.exacta_payout * (exactaStake / combos);
+          }
+        }
+      }
+      const dayNet = dayCollected - dayWagered;
+
       let raceCards = '';
       for (const r of races) {
         const sc = scoredMap[r.race_number];
@@ -172,7 +205,7 @@ export default async function handler(req: any, res: any) {
           </a>`;
       }
 
-      const html = buildOverviewHtml(raceCards, date, totalRaces);
+      const html = buildOverviewHtml(raceCards, date, totalRaces, dayWagered, dayCollected, dayNet);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(html);
     }
@@ -335,7 +368,7 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
 </html>`;
 }
 
-function buildOverviewHtml(raceCards: string, date: string, totalRaces: number): string {
+function buildOverviewHtml(raceCards: string, date: string, totalRaces: number, dayWagered: number = 0, dayCollected: number = 0, dayNet: number = 0): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -351,6 +384,12 @@ function buildOverviewHtml(raceCards: string, date: string, totalRaces: number):
     .page-title { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
     .page-subtitle { font-size: 12px; color: #6b7280; margin-top: 4px; }
     .page-note { font-size: 11px; color: #9ca3af; margin-top: 8px; font-style: italic; }
+    .day-summary { display: flex; justify-content: center; gap: 16px; margin: 16px 0; }
+    .day-stat { text-align: center; padding: 8px 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .day-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600; }
+    .day-stat-value { font-size: 18px; font-weight: 800; margin-top: 2px; }
+    .day-stat-positive { color: #16a34a; }
+    .day-stat-negative { color: #ef4444; }
     .race-card-link { text-decoration: none; color: inherit; }
     .race-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
     .commission-race { border: 2px solid #16a34a; }
@@ -372,6 +411,13 @@ function buildOverviewHtml(raceCards: string, date: string, totalRaces: number):
       <div class="page-subtitle">${date} — ${totalRaces} dirt races • Full card analysis</div>
       <div class="page-note">Analysis only — no wagering plan. Use these theories to build your own bets.</div>
     </div>
+    ${dayWagered > 0 ? `
+    <div class="day-summary">
+      <div class="day-stat"><div class="day-stat-label">Wagered</div><div class="day-stat-value">$${dayWagered}</div></div>
+      <div class="day-stat"><div class="day-stat-label">Collected</div><div class="day-stat-value">$${dayCollected.toFixed(0)}</div></div>
+      <div class="day-stat"><div class="day-stat-label">Net</div><div class="day-stat-value ${dayNet >= 0 ? 'day-stat-positive' : 'day-stat-negative'}">${dayNet >= 0 ? '+' : ''}$${dayNet.toFixed(0)}</div></div>
+    </div>
+    ` : ''}
     ${raceCards}
   </div>
 </body>
