@@ -98,18 +98,35 @@ export default async function handler(req: any, res: any) {
         const placeHit = placeOnPP && (placeOnPP === r.win_pp || placeOnPP === r.place_pp);
         const exactaHit = boxPPs.includes(r.win_pp) && boxPPs.includes(r.place_pp);
 
+        const placeStake = 50;
+        const exactaStake = 100;
+        const combos = boxPPs.length * (boxPPs.length - 1);
+        const placeCollected = placeHit && r.place_payout ? ((r.place_payout / 2) * placeStake) : (placeHit && r.win_payout ? ((r.win_payout / 2) * placeStake * 0.7) : 0);
+        const exactaCollected = exactaHit && r.exacta_payout ? (r.exacta_payout * (exactaStake / combos)) : 0;
+        const totalWagered = placeStake + exactaStake;
+        const totalCollected = placeCollected + exactaCollected;
+        const net = totalCollected - totalWagered;
+
         resultsHtml = `
-          <div class="results-card ${placeHit || exactaHit ? 'results-hit' : 'results-miss'}">
-            <div class="results-title">ACTUAL RESULT</div>
-            <div class="results-finish">
-              <div class="result-horse result-1"><span class="result-pos">1st</span><span class="result-name">#${r.win_pp} ${r.win_name}</span><span class="result-pay">$${r.win_payout}</span></div>
-              <div class="result-horse result-2"><span class="result-pos">2nd</span><span class="result-name">#${r.place_pp} ${r.place_name}</span></div>
-              <div class="result-horse result-3"><span class="result-pos">3rd</span><span class="result-name">#${r.show_pp} ${r.show_name}</span></div>
+          <div class="results-card ${net >= 0 ? 'results-hit' : 'results-miss'}">
+            <div class="results-title">RESULT</div>
+            <div class="results-finish-line">#${r.win_pp} ${r.win_name} → #${r.place_pp} ${r.place_name} → #${r.show_pp} ${r.show_name}</div>
+            <div class="results-bets">
+              <div class="result-bet-row">
+                <span class="bet-desc">$${placeStake} Place on #${placeOnPP}</span>
+                <span class="bet-outcome ${placeHit ? 'outcome-hit' : 'outcome-miss'}">${placeHit ? 'HIT' : 'MISS'}</span>
+                <span class="bet-payout">${placeCollected > 0 ? '+$' + placeCollected.toFixed(2) : '$0'}</span>
+              </div>
+              <div class="result-bet-row">
+                <span class="bet-desc">$${exactaStake} Exacta box ${boxPPs.join('-')}</span>
+                <span class="bet-outcome ${exactaHit ? 'outcome-hit' : 'outcome-miss'}">${exactaHit ? 'HIT' : 'MISS'}</span>
+                <span class="bet-payout">${exactaCollected > 0 ? '+$' + exactaCollected.toFixed(2) : '$0'}</span>
+              </div>
             </div>
-            ${r.exacta_payout ? '<div class="result-exotic">Exacta (' + r.win_pp + '-' + r.place_pp + '): $' + r.exacta_payout + '</div>' : ''}
-            <div class="result-verdict">
-              ${placeHit ? '<span class="verdict-hit">PLACE HIT</span>' : '<span class="verdict-miss">PLACE MISS</span>'}
-              ${exactaHit ? '<span class="verdict-hit">EXACTA HIT</span>' : '<span class="verdict-miss">EXACTA MISS</span>'}
+            <div class="results-total">
+              <span>Wagered $${totalWagered}</span>
+              <span>Collected $${totalCollected.toFixed(2)}</span>
+              <span class="${net >= 0 ? 'total-positive' : 'total-negative'}">Net ${net >= 0 ? '+' : ''}$${net.toFixed(2)}</span>
             </div>
           </div>`;
       }
@@ -195,16 +212,19 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .results-card { border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .results-hit { background: #f0fdf4; border: 2px solid #16a34a; }
     .results-miss { background: #fef2f2; border: 2px solid #ef4444; }
-    .results-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700; margin-bottom: 12px; }
-    .results-finish { margin-bottom: 10px; }
-    .result-horse { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-    .result-pos { font-size: 12px; font-weight: 700; color: #6b7280; min-width: 28px; }
-    .result-name { font-size: 14px; font-weight: 700; flex: 1; }
-    .result-pay { font-size: 13px; font-weight: 600; color: #16a34a; }
-    .result-exotic { font-size: 12px; color: #6b7280; padding: 8px 0; border-top: 1px solid #e5e7eb; }
-    .result-verdict { display: flex; gap: 8px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
-    .verdict-hit { font-size: 11px; font-weight: 800; background: #16a34a; color: #fff; padding: 3px 8px; border-radius: 4px; }
-    .verdict-miss { font-size: 11px; font-weight: 800; background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 4px; }
+    .results-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700; margin-bottom: 8px; }
+    .results-finish-line { font-size: 14px; font-weight: 700; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .results-bets { margin-bottom: 12px; }
+    .result-bet-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 13px; }
+    .result-bet-row:last-child { border-bottom: none; }
+    .bet-desc { flex: 1; font-weight: 500; }
+    .bet-outcome { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 3px; }
+    .outcome-hit { background: #16a34a; color: #fff; }
+    .outcome-miss { background: #ef4444; color: #fff; }
+    .bet-payout { font-weight: 700; min-width: 60px; text-align: right; }
+    .results-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); color: #6b7280; }
+    .total-positive { color: #16a34a; font-weight: 800; }
+    .total-negative { color: #ef4444; font-weight: 800; }
     .projected-card { background: #1a1a1a; border-radius: 12px; padding: 16px; margin-bottom: 16px; color: #fff; }
     .projected-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; font-weight: 700; margin-bottom: 12px; }
     .proj-horse { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
