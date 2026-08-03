@@ -107,27 +107,40 @@ export default async function handler(req: any, res: any) {
         const totalCollected = placeCollected + exactaCollected;
         const net = totalCollected - totalWagered;
 
+        const placeNet = placeCollected - placeStake;
+        const exactaNet = exactaCollected - exactaStake;
+
         resultsHtml = `
           <div class="results-card ${net >= 0 ? 'results-hit' : 'results-miss'}">
             <div class="results-title">RESULT</div>
             <div class="results-finish-line">#${r.win_pp} ${r.win_name} → #${r.place_pp} ${r.place_name} → #${r.show_pp} ${r.show_name}</div>
-            <div class="results-bets">
-              <div class="result-bet-row">
-                <span class="bet-desc">$${placeStake} Place on #${placeOnPP}</span>
-                <span class="bet-outcome ${placeHit ? 'outcome-hit' : 'outcome-miss'}">${placeHit ? 'HIT' : 'MISS'}</span>
-                <span class="bet-payout">${placeCollected > 0 ? '+$' + placeCollected.toFixed(2) : '$0'}</span>
-              </div>
-              <div class="result-bet-row">
-                <span class="bet-desc">$${exactaStake} Exacta box ${boxPPs.join('-')}</span>
-                <span class="bet-outcome ${exactaHit ? 'outcome-hit' : 'outcome-miss'}">${exactaHit ? 'HIT' : 'MISS'}</span>
-                <span class="bet-payout">${exactaCollected > 0 ? '+$' + exactaCollected.toFixed(2) : '$0'}</span>
-              </div>
-            </div>
-            <div class="results-total">
-              <span>Wagered $${totalWagered}</span>
-              <span>Collected $${totalCollected.toFixed(2)}</span>
-              <span class="${net >= 0 ? 'total-positive' : 'total-negative'}">Net ${net >= 0 ? '+' : ''}$${net.toFixed(2)}</span>
-            </div>
+            <table class="results-table">
+              <thead>
+                <tr><th>Bet</th><th>Wagered</th><th>Collected</th><th>Net</th></tr>
+              </thead>
+              <tbody>
+                <tr class="${placeHit ? 'row-hit' : 'row-miss'}">
+                  <td>Place #${placeOnPP}</td>
+                  <td>$${placeStake}</td>
+                  <td>$${placeCollected.toFixed(2)}</td>
+                  <td class="${placeNet >= 0 ? 'total-positive' : 'total-negative'}">${placeNet >= 0 ? '+' : ''}$${placeNet.toFixed(2)}</td>
+                </tr>
+                <tr class="${exactaHit ? 'row-hit' : 'row-miss'}">
+                  <td>Exacta ${boxPPs.join('-')}</td>
+                  <td>$${exactaStake}</td>
+                  <td>$${exactaCollected.toFixed(2)}</td>
+                  <td class="${exactaNet >= 0 ? 'total-positive' : 'total-negative'}">${exactaNet >= 0 ? '+' : ''}$${exactaNet.toFixed(2)}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td><strong>Total</strong></td>
+                  <td><strong>$${totalWagered}</strong></td>
+                  <td><strong>$${totalCollected.toFixed(2)}</strong></td>
+                  <td class="${net >= 0 ? 'total-positive' : 'total-negative'}"><strong>${net >= 0 ? '+' : ''}$${net.toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>`;
       }
 
@@ -214,15 +227,13 @@ function buildSingleRaceHtml(raceNum: number, race: any, sc: any, postTime: stri
     .results-miss { background: #fef2f2; border: 2px solid #ef4444; }
     .results-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #6b7280; font-weight: 700; margin-bottom: 8px; }
     .results-finish-line { font-size: 14px; font-weight: 700; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.1); }
-    .results-bets { margin-bottom: 12px; }
-    .result-bet-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 13px; }
-    .result-bet-row:last-child { border-bottom: none; }
-    .bet-desc { flex: 1; font-weight: 500; }
-    .bet-outcome { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 3px; }
-    .outcome-hit { background: #16a34a; color: #fff; }
-    .outcome-miss { background: #ef4444; color: #fff; }
-    .bet-payout { font-weight: 700; min-width: 60px; text-align: right; }
-    .results-total { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); color: #6b7280; }
+    .results-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    .results-table th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7280; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    .results-table td { padding: 8px 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    .results-table tfoot td { border-bottom: none; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.15); }
+    .row-hit { background: rgba(22,163,106,0.05); }
+    .row-miss { }
+    .total-row { font-weight: 700; }
     .total-positive { color: #16a34a; font-weight: 800; }
     .total-negative { color: #ef4444; font-weight: 800; }
     .projected-card { background: #1a1a1a; border-radius: 12px; padding: 16px; margin-bottom: 16px; color: #fff; }
