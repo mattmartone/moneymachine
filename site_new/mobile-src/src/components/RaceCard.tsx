@@ -241,10 +241,26 @@ export function RaceCard({ race }: RaceCardProps) {
               <StrategyBadges strategies={race.analysis.strategies} detail={race.analysis.strategiesDetail || []} />
 
               {race.compositeScore && (
-              <div className="flex items-center gap-3 pt-1">
-                <div className="flex items-center gap-2">
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] uppercase tracking-wider text-muted font-semibold">Composite Score</span>
-                  <span className="text-lg font-bold tabular-nums text-primary">{race.compositeScore.toFixed(1)}</span>
+                  <span className="text-sm font-bold tabular-nums text-primary">{race.compositeScore.toFixed(1)}</span>
+                </div>
+                <div className="relative h-2 bg-app border border-border rounded-full overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 bg-primary/80 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, Math.max(0, ((race.compositeScore - 12) / (26 - 12)) * 100))}%` }}
+                  />
+                  {/* Average marker */}
+                  <div
+                    className="absolute top-0 bottom-0 w-px bg-gray-400"
+                    style={{ left: `${((19.6 - 12) / (26 - 12)) * 100}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-0.5">
+                  <span className="text-[9px] text-muted">12</span>
+                  <span className="text-[9px] text-muted">avg 19.6</span>
+                  <span className="text-[9px] text-muted">26</span>
                 </div>
               </div>
               )}
