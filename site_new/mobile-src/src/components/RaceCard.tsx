@@ -163,16 +163,24 @@ export function RaceCard({ race }: RaceCardProps) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {race.field.map((entry) => (
-                        <tr key={entry.pp} className={entry.scratched ? 'opacity-40 line-through' : ''}>
+                      {race.field.map((entry) => {
+                        const isPick = entry.pp === race.winPick.pp;
+                        const isFave = !entry.scratched && entry.ml && race.field.filter(e => !e.scratched && e.ml).every(e => {
+                          const parseML = (s: string) => { if (!s) return 99; const parts = s.split(/[-\/]/); return parts.length === 2 ? Number(parts[0])/Number(parts[1]) : parseFloat(s); };
+                          return parseML(entry.ml) <= parseML(e.ml);
+                        });
+                        return (
+                        <tr key={entry.pp} className={`${entry.scratched ? 'opacity-40 line-through' : ''} ${isPick ? 'bg-green-50' : isFave ? 'bg-red-50' : ''}`}>
                           <td className="py-1.5 px-3 tabular-nums text-gray-900 font-semibold">{entry.pp}</td>
                           <td className={`py-1.5 px-3 text-gray-700 ${entry.scratched ? 'line-through' : ''}`}>
                             {entry.name}
+                            {isPick && <span className="ml-2 text-[9px] uppercase tracking-wider text-green-600 font-bold bg-green-100 px-1.5 py-0.5 rounded">FADE</span>}
+                            {isFave && !isPick && <span className="ml-2 text-[9px] uppercase tracking-wider text-red-600 font-bold bg-red-100 px-1.5 py-0.5 rounded">CHALK</span>}
                             {entry.scratched && <span className="ml-2 text-[9px] uppercase tracking-wider text-danger font-semibold">SCR</span>}
                           </td>
                           <td className="py-1.5 px-3 text-right tabular-nums text-muted">{entry.live || entry.ml}</td>
-                        </tr>
-                      ))}
+                        </tr>);
+                      })}
                     </tbody>
                   </table>
                 </div>
