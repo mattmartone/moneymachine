@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifying... — Fade the Chalk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: Inter, -apple-system, sans-serif;
+      background: #f8f8f6;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    .logo { font-size: 20px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 16px; }
+    .status { font-size: 15px; color: #6b7280; }
+    .error { color: #dc2626; margin-top: 16px; font-size: 13px; }
+    a { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Fade the Chalk</div>
+    <p class="status" id="status">Verifying your sign-in link...</p>
+    <p class="error" id="error" style="display:none;"></p>
+  </div>
+
+  <script>
+    async function verify() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+
+      if (!token) {
+        document.getElementById('status').textContent = 'Invalid link.';
+        document.getElementById('error').textContent = 'No token found. Try signing in again.';
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          localStorage.setItem('ftc_token', data.token);
+          localStorage.setItem('ftc_user', JSON.stringify(data.user));
+          document.getElementById('status').textContent = 'Verified! Redirecting...';
+          setTimeout(() => { window.location.href = '/mobile'; }, 500);
+        } else {
+          document.getElementById('status').textContent = 'Link expired or invalid.';
+          document.getElementById('error').innerHTML = (data.error || 'Try signing in again.') + '<br><br><a href="/signin">Back to sign in</a>';
+          document.getElementById('error').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('status').textContent = 'Something went wrong.';
+        document.getElementById('error').innerHTML = 'Network error.<br><br><a href="/signin">Try again</a>';
+        document.getElementById('error').style.display = 'block';
+      }
+    }
+
+    verify();
+  </script>
+</body>
+</html>
