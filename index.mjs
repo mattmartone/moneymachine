@@ -6,6 +6,7 @@ import { scanCard, formatCardAlert } from './lib/racing-api.mjs';
 import { checkScratches } from './lib/scratch-monitor.mjs';
 import { handleSlackFiles } from './lib/file-handler.mjs';
 import { handleChat } from './lib/chat.mjs';
+import { runPipeline, runPendingPipelines, settleToday } from './lib/pipeline.mjs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -54,17 +55,20 @@ app.post('/slack/events', async (req, res) => {
           msg += `• ${t.trackName} — ${t.races} races, ${t.entries} entries\n`;
         }
         msg += `\n*Totals:* ${result.totalRaces} races | ${result.totalEntries} entries\n`;
-        msg += `\n*Next steps:*\n`;
-        msg += `1. Racing API pull (ML odds, post times, jockeys)\n`;
-        msg += `2. Score qualifying races\n`;
-        msg += `3. Present HIGH candidates for Commission\n`;
-        msg += `\nSay *"hunt"* or *"scan"* to kick off scoring.`;
+        msg += `\n*Running pipeline automatically...*`;
 
         await fetch(process.env.SLACK_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: `*[Street Boss]* ${msg}` })
         });
+
+        // Auto-run pipeline for all pending dates
+        try {
+          await runPendingPipelines();
+        } catch (err) {
+          await notify(`❌ Pipeline error after file load: ${err.message}`);
+        }
       } else {
         await notify(`⚠️ Files received but no races parsed. Check file format.`);
       }
@@ -230,8 +234,32 @@ cron.schedule('*/10 11-22 * * *', async () => {
   }
 }, { timezone: 'America/New_York' });
 
+// 6:30 AM Thu-Sun — Morning pipeline: re-enrich today + re-score
+cron.schedule('30 6 * * 4-7', async () => {
+  const date = new Date().toISOString().split('T')[0];
+  try {
+    const { rows } = await query('SELECT count(*) as c FROM races WHERE date = $1', [date]);
+    if (parseInt(rows[0].c) > 0) {
+      console.log(`[MORNING PIPELINE] Running for ${date}`);
+      await runPipeline(date);
+    }
+  } catch (e) {
+    await notify(`Morning pipeline failed: ${e.message}`);
+  }
+}, { timezone: 'America/New_York' });
+
+// Every 15 min (2 PM - 11 PM) Thu-Sun — Settle results
+cron.schedule('*/15 14-23 * * 4-7', async () => {
+  try {
+    await settleToday();
+  } catch (e) {
+    console.error('[SETTLE] Error:', e.message);
+  }
+}, { timezone: 'America/New_York' });
+
 app.listen(PORT, () => {
-  console.log(`Street Boss v2.0 — The Spotter`);
+  console.log(`Street Boss v3.0 — Autonomous Pipeline`);
   console.log(`Listening on port ${PORT}`);
-  console.log(`Daily hunt at 7:00 AM ET. Scratch monitor 11 AM - 10 PM ET.`);
+  console.log(`Morning pipeline 6:30 AM Thu-Sun. Hunt 7:00 AM daily.`);
+  console.log(`Scratch monitor 11 AM-10 PM. Results 2 PM-11 PM.`);
 });
