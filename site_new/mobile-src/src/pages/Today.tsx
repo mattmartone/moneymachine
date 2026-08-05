@@ -199,13 +199,11 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         </div>
 
 
-        {(selectedDate === '2026-08-01' || selectedDate === '2026-08-02') && (
         <div className="flex justify-center py-4">
           <a href={`/saratoga?date=${selectedDate}`} className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
             Saratoga — Full Card Analysis
           </a>
         </div>
-        )}
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
         <div className="relative">
