@@ -37,6 +37,7 @@ export default async function handler(req: any, res: any) {
               r.track, r.race_number, r.conditions, r.distance, r.surface, r.field_size, r.post_time,
               r.race_theory, r.skip_reason,
               (SELECT array_agg(s.name) FROM strategy_activations sa JOIN strategies s ON s.id = sa.strategy_id WHERE sa.bet_id = b.id) as strategies_fired,
+              (SELECT json_agg(json_build_object('name', s.name, 'reasoning', sa.reasoning)) FROM strategy_activations sa JOIN strategies s ON s.id = sa.strategy_id WHERE sa.bet_id = b.id AND sa.reasoning IS NOT NULL) as strategies_detail,
               sc.composite_score, sc.signal_score, sc.win_pick_name, sc.win_pick_ml, sc.win_pick_beyer
        FROM bets b
        JOIN races r ON r.id = b.race_id

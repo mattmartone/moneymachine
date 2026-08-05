@@ -1,7 +1,46 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Race } from '../data';
-import { ChevronDown, Zap } from 'lucide-react';
+import { ChevronDown, Zap, ChevronRight } from 'lucide-react';
+
+function StrategyBadges({ strategies, detail }: { strategies: string[]; detail: any[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  return (
+    <div>
+      <h4 className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
+        Strategies Firing
+      </h4>
+      <div className="space-y-1.5">
+        {strategies.map((strategy, idx) => {
+          const info = detail.find(d => d.name === strategy);
+          const isOpen = expanded === strategy;
+          return (
+            <div key={idx}>
+              <button
+                onClick={() => setExpanded(isOpen ? null : strategy)}
+                className={`w-full flex items-center gap-2 bg-surface border border-border text-gray-700 text-xs px-3 py-2 rounded-lg font-medium shadow-sm text-left transition-colors ${isOpen ? 'border-primary bg-primary/5' : 'hover:bg-app'}`}
+              >
+                <ChevronRight size={12} className={`text-muted transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+                <span className="flex-1">{strategy}</span>
+              </button>
+              {isOpen && info?.reasoning && (
+                <div className="ml-5 mt-1 mb-1 px-3 py-2 bg-app border-l-2 border-primary rounded-r-lg">
+                  <p className="text-xs text-gray-600 leading-relaxed">{info.reasoning}</p>
+                </div>
+              )}
+              {isOpen && !info?.reasoning && (
+                <div className="ml-5 mt-1 mb-1 px-3 py-2 bg-app border-l-2 border-border rounded-r-lg">
+                  <p className="text-xs text-muted italic">Strategy active — reasoning not yet available.</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 interface RaceCardProps {
   race: Race;
 }
@@ -199,21 +238,7 @@ export function RaceCard({ race }: RaceCardProps) {
               </div>
               )}
 
-              <div>
-                <h4 className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
-                  Strategies Firing
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {race.analysis.strategies.map((strategy, idx) =>
-                <span
-                  key={idx}
-                  className="bg-surface border border-border text-gray-700 text-xs px-2.5 py-1 rounded-full font-medium shadow-sm">
-
-                      {strategy}
-                    </span>
-                )}
-                </div>
-              </div>
+              <StrategyBadges strategies={race.analysis.strategies} detail={race.analysis.strategiesDetail || []} />
 
               {race.compositeScore && (
               <div className="flex items-center gap-3 pt-1">

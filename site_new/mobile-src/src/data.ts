@@ -444,6 +444,10 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
           .flatMap((p: any) => p.strategies_fired || [])
           .filter((s: string | null) => s !== null)
           .filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i),
+        strategiesDetail: racePicks
+          .flatMap((p: any) => p.strategies_detail || [])
+          .filter((s: any) => s && s.name)
+          .filter((s: any, i: number, arr: any[]) => arr.findIndex(x => x.name === s.name) === i),
       },
       wagers,
       field: entriesMap.get(raceId) || [],
