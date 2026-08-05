@@ -176,22 +176,20 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
         <FeaturedVideo />
 
-        <div className="flex justify-between items-end mb-4">
-          <h2 className="text-xl font-bold tracking-tight">Race Day</h2>
-        </div>
-
-        {/* Commission / Saratoga toggle */}
-        <div className="flex gap-2 mb-4">
-          <a
-            href="#commission"
-            className="flex-1 text-center bg-surface border border-border text-gray-900 font-bold text-sm px-4 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
-            Commission Picks
-          </a>
-          <a
-            href={`/saratoga?date=${selectedDate}`}
-            className="flex-1 text-center bg-surface border border-border text-gray-900 font-bold text-sm px-4 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
-            Saratoga Card
-          </a>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold tracking-tight mb-3">Race Day</h2>
+          <div className="flex gap-2">
+            <a
+              href="#commission"
+              className="flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg bg-primary/10 text-primary border border-primary/20">
+              Commission Picks
+            </a>
+            <a
+              href={`/saratoga?date=${selectedDate}`}
+              className="flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg bg-surface border border-border text-gray-700 hover:bg-app transition-colors">
+              Saratoga Full Card
+            </a>
+          </div>
         </div>
 
         {/* Upcoming / Settled tabs */}
