@@ -97,14 +97,6 @@ export function Sidebar({
           <CalendarDays size={18} />
           Race Day
         </NavLink>
-        <NavLink
-          to="/bet-builder"
-          className={({ isActive }) =>
-          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
-          }>
-          <Sparkles size={18} />
-          AI Bet Builder
-        </NavLink>
 
         <div className="my-4 border-t border-border pt-4 space-y-2">
           <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
@@ -119,14 +111,6 @@ export function Sidebar({
             Performance
           </NavLink>
           <NavLink
-            to="/research"
-            className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
-            }>
-            <Search size={18} />
-            Research
-          </NavLink>
-          <NavLink
             to="/settings"
             className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
@@ -137,14 +121,6 @@ export function Sidebar({
         </div>
       </nav>
 
-      <div className="p-4 border-t border-border">
-        <NavLink
-          to="/bet-builder"
-          className="w-full flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-xl font-semibold hover:bg-primary/90 transition-colors shadow-sm">
-          <Sparkles size={18} />
-          AI Bet Builder
-        </NavLink>
-      </div>
     </div>);
 
 }

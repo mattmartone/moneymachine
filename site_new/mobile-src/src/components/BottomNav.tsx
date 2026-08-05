@@ -22,19 +22,6 @@ export function BottomNav({
           </span>
         </NavLink>
 
-        {/* Center FAB for AI Bet Builder */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-5">
-          <motion.button
-            whileTap={{
-              scale: 0.92
-            }}
-            onClick={onOpenBetBuilder}
-            className="bg-primary text-white p-3.5 rounded-full shadow-float flex items-center justify-center border-4 border-surface focus:outline-none"
-            aria-label="Open AI Bet Builder">
-            
-            <Sparkles size={22} />
-          </motion.button>
-        </div>
 
         <NavLink
           to="/history"
