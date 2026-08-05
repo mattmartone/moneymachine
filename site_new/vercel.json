@@ -8,7 +8,7 @@
     { "source": "/mobile", "destination": "/mobile/index.html" },
     { "source": "/mobile/assets/(.*)", "destination": "/mobile/assets/$1" },
     { "source": "/mobile/(.*)", "destination": "/mobile/index.html" },
-    { "source": "/((?!mobile|execution).*)", "destination": "/index.html" }
+    { "source": "/old-landing/(.*)", "destination": "/index.html" }
   ],
   "crons": [
     {
