@@ -177,12 +177,22 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         <FeaturedVideo />
 
         <div className="flex justify-between items-end mb-4">
-          <h2 className="text-xl font-bold tracking-tight">Today's Commission Card</h2>
-          <span className="text-xs text-muted font-medium">
-            Updated: 1:45 PM
-          </span>
+          <h2 className="text-xl font-bold tracking-tight">Race Day</h2>
         </div>
 
+        {/* Commission / Saratoga toggle */}
+        <div className="flex gap-2 mb-4">
+          <a
+            href="#commission"
+            className="flex-1 text-center bg-surface border border-border text-gray-900 font-bold text-sm px-4 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
+            Commission Picks
+          </a>
+          <a
+            href={`/saratoga?date=${selectedDate}`}
+            className="flex-1 text-center bg-surface border border-border text-gray-900 font-bold text-sm px-4 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
+            Saratoga Card
+          </a>
+        </div>
 
         {/* Upcoming / Settled tabs */}
         <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
@@ -196,13 +206,6 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
             className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${viewTab === 'settled' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
             Results
           </button>
-        </div>
-
-
-        <div className="flex justify-center py-4">
-          <a href={`/saratoga?date=${selectedDate}`} className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
-            Saratoga — Full Card Analysis
-          </a>
         </div>
 
         {/* Timeline: hour markers sit on a background rail, races sit on top */}
