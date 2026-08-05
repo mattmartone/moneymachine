@@ -82,13 +82,8 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
   }, [selectedDate]);
 
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
-  const [pickType, setPickType] = useState<'all' | 'commission' | 'capo'>('all');
 
-  const allRaces = races.filter((r) => {
-    if (pickType === 'all') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED' || r.conviction === 'HIGH' || r.conviction === 'CAPO';
-    if (pickType === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
-    return r.conviction === 'HIGH' || r.conviction === 'CAPO';
-  });
+  const allRaces = races.filter((r) => r.conviction === 'COMMISSION' || r.conviction === 'DROPPED');
 
   const isPostTimePassed = (r: Race) => {
     if (r.postTime === '—') return false;
@@ -182,7 +177,7 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         <FeaturedVideo />
 
         <div className="flex justify-between items-end mb-4">
-          <h2 className="text-xl font-bold tracking-tight">Today's Card</h2>
+          <h2 className="text-xl font-bold tracking-tight">Today's Commission Card</h2>
           <span className="text-xs text-muted font-medium">
             Updated: 1:45 PM
           </span>
@@ -203,24 +198,6 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
           </button>
         </div>
 
-        {/* Pick type toggle */}
-        <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-3">
-          <button
-            onClick={() => setPickType('commission')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Commission
-          </button>
-          <button
-            onClick={() => setPickType('capo')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'capo' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            Capo
-          </button>
-          <button
-            onClick={() => setPickType('all')}
-            className={`flex-1 text-xs font-semibold py-2 rounded-lg transition-colors ${pickType === 'all' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-            All
-          </button>
-        </div>
 
         {(selectedDate === '2026-08-01' || selectedDate === '2026-08-02') && (
         <div className="flex justify-center py-4">
