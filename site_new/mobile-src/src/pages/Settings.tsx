@@ -3,49 +3,10 @@ import { Check, Moon, Sun, Lock, User, Coins, LogOut } from 'lucide-react';
 import { useTheme } from '../components/ThemeProvider';
 import { THEMES } from '../theme';
 
-const ACCOUNT_PINS = ['7413', '666'];
 const API_HEADERS = { 'Authorization': 'Bearer public' };
 
 export function Settings() {
   const { theme, setTheme } = useTheme();
-  const [unlocked, setUnlocked] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  const [pinError, setPinError] = useState(false);
-
-  if (!unlocked) {
-    return (
-      <div className="pb-24 min-h-screen bg-app flex items-center justify-center">
-        <div className="bg-surface border border-border rounded-2xl p-6 w-72 shadow-sm text-center">
-          <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Lock size={20} className="text-primary" />
-          </div>
-          <h2 className="text-sm font-bold text-gray-900 mb-1">Account Locked</h2>
-          <p className="text-xs text-muted mb-4">Enter PIN to access account settings</p>
-          <input
-            type="password"
-            inputMode="numeric"
-            maxLength={4}
-            value={pinInput}
-            onChange={(e) => {
-              setPinError(false);
-              setPinInput(e.target.value);
-              if (e.target.value.length >= 3) {
-                if (ACCOUNT_PINS.includes(e.target.value)) {
-                  setUnlocked(true);
-                } else {
-                  setPinError(true);
-                  setPinInput('');
-                }
-              }
-            }}
-            placeholder="••••"
-            className={`w-full text-center text-2xl tracking-[0.5em] font-bold bg-app border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 ${pinError ? 'border-danger' : 'border-border'}`}
-          />
-          {pinError && <p className="text-xs text-danger mt-2">Incorrect PIN</p>}
-        </div>
-      </div>
-    );
-  }
 
   const [user, setUser] = useState<any>(null);
   const [resetSent, setResetSent] = useState(false);
