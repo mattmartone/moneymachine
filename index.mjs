@@ -116,6 +116,17 @@ app.post('/scan', async (req, res) => {
   }
 });
 
+// Manual pipeline trigger
+app.post('/pipeline', async (req, res) => {
+  const date = req.query.date || new Date().toISOString().split('T')[0];
+  res.json({ status: 'triggered', date });
+  try {
+    await runPipeline(date);
+  } catch (e) {
+    console.error('[PIPELINE MANUAL] Error:', e.message);
+  }
+});
+
 // Test: can we load brisnet in a browser?
 app.post('/test-browser', async (req, res) => {
   try {
