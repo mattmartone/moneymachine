@@ -183,6 +183,19 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
 
         <div className="mb-4">
           <h2 className="text-xl font-bold tracking-tight mb-3">Race Day</h2>
+          <div className="flex gap-2 mb-3">
+            <a
+              href="#commission"
+              onClick={(e) => { e.preventDefault(); setSourceTab('commission'); }}
+              className={`flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-surface border border-border text-gray-700 hover:bg-app'}`}>
+              Commission
+            </a>
+            <a
+              href="/mobile/saratoga"
+              className="flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg bg-surface border border-border text-gray-700 hover:bg-app transition-colors">
+              Saratoga
+            </a>
+          </div>
           <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
             <button
               onClick={() => setSourceTab('commission')}
