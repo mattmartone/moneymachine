@@ -82,8 +82,13 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
   }, [selectedDate]);
 
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
+  const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
 
-  const allRaces = races.filter((r) => r.conviction === 'COMMISSION' || r.conviction === 'DROPPED');
+  const allRaces = races.filter((r) => {
+    if (sourceTab === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
+    if (sourceTab === 'fable') return r.conviction === 'FABLE';
+    return false;
+  });
 
   const isPostTimePassed = (r: Race) => {
     if (r.postTime === '—') return false;
@@ -178,17 +183,17 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
 
         <div className="mb-4">
           <h2 className="text-xl font-bold tracking-tight mb-3">Race Day</h2>
-          <div className="flex gap-2">
-            <a
-              href="#commission"
-              className="flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg bg-primary/10 text-primary border border-primary/20">
-              Commission Picks
-            </a>
-            <a
-              href={`/saratoga?date=${selectedDate}`}
-              className="flex-1 text-center text-xs font-semibold py-2.5 px-3 rounded-lg bg-surface border border-border text-gray-700 hover:bg-app transition-colors">
-              Saratoga Full Card
-            </a>
+          <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
+            <button
+              onClick={() => setSourceTab('commission')}
+              className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+              Commission
+            </button>
+            <button
+              onClick={() => setSourceTab('fable')}
+              className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'fable' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+              Fable
+            </button>
           </div>
         </div>
 
@@ -282,20 +287,6 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
             )}
           </motion.div>
         </div>
-        {selectedDate === '2026-07-24' && (
-        <div className="flex justify-center py-6">
-          <a href="/monmouth?date=2026-07-24&race=1" className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
-            Monmouth Park — At the Track
-          </a>
-        </div>
-        )}
-        {(selectedDate === '2026-08-01' || selectedDate === '2026-08-02') && (
-        <div className="flex justify-center py-6">
-          <a href={`/saratoga?date=${selectedDate}`} className="bg-surface border border-border text-gray-900 font-bold text-sm px-5 py-3 rounded-xl shadow-soft hover:bg-app transition-colors">
-            Saratoga — Full Card Analysis
-          </a>
-        </div>
-        )}
       </main>
     </div>);
 
