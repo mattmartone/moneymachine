@@ -28,8 +28,7 @@ export default async function handler(req: any, res: any) {
               box_pps, box_names, pace_scenario, fave_vulnerable, fave_name, fave_style,
               vulnerability_reason, race_theory,
               s1_fired, s4_fired, s5_fired, s6_fired, s9_fired, s11_fired
-       FROM scored_candidates WHERE race_id = ANY($1) AND date = $2
-       ORDER BY race_number`,
+       FROM scored_candidates WHERE race_id = ANY($1) AND date = $2`,
       [raceIds, date]
     );
 
