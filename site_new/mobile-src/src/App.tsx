@@ -6,7 +6,6 @@ import { Settings } from './pages/Settings';
 import { Performance } from './pages/Performance';
 import { Research } from './pages/Research';
 import { BetBuilder } from './pages/BetBuilder';
-import { TrackCard } from './pages/TrackCard';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { BetBuilderOverlay } from './components/BetBuilderOverlay';
@@ -30,7 +29,7 @@ export function App() {
         <div className="w-full">
           <Routes>
             <Route path="/" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} />} />
-            <Route path="/saratoga" element={<TrackCard track="Saratoga" selectedDate={selectedDate} />} />
+            <Route path="/saratoga" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Saratoga" />} />
             <Route path="/history" element={<History />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/research" element={<Research />} />

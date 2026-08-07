@@ -72,7 +72,7 @@ function SectionTag({
     </div>);
 
 }
-export function Today({ selectedDate, onDateChange }: { selectedDate?: string; onDateChange?: (date: string) => void }) {
+export function Today({ selectedDate, onDateChange, track }: { selectedDate?: string; onDateChange?: (date: string) => void; track?: string }) {
   const [races, setRaces] = useState<Race[]>(mockRaces);
 
   useEffect(() => {
@@ -85,6 +85,7 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
   const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
 
   const allRaces = races.filter((r) => {
+    if (track && r.track !== track) return false;
     if (sourceTab === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
     if (sourceTab === 'fable') return r.conviction === 'FABLE';
     return false;
@@ -182,7 +183,7 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         <FeaturedVideo />
 
         <div className="mb-4">
-          <h2 className="text-xl font-bold tracking-tight mb-3">Commission</h2>
+          <h2 className="text-xl font-bold tracking-tight mb-3">{track || 'Commission'}</h2>
           <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
             <button
               onClick={() => setSourceTab('commission')}
