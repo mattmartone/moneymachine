@@ -182,23 +182,18 @@ export function Today({ selectedDate, onDateChange }: { selectedDate?: string; o
         <FeaturedVideo />
 
         <div className="mb-4">
-          <h2 className="text-xl font-bold tracking-tight mb-3">Race Day</h2>
+          <h2 className="text-xl font-bold tracking-tight mb-3">Commission</h2>
           <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
             <button
               onClick={() => setSourceTab('commission')}
               className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-              Commission
+              Deterministic
             </button>
             <button
               onClick={() => setSourceTab('fable')}
               className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'fable' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
               Fable
             </button>
-            <a
-              href="/mobile/saratoga"
-              className={`flex-1 text-center text-xs font-semibold py-2.5 rounded-lg transition-colors text-muted hover:text-gray-700`}>
-              Saratoga
-            </a>
           </div>
         </div>
 
