@@ -188,7 +188,7 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
             <button
               onClick={() => setSourceTab('commission')}
               className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-              Deterministic
+              Street Boss
             </button>
             <button
               onClick={() => setSourceTab('fable')}
