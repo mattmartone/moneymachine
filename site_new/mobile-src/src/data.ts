@@ -175,17 +175,18 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     };
   }
 
-  // Build a lookup of race_id -> picks for that race
-  // Group picks by race_id
+  // Build a lookup of (race_id + conviction) -> picks for that race
+  // Group picks by race_id AND conviction so Commission and Fable are separate Race objects
   const picksByRace = new Map<number, any[]>();
   for (const pick of picks) {
-    const existing = picksByRace.get(pick.race_id) ?? [];
+    const key = pick.race_id * 100 + (pick.conviction === 'FABLE' ? 1 : 0);
+    const existing = picksByRace.get(key) ?? [];
     existing.push(pick);
-    picksByRace.set(pick.race_id, existing);
+    picksByRace.set(key, existing);
   }
 
   // Use inline results/entries from the today endpoint (single query, no N+1)
-  const raceIds = Array.from(picksByRace.keys());
+  const raceIds = [...new Set(Array.from(picksByRace.values()).map(p => p[0].race_id))];
   const resultsMap = new Map<number, ApiResults>();
   const entriesMap = new Map<number, FieldEntry[]>();
 
@@ -236,7 +237,8 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
   const isPastDate = date ? date < todayStr : false;
   const currentTime = isFutureDate ? '00:00' : isPastDate ? '23:59' : `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  const races: Race[] = Array.from(picksByRace.entries()).map(([raceId, racePicks]) => {
+  const races: Race[] = Array.from(picksByRace.entries()).map(([key, racePicks]) => {
+    const raceId = racePicks[0].race_id;
     const results = resultsMap.get(raceId);
     const firstPick = racePicks[0];
     const track = firstPick.track || 'Unknown';
@@ -423,7 +425,7 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     }
 
     return {
-      id: String(raceId),
+      id: String(key),
       raceId,
       postTime: postTimeRaw ? formatPostTime(postTimeRaw) : '—',
       track,
