@@ -30,7 +30,7 @@ export function App() {
         <div className="w-full">
           <Routes>
             <Route path="/" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} />} />
-            <Route path="/saratoga" element={<TrackCard track="Saratoga" selectedDate={selectedDate} />} />
+            <Route path="/saratoga" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Saratoga" />} />
             <Route path="/history" element={<History />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/research" element={<Research />} />

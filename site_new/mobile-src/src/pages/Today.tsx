@@ -85,6 +85,11 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
   const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
 
   const allRaces = races.filter((r) => {
+    if (track) {
+      // Track pages: show ALL races at this track
+      return r.track === track;
+    }
+    // Commission page: only published HIGH picks
     if (sourceTab === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
     if (sourceTab === 'fable') return r.conviction === 'FABLE';
     return false;
