@@ -175,10 +175,11 @@ export async function fetchRaces(date?: string): Promise<Race[]> {
     };
   }
 
-  // Build a lookup of (race_id + conviction) -> picks for that race
-  // Group picks by race_id AND conviction so Commission and Fable are separate Race objects
+  // Build a lookup of (race_id + source) -> picks for that race
+  // Only include COMMISSION and FABLE conviction bets — ignore HIGH/MEDIUM leftovers
   const picksByRace = new Map<number, any[]>();
   for (const pick of picks) {
+    if (pick.conviction !== 'COMMISSION' && pick.conviction !== 'FABLE' && pick.conviction !== 'DROPPED') continue;
     const key = pick.race_id * 100 + (pick.conviction === 'FABLE' ? 1 : 0);
     const existing = picksByRace.get(key) ?? [];
     existing.push(pick);
