@@ -24,11 +24,23 @@ export function BottomNav({
 
 
         <NavLink
+          to="/saratoga"
+          className={({ isActive }) =>
+          `flex flex-col items-center justify-center h-full gap-1 transition-colors ${isActive ? 'text-primary' : 'text-muted hover:text-gray-900'}`
+          }>
+
+          <Sparkles size={20} />
+          <span className="text-[10px] font-semibold tracking-wider uppercase">
+            Saratoga
+          </span>
+        </NavLink>
+
+        <NavLink
           to="/history"
           className={({ isActive }) =>
           `flex flex-col items-center justify-center h-full gap-1 transition-colors ${isActive ? 'text-primary' : 'text-muted hover:text-gray-900'}`
           }>
-          
+
           <Activity size={20} />
           <span className="text-[10px] font-semibold tracking-wider uppercase">
             Activity
