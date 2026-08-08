@@ -84,13 +84,12 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
   const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
 
+  const trackFableOnly = track && sourceTab === 'commission';
   const allRaces = races.filter((r) => {
     if (track) {
       if (r.track !== track) return false;
-      if (sourceTab === 'fable') return r.conviction === 'FABLE';
-      return r.conviction !== 'FABLE';
+      return r.conviction === 'FABLE';
     }
-    // Commission page: only show races with real stakes OR dropped (scratch)
     if (sourceTab === 'commission') return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
     if (sourceTab === 'fable') return r.conviction === 'FABLE' && r.totalStake > 0;
     return false;
@@ -202,6 +201,12 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
             </button>
           </div>
         </div>
+
+        {trackFableOnly && (
+          <div className="mb-4 bg-app border border-border rounded-lg px-3 py-2">
+            <p className="text-xs text-muted">Fable is scoring the full {track} card today. Showing Fable analysis below.</p>
+          </div>
+        )}
 
         {/* Upcoming / Settled tabs */}
         <div className="flex gap-1 bg-app border border-border rounded-xl p-1 mb-6">
