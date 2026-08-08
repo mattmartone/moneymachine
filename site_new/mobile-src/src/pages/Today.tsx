@@ -90,8 +90,9 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
       if (sourceTab === 'fable') return r.conviction === 'FABLE';
       return r.conviction !== 'FABLE';
     }
-    if (sourceTab === 'commission') return r.conviction === 'COMMISSION' || r.conviction === 'DROPPED';
-    if (sourceTab === 'fable') return r.conviction === 'FABLE';
+    // Commission page: only show races with real stakes OR dropped (scratch)
+    if (sourceTab === 'commission') return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
+    if (sourceTab === 'fable') return r.conviction === 'FABLE' && r.totalStake > 0;
     return false;
   });
 
