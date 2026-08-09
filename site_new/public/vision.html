@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fade the Chalk — Vision</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --border: #E8E5E0;
+  --text: #1a1a1a;
+  --muted: #8C8C8C;
+  --primary: #2D3748;
+  --accent: #C53030;
+  --green: #276749;
+  --green-bg: #F0FFF4;
+  --red: #C53030;
+  --red-bg: #FFF5F5;
+  --amber: #B7791F;
+  --amber-bg: #FFFFF0;
+}
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Top Nav */
+.top-bar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+.top-bar-inner { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.logo { font-weight: 800; font-size: 15px; letter-spacing: -0.5px; }
+.logo span { color: var(--accent); }
+.user-info { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.token-badge { background: var(--primary); color: white; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+
+/* Tab Nav */
+.tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab-nav-inner { display: flex; gap: 0; }
+.tab-btn { padding: 14px 24px; font-size: 13px; font-weight: 600; color: var(--muted); border: none; background: none; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--primary); }
+.tab-btn:hover { color: var(--text); }
+
+/* Panels */
+.panel { display: none; padding: 24px 0; }
+.panel.active { display: block; }
+
+/* Card Room */
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.card-header h2 { font-size: 20px; font-weight: 700; }
+.card-meta { font-size: 12px; color: var(--muted); }
+.ledger-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-bg); border: 1px solid #C6F6D5; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; color: var(--green); }
+
+.pick-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+.pick-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.pick-track { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; }
+.pick-race { font-size: 22px; font-weight: 800; }
+.pick-time { font-size: 12px; color: var(--muted); }
+.conviction-badge { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; }
+.conviction-high { background: var(--green-bg); color: var(--green); border: 1px solid #C6F6D5; }
+.pick-thesis { font-size: 13px; color: #4A5568; line-height: 1.6; margin: 12px 0; padding: 12px; background: var(--bg); border-radius: 8px; border-left: 3px solid var(--primary); }
+.pick-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
+.pick-horse { font-size: 15px; font-weight: 700; color: var(--green); }
+.pick-odds { font-size: 13px; color: var(--muted); }
+.pick-box { display: flex; gap: 6px; }
+.box-pp { background: var(--bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.box-pp.win { background: var(--green-bg); border-color: #C6F6D5; color: var(--green); }
+.thesis-status { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+.status-alive { background: var(--green-bg); color: var(--green); }
+.wager-row { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.wager-row span { font-weight: 600; color: var(--text); }
+
+/* Terminal Room */
+.terminal-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+@media (max-width: 900px) { .terminal-layout { grid-template-columns: 1fr; } }
+.terminal-main { }
+.terminal-sidebar { }
+.terminal-race-select { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.race-pill { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); cursor: pointer; }
+.race-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+.pp-table { width: 100%; border-collapse: collapse; font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.pp-table th { text-align: left; padding: 10px 12px; background: var(--bg); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; }
+.pp-table td { padding: 10px 12px; border-top: 1px solid var(--border); }
+.pp-table tr.highlight { background: var(--green-bg); }
+.pp-table tr.fave { background: var(--red-bg); }
+.odds-cell { font-weight: 700; }
+.overlay { color: var(--green); font-weight: 700; }
+.underlay { color: var(--red); }
+
+.fair-odds-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 16px; }
+.fair-odds-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.odds-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; }
+.odds-row .horse { font-weight: 600; }
+.odds-compare { display: flex; gap: 12px; align-items: center; }
+.odds-fair { color: var(--muted); }
+.odds-live { font-weight: 700; }
+.odds-glow { background: var(--green-bg); padding: 2px 8px; border-radius: 4px; color: var(--green); font-weight: 700; }
+
+/* Chat */
+.chat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.chat-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.chat-messages { padding: 16px; max-height: 400px; overflow-y: auto; }
+.chat-msg { margin-bottom: 12px; }
+.chat-msg.user { text-align: right; }
+.chat-msg .bubble { display: inline-block; max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+.chat-msg.user .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+.chat-msg.ai .bubble { background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.chat-input { display: flex; border-top: 1px solid var(--border); }
+.chat-input input { flex: 1; padding: 14px 16px; border: none; font-size: 13px; outline: none; }
+.chat-input button { padding: 14px 20px; background: var(--primary); color: white; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+/* Lab Room */
+.lab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .lab-grid { grid-template-columns: 1fr; } }
+.lab-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.lab-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.lab-card p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.strategy-input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; resize: vertical; min-height: 80px; font-family: inherit; }
+.strategy-btn { margin-top: 12px; padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.strategy-list { list-style: none; }
+.strategy-list li { padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.strategy-list .name { font-weight: 600; font-size: 13px; }
+.strategy-list .stats { font-size: 11px; color: var(--muted); }
+.strategy-list .roi { font-weight: 700; color: var(--green); font-size: 12px; }
+
+.backtest-result { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 16px; }
+.backtest-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+.backtest-row .label { color: var(--muted); }
+.backtest-row .value { font-weight: 600; }
+
+/* Ledger preview */
+.ledger-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+.ledger-table th { text-align: left; padding: 8px; background: var(--bg); font-size: 10px; text-transform: uppercase; color: var(--muted); }
+.ledger-table td { padding: 8px; border-top: 1px solid var(--border); }
+.ledger-hit { color: var(--green); font-weight: 600; }
+.ledger-miss { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="container top-bar-inner">
+    <div class="logo">Fade<span>the</span>Chalk</div>
+    <div class="user-info">
+      <span class="token-badge">847 tokens</span>
+      <span>Pro Plan</span>
+    </div>
+  </div>
+</div>
+
+<!-- Tab Nav -->
+<div class="tab-nav">
+  <div class="container tab-nav-inner">
+    <button class="tab-btn active" onclick="switchTab('card')">The Card</button>
+    <button class="tab-btn" onclick="switchTab('terminal')">Terminal</button>
+    <button class="tab-btn" onclick="switchTab('lab')">The Lab</button>
+    <button class="tab-btn" onclick="switchTab('ledger')">Ledger</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- THE CARD -->
+<div class="panel active" id="panel-card">
+  <div class="card-header">
+    <div>
+      <h2>Today's Card</h2>
+      <div class="card-meta">Saturday, August 9 · 6 plays · Saratoga, Del Mar, Monmouth</div>
+    </div>
+    <div class="ledger-badge">✓ 67% CLV beat rate · 142 picks graded</div>
+  </div>
+
+  <div class="pick-card">
+    <div class="pick-header">
+      <div>
+        <div class="pick-track">Saratoga</div>
+        <div class="pick-race">R4 <span class="pick-time">· 2:52 PM</span></div>
+      </div>
+      <div style="text-align:right">
+        <span class="conviction-badge conviction-high">HIGH</span>
+        <div class="thesis-status status-alive" style="margin-top:6px">● THESIS ALIVE</div>
+      </div>
+    </div>
+    <div class="pick-thesis">
+      Three confirmed speed types (Crimson Fury, Bravado's Edge, and the favorite Fleet Admiral) will duel through a quarter in :22 flat on a track that's been killing front-runners all week. Fleet Admiral has never faced pressure this hot — his two wins came gate-to-wire in 5-horse fields. When the pace collapses in the lane, Midnight Opal sits third, two lengths off, with the best closing Beyer in the field (94) and Irad Ortiz picking up the pieces.
+    </div>
+    <div class="pick-bottom">
+      <div>
+        <div class="pick-horse">PP7 MIDNIGHT OPAL</div>
+        <div class="pick-odds">ML 8/1 · Beyer 94 · Presser</div>
+      </div>
+      <div class="pick-box">
+        <span class="box-pp win">7</span>
+        <span class="box-pp">3</span>
+        <span class="box-pp">1</span>
+      </div>
+    </div>
+    <div class="wager-row">
+      Win <span>$25</span> · Place <span>$25</span> · Exacta Box <span>$60</span> · Total <span>$110</span>
+    </div>
+  </div>
+
+  <div class="pick-card">
+    <div class="pick-header">
+      <div>
+        <div class="pick-track">Del Mar</div>
+        <div class="pick-race">R6 <span class="pick-time">· 5:30 PM</span></div>
+      </div>
+      <div style="text-align:right">
+        <span class="conviction-badge conviction-high">HIGH</span>
+        <div class="thesis-status status-alive" style="margin-top:6px">● THESIS ALIVE</div>
+      </div>
+    </div>
+    <div class="pick-thesis">
+      The favorite Pacific Storm is a pure E-type drawn in post 2 with confirmed speed to his inside (Lightning Lane, post 1). They'll hook through a :45.2 half that neither survives. Desert Phantom has closed into hot pace his last three — speed figure of 91 two back at this exact distance — and gets the rail trip behind the duel. At 12/1 the market is asleep.
+    </div>
+    <div class="pick-bottom">
+      <div>
+        <div class="pick-horse">PP9 DESERT PHANTOM</div>
+        <div class="pick-odds">ML 12/1 · Beyer 91 · Closer</div>
+      </div>
+      <div class="pick-box">
+        <span class="box-pp win">9</span>
+        <span class="box-pp">2</span>
+        <span class="box-pp">5</span>
+        <span class="box-pp">1</span>
+      </div>
+    </div>
+    <div class="wager-row">
+      Win <span>$10</span> · Place <span>$25</span> · Exacta Box <span>$60</span> · Total <span>$95</span>
+    </div>
+  </div>
+
+  <div class="pick-card">
+    <div class="pick-header">
+      <div>
+        <div class="pick-track">Monmouth Park</div>
+        <div class="pick-race">R8 <span class="pick-time">· 4:44 PM</span></div>
+      </div>
+      <div style="text-align:right">
+        <span class="conviction-badge conviction-high">HIGH</span>
+        <div class="thesis-status status-alive" style="margin-top:6px">● THESIS ALIVE</div>
+      </div>
+    </div>
+    <div class="pick-thesis">
+      Nobody wants the lead. Three pressers and two closers — the lone E-type scratched this morning. Without a target to chase, the closers have nobody to run down. Ironclad Express has the tactical speed to steal the front in a field that's waiting, and his 88 Beyer from two back at this distance is the ceiling. He's been overlooked because of a bad trip last out (boxed at the quarter, ignore the finish).
+    </div>
+    <div class="pick-bottom">
+      <div>
+        <div class="pick-horse">PP4 IRONCLAD EXPRESS</div>
+        <div class="pick-odds">ML 6/1 · Beyer 88 · E/P</div>
+      </div>
+      <div class="pick-box">
+        <span class="box-pp win">4</span>
+        <span class="box-pp">2</span>
+        <span class="box-pp">7</span>
+      </div>
+    </div>
+    <div class="wager-row">
+      Win <span>$25</span> · Place <span>$25</span> · Exacta Box <span>$60</span> · Total <span>$110</span>
+    </div>
+  </div>
+</div>
+
+<!-- THE TERMINAL -->
+<div class="panel" id="panel-terminal">
+  <div class="terminal-race-select">
+    <span class="race-pill">SAR R1</span>
+    <span class="race-pill">SAR R2</span>
+    <span class="race-pill">SAR R3</span>
+    <span class="race-pill active">SAR R4</span>
+    <span class="race-pill">SAR R5</span>
+    <span class="race-pill">SAR R6</span>
+    <span class="race-pill">SAR R7</span>
+    <span class="race-pill">DMR R6</span>
+    <span class="race-pill">MTH R8</span>
+  </div>
+
+  <div class="terminal-layout">
+    <div class="terminal-main">
+      <div class="pick-card" style="margin-bottom:16px">
+        <div class="pick-track">Saratoga Race 4 · 6 Furlongs Dirt · $110,000 Allowance</div>
+        <div class="pick-thesis" style="margin-top:12px">
+          Three confirmed speed types (Crimson Fury, Bravado's Edge, and the favorite Fleet Admiral) will duel through a quarter in :22 flat on a track that's been killing front-runners all week. Fleet Admiral has never faced pressure this hot — his two wins came gate-to-wire in 5-horse fields. When the pace collapses in the lane, Midnight Opal sits third, two lengths off, with the best closing Beyer (94) and Irad Ortiz.
+        </div>
+      </div>
+
+      <table class="pp-table">
+        <thead>
+          <tr><th>PP</th><th>Horse</th><th>ML</th><th>Fair</th><th>Style</th><th>Beyer</th><th>Jockey</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr class="fave"><td>1</td><td>Fleet Admiral</td><td class="odds-cell">8/5</td><td class="underlay">2/1</td><td>E</td><td>90</td><td>Saez L</td><td>Vulnerable — pace duel</td></tr>
+          <tr><td>2</td><td>Bravado's Edge</td><td>5/1</td><td>6/1</td><td>E</td><td>86</td><td>Franco M</td><td>Will press</td></tr>
+          <tr><td>3</td><td>Crimson Fury</td><td>10/1</td><td>12/1</td><td>E</td><td>84</td><td>Davis D</td><td>Will press</td></tr>
+          <tr><td>4</td><td>Stonecold</td><td>15/1</td><td>20/1</td><td>S</td><td>79</td><td>Gomez R</td><td></td></tr>
+          <tr><td>5</td><td>Harbor Light</td><td>4/1</td><td>5/1</td><td>P</td><td>88</td><td>Rosario J</td><td>In the box</td></tr>
+          <tr><td>6</td><td>Windswept</td><td>12/1</td><td>15/1</td><td>S</td><td>82</td><td>Ortiz I Jr</td><td></td></tr>
+          <tr class="highlight"><td><strong>7</strong></td><td><strong>Midnight Opal</strong></td><td class="odds-cell overlay">8/1</td><td class="overlay">5/1</td><td>P</td><td><strong>94</strong></td><td>Ortiz I Jr</td><td><strong>WIN PICK — overlay</strong></td></tr>
+          <tr><td>8</td><td>Regal Prince</td><td>20/1</td><td>25/1</td><td>S</td><td>77</td><td>Cancel E</td><td></td></tr>
+          <tr><td>9</td><td>Quick Silver</td><td>6/1</td><td>7/1</td><td>P</td><td>85</td><td>Prat F</td><td></td></tr>
+        </tbody>
+      </table>
+
+      <div class="fair-odds-bar">
+        <div class="fair-odds-title">Fair Odds vs Live Board — Overlays</div>
+        <div class="odds-row"><span class="horse">Midnight Opal</span><div class="odds-compare"><span class="odds-fair">Fair: 5/1</span><span class="odds-glow">Live: 8/1 ↑</span></div></div>
+        <div class="odds-row"><span class="horse">Harbor Light</span><div class="odds-compare"><span class="odds-fair">Fair: 5/1</span><span class="odds-live">Live: 4/1</span></div></div>
+        <div class="odds-row"><span class="horse">Fleet Admiral</span><div class="odds-compare"><span class="odds-fair">Fair: 2/1</span><span class="odds-live underlay">Live: 8/5 ↓</span></div></div>
+      </div>
+    </div>
+
+    <div class="terminal-sidebar">
+      <div class="chat-box">
+        <div class="chat-header">
+          <span>Interrogate the Model</span>
+          <span style="font-size:10px;color:var(--muted)">~3 tokens/msg</span>
+        </div>
+        <div class="chat-messages">
+          <div class="chat-msg user"><div class="bubble">Why Midnight Opal over Harbor Light? Both are pressers.</div></div>
+          <div class="chat-msg ai"><div class="bubble">Two reasons. First, the ceiling: Midnight Opal's 94 Beyer is 6 points clear of Harbor Light's best (88). At this distance, that's two lengths. Second, the trip. Harbor Light is drawn in post 5 — he'll be three wide around the turn. Midnight Opal draws post 7, further outside, but his running style lets him angle in behind the speed duel. He saves ground; Harbor Light uses it. When the pace collapses, Opal has both the figure and the position.</div></div>
+          <div class="chat-msg user"><div class="bubble">What if Fleet Admiral gets a soft lead?</div></div>
+          <div class="chat-msg ai"><div class="bubble">Then the thesis is dead and Fleet Admiral wins. But look at Bravado's Edge (post 2) and Crimson Fury (post 3) — both have E-type profiles and their last 4 first-call positions are 1-1-2-1 and 2-1-1-2. Neither is going to sit. The track bias data this week shows 0-for-7 wire-to-wire winners in sprints. The speed is real, and it's suicidal.</div></div>
+        </div>
+        <div class="chat-input">
+          <input type="text" placeholder="Ask about this race...">
+          <button>Send</button>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="pick-card">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px">Stress-Test Your Ticket</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Enter your pick and the model will challenge it.</p>
+          <div style="display:flex;gap:8px">
+            <input type="text" placeholder="e.g. PP1 Fleet Admiral to win" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:12px">
+            <button style="padding:10px 16px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Challenge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THE LAB -->
+<div class="panel" id="panel-lab">
+  <div class="lab-grid">
+    <div class="lab-card">
+      <h3>Build Your Strategy</h3>
+      <p>Describe your approach in plain English. The agent screens today's 50+ races and builds your personal card.</p>
+      <textarea class="strategy-input" placeholder="e.g. I only play dirt sprints where the favorite is an E-type in a pace duel, and my pick is a closer with a speed figure within 5 points of the ceiling. Minimum 8-horse field, 6/1 or higher on the win pick."></textarea>
+      <button class="strategy-btn">Build My Card →</button>
+
+      <div class="backtest-result">
+        <div style="font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px">Backtest: Last 90 days</div>
+        <div class="backtest-row"><span class="label">Qualifying races</span><span class="value">47</span></div>
+        <div class="backtest-row"><span class="label">Win rate</span><span class="value">23.4%</span></div>
+        <div class="backtest-row"><span class="label">ITM rate</span><span class="value">51.1%</span></div>
+        <div class="backtest-row"><span class="label">Exacta hit rate</span><span class="value">31.9%</span></div>
+        <div class="backtest-row"><span class="label">CLV beat rate</span><span class="value">64.2%</span></div>
+        <div class="backtest-row"><span class="label">ROI</span><span class="value" style="color:var(--green)">+38.7%</span></div>
+      </div>
+    </div>
+
+    <div class="lab-card">
+      <h3>Strategy Library</h3>
+      <p>Named strategies with public ledgers. Select one to filter today's card, or compose your own.</p>
+      <ul class="strategy-list">
+        <li><div><div class="name">Beyer Ceiling Box</div><div class="stats">312 races graded · 29.2% exacta rate</div></div><span class="roi">+41.3%</span></li>
+        <li><div><div class="name">La Cosa Nostra</div><div class="stats">89 races graded · 34.1% exacta rate</div></div><span class="roi">+67.2%</span></li>
+        <li><div><div class="name">Pace Makes the Race</div><div class="stats">204 races graded · 26.8% exacta rate</div></div><span class="roi">+22.1%</span></li>
+        <li><div><div class="name">Spot the Vulnerable Fave</div><div class="stats">178 races graded · 31.5% exacta rate</div></div><span class="roi">+44.8%</span></li>
+        <li><div><div class="name">Sprint Closer in Pace Duel</div><div class="stats">56 races graded · 37.2% exacta rate</div></div><span class="roi">+58.9%</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="lab-card" style="margin-top:20px">
+    <h3>Your Personal Card — Today</h3>
+    <p>3 races match your strategy. Agent analysis attached.</p>
+    <div class="pick-card" style="border:1px solid var(--border);margin-top:12px">
+      <div class="pick-header">
+        <div><div class="pick-track">Saratoga</div><div class="pick-race">R4</div></div>
+        <span class="conviction-badge conviction-high">MATCH</span>
+      </div>
+      <div style="font-size:13px;color:#4A5568;margin-top:8px">Qualifies: dirt sprint, E-type fave in pace duel, closer at 8/1 with 94 Beyer (ceiling gap: 4 points). ✓ All criteria met.</div>
+    </div>
+    <div class="pick-card" style="border:1px solid var(--border);margin-top:8px">
+      <div class="pick-header">
+        <div><div class="pick-track">Monmouth Park</div><div class="pick-race">R8</div></div>
+        <span class="conviction-badge conviction-high">MATCH</span>
+      </div>
+      <div style="font-size:13px;color:#4A5568;margin-top:8px">Qualifies: dirt sprint, E-type fave (scratched — lone speed scenario), E/P at 6/1 with 88 Beyer (IS the ceiling). ✓ Partial match — modified thesis.</div>
+    </div>
+  </div>
+</div>
+
+<!-- THE LEDGER -->
+<div class="panel" id="panel-ledger">
+  <div class="card-header">
+    <div>
+      <h2>The Ledger</h2>
+      <div class="card-meta">Every pick. Every result. Nothing edited after post time.</div>
+    </div>
+    <div class="ledger-badge">✓ 142 picks · 67% CLV · +31.2% ROI</div>
+  </div>
+
+  <table class="ledger-table">
+    <thead>
+      <tr><th>Date</th><th>Track</th><th>Race</th><th>Pick</th><th>ML</th><th>Post Odds</th><th>CLV</th><th>Result</th><th>Exacta</th><th>Net</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Aug 8</td><td>GPX</td><td>R1</td><td>Hands of Time</td><td>8/1</td><td>6/1</td><td class="ledger-hit">+2pts</td><td class="ledger-hit">WIN $7.80</td><td class="ledger-miss">miss</td><td style="color:var(--green);font-weight:600">+$160</td></tr>
+      <tr><td>Aug 8</td><td>DEL</td><td>R3</td><td>J D Factor</td><td>6/1</td><td>5/2</td><td class="ledger-hit">+3.5pts</td><td class="ledger-hit">WIN $5.40</td><td class="ledger-hit">HIT $6.80</td><td style="color:var(--green);font-weight:600">+$66</td></tr>
+      <tr><td>Aug 8</td><td>GPX</td><td>R5</td><td>Hottakejake</td><td>6/1</td><td>5/1</td><td class="ledger-hit">+1pt</td><td>PLACE $5.60</td><td class="ledger-hit">HIT $26.00</td><td style="color:var(--green);font-weight:600">+$115</td></tr>
+      <tr><td>Aug 8</td><td>DEL</td><td>R7</td><td>Radical Right</td><td>8/1</td><td>5/1</td><td class="ledger-hit">+3pts</td><td>PLACE $4.80</td><td class="ledger-hit">HIT $40.00</td><td style="color:var(--green);font-weight:600">+$175</td></tr>
+      <tr><td>Aug 8</td><td>DEL</td><td>R1</td><td>Sharp Wonder</td><td>6/1</td><td>12/1</td><td class="ledger-miss">-6pts</td><td class="ledger-miss">3rd</td><td class="ledger-miss">miss</td><td style="color:var(--red)">-$85</td></tr>
+      <tr><td>Aug 8</td><td>GPX</td><td>R2</td><td>Willing One</td><td>10/1</td><td>15/1</td><td class="ledger-miss">-5pts</td><td class="ledger-miss">4th</td><td class="ledger-miss">miss</td><td style="color:var(--red)">-$85</td></tr>
+      <tr><td>Aug 7</td><td>SAR</td><td>R4</td><td>What's Up Bro</td><td>30/1</td><td>15/1</td><td class="ledger-hit">+15pts</td><td>PLACE $16.98</td><td class="ledger-hit">HIT $82.53</td><td style="color:var(--green);font-weight:600">+$297</td></tr>
+      <tr><td>Aug 7</td><td>PRM</td><td>R8</td><td>Breathtaking Folly</td><td>4/1</td><td>3/1</td><td class="ledger-hit">+1pt</td><td>PLACE $3.60</td><td class="ledger-hit">HIT $10.30</td><td style="color:var(--green);font-weight:600">+$103</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
