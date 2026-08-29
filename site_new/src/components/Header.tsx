@@ -12,10 +12,7 @@ export function Header() {
     <>
       <header className="text-center mb-6">
         <div className="flex flex-col items-center justify-center gap-2 mb-4">
-          <Logo className="w-20 h-20" />
-          <h1 className="font-serif text-4xl md:text-5xl font-bold text-black tracking-tighter">
-            FADE THE CHALK
-          </h1>
+          <Logo className="w-64 h-auto" />
         </div>
         <nav className="bg-web-gray border-2 border-black p-2 shadow-outset font-sans text-sm font-bold flex flex-wrap justify-center gap-4 md:gap-8">
           <a href="#home" className="web-link">
