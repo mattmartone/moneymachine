@@ -79,9 +79,7 @@ export function Sidebar({
   return (
     <div className="hidden md:flex flex-col w-64 bg-surface border-r border-border h-screen fixed left-0 top-0 shrink-0 z-40">
       <div className="p-6 border-b border-border">
-        <h1 className="text-xl font-bold tracking-tight text-gray-900">
-          Fade the Chalk
-        </h1>
+        <img src="/mobile/ftc-logo.png" alt="Fade the Chalk" className="h-10 object-contain" />
         {selectedDate && onDateChange && (
           <MiniCalendar selectedDate={selectedDate} onDateChange={onDateChange} />
         )}

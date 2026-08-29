@@ -68,9 +68,7 @@ export function SummaryBar({ compact = false, races = [] }: {compact?: boolean; 
                 
                 <Menu size={24} />
               </button>
-              <h1 className="text-lg font-bold tracking-tight text-gray-900">
-                Fade the Chalk
-              </h1>
+              <img src="/mobile/ftc-logo.png" alt="Fade the Chalk" className="h-8 object-contain" />
             </div>
             {/* Desktop spacer to keep the right side aligned when brand is hidden */}
             <div className="hidden md:block" />
