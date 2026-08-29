@@ -62,10 +62,10 @@ export interface FeaturedVideo {
 }
 
 export let featuredVideo: FeaturedVideo | null = {
-  youtubeId: '6loOvE5t51Y',
-  tag: 'Race Day',
-  title: 'Fade the Chalk — Today on the Board',
-  subtitle: "A quick look at the plays we're fading and why"
+  youtubeId: 'y0uFHHvteYM',
+  tag: 'Travers Day',
+  title: 'Travers Day at the Spa — Ballerina G1 & Travers G1',
+  subtitle: 'Two models, one card. Street Boss and Fable converge on the Ballerina — then split on the Travers.'
 };
 
 // Mutable export so components that import synchronously get the latest data
