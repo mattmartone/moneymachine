@@ -87,7 +87,10 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
     fetch(`/api/lab/track-card?date=${date}&track=${encodeURIComponent(track)}`, { headers: API_HEADERS })
       .then(r => r.json())
       .then(data => {
-        setRaces(data.races || []);
+        const races = data.races || [];
+        console.log('[TrackCard] API returned', races.length, 'races:', races.map((r: any) => `R${r.race_number}`).join(', '));
+        console.log('[TrackCard] Fable keys:', Object.keys(data.fable || {}));
+        setRaces(races);
         setDet(data.deterministic || {});
         setFable(data.fable || {});
         setResults(data.results || {});
@@ -141,6 +144,7 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
         {/* Race cards */}
         <div className="space-y-3">
           {races.map(race => {
+            if (race.race_number === 13) console.log('[TrackCard] RENDERING R13, id=', race.id, 'fable=', fable[race.id]);
             const detPick = det[race.id];
             const fablePick = fable[race.id];
             const result = results[race.id];
