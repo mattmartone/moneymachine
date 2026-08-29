@@ -84,11 +84,11 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
   const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
 
-  const trackFableOnly = track && sourceTab === 'commission';
   const allRaces = races.filter((r) => {
     if (track) {
       if (r.track !== track) return false;
-      return r.conviction === 'FABLE';
+      if (sourceTab === 'fable') return r.conviction === 'FABLE';
+      return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
     }
     if (sourceTab === 'commission') return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
     if (sourceTab === 'fable') return r.conviction === 'FABLE' && r.totalStake > 0;
