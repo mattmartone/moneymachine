@@ -87,10 +87,7 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
     fetch(`/api/lab/track-card?date=${date}&track=${encodeURIComponent(track)}`, { headers: API_HEADERS })
       .then(r => r.json())
       .then(data => {
-        const races = data.races || [];
-        console.log('[TrackCard] API returned', races.length, 'races:', races.map((r: any) => `R${r.race_number}`).join(', '));
-        console.log('[TrackCard] Fable keys:', Object.keys(data.fable || {}));
-        setRaces(races);
+        setRaces(data.races || []);
         setDet(data.deterministic || {});
         setFable(data.fable || {});
         setResults(data.results || {});
@@ -143,8 +140,7 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
 
         {/* Race cards */}
         <div className="space-y-3">
-          {races.map(race => {
-            if (race.race_number === 13) console.log('[TrackCard] RENDERING R13, id=', race.id, 'fable=', fable[race.id]);
+          {races.map((race, idx) => {
             const detPick = det[race.id];
             const fablePick = fable[race.id];
             const result = results[race.id];
@@ -188,11 +184,9 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
             }
 
             return (
-              <motion.div
+              <div
                 key={race.id}
-                className="bg-surface border border-border rounded-2xl shadow-soft overflow-hidden"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}>
+                className="bg-surface border border-border rounded-2xl shadow-soft overflow-hidden">
 
                 {/* Collapsed header */}
                 <button
@@ -341,7 +335,7 @@ export function TrackCard({ track = 'Saratoga', selectedDate }: { track?: string
                     )}
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>
