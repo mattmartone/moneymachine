@@ -202,7 +202,7 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
           </div>
         </div>
 
-        {trackFableOnly && (
+        {track && sourceTab === 'fable' && (
           <div className="mb-4 bg-app border border-border rounded-lg px-3 py-2">
             <p className="text-xs text-muted">Fable is scoring the full {track} card today. Showing Fable analysis below.</p>
           </div>
