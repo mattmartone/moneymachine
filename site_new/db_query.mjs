@@ -4,8 +4,11 @@ const { Pool } = pg;
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const pool = new Pool({
-  connectionString: 'postgres://postgres.bazvhjajajkpkqqvyelg:LMczMTBYFGH6w9yn@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-  ssl: true
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 2,
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 3000,
 });
 
 const sql = process.argv[2];

@@ -4,8 +4,11 @@ const { Pool } = pg;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const pool = new Pool({
-  connectionString: 'postgres://postgres.bazvhjajajkpkqqvyelg:LMczMTBYFGH6w9yn@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-  ssl: true
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 2,
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 3000,
 });
 
 const file = process.argv[2];
@@ -194,10 +197,7 @@ async function run() {
         await pool.end();
         return;
       }
-      const ids = existing.rows.map(r => r.id);
-      await pool.query(`DELETE FROM entries WHERE race_id = ANY($1)`, [ids]);
-      await pool.query(`DELETE FROM races WHERE id = ANY($1)`, [ids]);
-      console.log(`Cleared ${ids.length} existing races (--force)`);
+      console.log(`Updating ${existing.rows.length} existing races (--force, upsert mode)`);
     }
   }
 
@@ -206,7 +206,9 @@ async function run() {
   for (const [key, race] of races) {
     const res = await pool.query(
       `INSERT INTO races (track, date, race_number, conditions, distance, surface, purse, field_size)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (track, date, race_number) DO UPDATE SET field_size = EXCLUDED.field_size, purse = EXCLUDED.purse
+       RETURNING id`,
       [race.track, race.date, race.race_number, race.conditions, race.distance, race.surface, race.purse, race.field_size]
     );
     raceIdMap.set(key, res.rows[0].id);
