@@ -72,7 +72,7 @@ function SectionTag({
     </div>);
 
 }
-export function Today({ selectedDate, onDateChange, track }: { selectedDate?: string; onDateChange?: (date: string) => void; track?: string }) {
+export function Today({ selectedDate, onDateChange, track, fableOnly }: { selectedDate?: string; onDateChange?: (date: string) => void; track?: string; fableOnly?: boolean }) {
   const [races, setRaces] = useState<Race[]>(mockRaces);
 
   useEffect(() => {
@@ -82,12 +82,12 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
   }, [selectedDate]);
 
   const [viewTab, setViewTab] = useState<'upcoming' | 'settled'>('upcoming');
-  const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>('commission');
+  const [sourceTab, setSourceTab] = useState<'commission' | 'fable'>(fableOnly ? 'fable' : 'commission');
 
   const allRaces = races.filter((r) => {
     if (track) {
       if (r.track !== track) return false;
-      if (sourceTab === 'fable') return r.conviction === 'FABLE';
+      if (fableOnly || sourceTab === 'fable') return r.conviction === 'FABLE';
       return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
     }
     if (sourceTab === 'commission') return (r.conviction === 'COMMISSION' && r.totalStake > 0) || r.conviction === 'DROPPED';
@@ -184,25 +184,30 @@ export function Today({ selectedDate, onDateChange, track }: { selectedDate?: st
       )}
 
       <main className="p-4 max-w-md md:max-w-4xl mx-auto">
-        <FeaturedVideo />
+        {!fableOnly && <FeaturedVideo />}
 
         <div className="mb-4">
           <h2 className="text-xl font-bold tracking-tight mb-3">{track || 'Commission'}</h2>
-          <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
-            <button
-              onClick={() => setSourceTab('commission')}
-              className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-              Street Boss
-            </button>
-            <button
-              onClick={() => setSourceTab('fable')}
-              className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'fable' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
-              Fable
-            </button>
-          </div>
+          {!fableOnly && (
+            <div className="flex gap-1 bg-app border border-border rounded-xl p-1">
+              <button
+                onClick={() => setSourceTab('commission')}
+                className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'commission' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+                Street Boss
+              </button>
+              <button
+                onClick={() => setSourceTab('fable')}
+                className={`flex-1 text-xs font-semibold py-2.5 rounded-lg transition-colors ${sourceTab === 'fable' ? 'bg-surface text-gray-900 shadow-sm' : 'text-muted hover:text-gray-700'}`}>
+                Fable
+              </button>
+            </div>
+          )}
+          {fableOnly && (
+            <p className="text-xs text-muted">Fable is scoring the full {track} card today.</p>
+          )}
         </div>
 
-        {track && sourceTab === 'fable' && (
+        {track && !fableOnly && sourceTab === 'fable' && (
           <div className="mb-4 bg-app border border-border rounded-lg px-3 py-2">
             <p className="text-xs text-muted">Fable is scoring the full {track} card today. Showing Fable analysis below.</p>
           </div>
