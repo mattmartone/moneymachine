@@ -31,6 +31,9 @@ export function App() {
           <Routes>
             <Route path="/" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} />} />
             <Route path="/saratoga" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Saratoga" />} />
+            <Route path="/gulfstream" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Gulfstream Park" />} />
+            <Route path="/monmouth" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Monmouth Park" />} />
+            <Route path="/prairie-meadows" element={<Today selectedDate={selectedDate} onDateChange={handleDateChange} track="Prairie Meadows" />} />
             <Route path="/history" element={<History />} />
             <Route path="/performance" element={<Performance />} />
             <Route path="/research" element={<Research />} />

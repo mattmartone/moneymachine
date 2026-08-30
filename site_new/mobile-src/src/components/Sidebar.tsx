@@ -107,6 +107,33 @@ export function Sidebar({
           <CalendarDays size={18} />
           Saratoga
         </NavLink>
+        <NavLink
+          to="/gulfstream"
+          className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+          }>
+
+          <CalendarDays size={18} />
+          Gulfstream
+        </NavLink>
+        <NavLink
+          to="/monmouth"
+          className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+          }>
+
+          <CalendarDays size={18} />
+          Monmouth
+        </NavLink>
+        <NavLink
+          to="/prairie-meadows"
+          className={({ isActive }) =>
+          `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-app'}`
+          }>
+
+          <CalendarDays size={18} />
+          Prairie Meadows
+        </NavLink>
 
         <div className="my-4 border-t border-border pt-4 space-y-2">
           <p className="px-4 text-[10px] uppercase tracking-wider text-muted font-semibold mb-2">
